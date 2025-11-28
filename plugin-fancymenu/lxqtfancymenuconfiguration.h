@@ -41,9 +41,7 @@ class LXQtFancyMenuConfiguration : public LXQtPanelPluginConfigDialog {
   Q_OBJECT
 
  public:
-  explicit LXQtFancyMenuConfiguration(PluginSettings* settings,
-                                      const QString& defaultShortcut,
-                                      QWidget* parent = nullptr);
+  explicit LXQtFancyMenuConfiguration(PluginSettings* settings, QWidget* parent = nullptr);
   ~LXQtFancyMenuConfiguration();
 
  private:
@@ -53,12 +51,9 @@ class LXQtFancyMenuConfiguration : public LXQtPanelPluginConfigDialog {
  private:
   Ui::LXQtFancyMenuConfiguration* ui;
   QString mDefaultShortcut;
-  GlobalKeyShortcut::Action* mShortcut;
   bool mLockSettingChanges;
 
  private slots:
-  void globalShortcutChanged(const QString& oldShortcut, const QString& newShortcut);
-  void shortcutChanged(const QString& value);
   /*
     Saves settings in conf file.
   */
@@ -67,7 +62,6 @@ class LXQtFancyMenuConfiguration : public LXQtPanelPluginConfigDialog {
   void showTextChanged(bool value);
   void chooseIcon();
   void chooseMenuFile();
-  void shortcutReset();
   void customFontChanged(bool value);
   void customFontSizeChanged(int value);
   void buttonRowPositionChanged(int idx);

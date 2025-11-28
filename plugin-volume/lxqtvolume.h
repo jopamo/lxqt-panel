@@ -65,9 +65,6 @@ class LXQtVolume : public QObject, public ILXQtPanelPlugin {
   VolumeButton* m_volumeButton;
   int m_defaultSinkIndex;
   AudioDevice* m_defaultSink;
-  GlobalKeyShortcut::Action* m_keyVolumeUp;
-  GlobalKeyShortcut::Action* m_keyVolumeDown;
-  GlobalKeyShortcut::Action* m_keyMuteToggle;
   LXQt::Notification* m_notification;
   QPointer<LXQtVolumeConfiguration> m_configDialog;
   bool m_alwaysShowNotifications;
