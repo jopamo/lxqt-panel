@@ -147,8 +147,6 @@ LXQtPanel::LXQtPanel(const QString &configGroup, LXQt::Settings *settings, QWidg
     mAnimationTime(0),
     mReserveSpace(true),
     mAnimation(nullptr),
-    mWAnimation(nullptr),
-    mLayerWindow(nullptr),
     mLockPanel(false)
 {
     //You can find information about the flags and widget attributes in your
@@ -426,7 +424,6 @@ LXQtPanel::~LXQtPanel()
 {
     mLayout->setEnabled(false);
     delete mAnimation;
-    delete mWAnimation;
     delete mConfigDialog.data();
     // do not save settings because of "user deleted panel" functionality saveSettings();
 }
@@ -491,28 +488,6 @@ int LXQtPanel::getReserveDimension()
     return mHidable ? PANEL_HIDE_SIZE : std::max(PANEL_MINIMUM_SIZE, mPanelSize);
 }
 
-QMargins LXQtPanel::layerWindowMargins()
-{
-    QMargins margins;
-    if (!mHidden)
-        return margins;
-    int offset = PANEL_HIDE_SIZE - std::max(PANEL_MINIMUM_SIZE, mPanelSize); // negative
-    if (isHorizontal())
-    {
-        if (mPosition == ILXQtPanel::PositionTop)
-            margins = QMargins(0, offset, 0, 0);
-        else
-            margins = QMargins(0, 0, 0, offset);
-    }
-    else
-    {
-        if (mPosition == ILXQtPanel::PositionLeft)
-            margins = QMargins(offset, 0, 0, 0);
-        else
-            margins = QMargins(0, 0, offset, 0);
-    }
-    return margins;
-}
 
 void LXQtPanel::setPanelGeometry(bool animate)
 {

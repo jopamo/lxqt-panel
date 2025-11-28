@@ -1,0 +1,11 @@
+--- panel/lxqtpanel.h
++++ panel/lxqtpanel.h
+@@ -147,7 +147,7 @@ class LXQT_PANEL_API LXQtPanel : public QFrame, public ILXQtPanel {
+   void willShowWindow(QWidget* w) override;
+   void pluginFlagsChanged(const ILXQtPanelPlugin* plugin) override;
+   bool isLocked() const override { return mLockPanel; }
+-  QString screenName() const override { return mScreenName; }
++  QString screenName() const override { return QString(); }
+   // ........ end of ILXQtPanel overrides
+ 
+   /**
