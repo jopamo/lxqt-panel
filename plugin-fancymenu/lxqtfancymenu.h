@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQT_FANCYMENU_H
 #define LXQT_FANCYMENU_H
 
@@ -45,69 +44,62 @@ class LXQtBar;
 namespace LXQt {
 class PowerManager;
 class ScreenSaver;
-}
+}  // namespace LXQt
 
-namespace GlobalKeyShortcut
-{
-class Action;
-}
+class LXQtFancyMenu : public QObject, public ILXQtPanelPlugin {
+  Q_OBJECT
+ public:
+  LXQtFancyMenu(const ILXQtPanelPluginStartupInfo& startupInfo);
+  ~LXQtFancyMenu();
 
-class LXQtFancyMenu : public QObject, public ILXQtPanelPlugin
-{
-    Q_OBJECT
-public:
-    LXQtFancyMenu(const ILXQtPanelPluginStartupInfo &startupInfo);
-    ~LXQtFancyMenu();
+  QString themeId() const { return QStringLiteral("FancyMenu"); }
+  virtual ILXQtPanelPlugin::Flags flags() const { return HaveConfigDialog; }
 
-    QString themeId() const { return QStringLiteral("FancyMenu"); }
-    virtual ILXQtPanelPlugin::Flags flags() const { return HaveConfigDialog ; }
+  QWidget* widget() { return &mButton; }
+  QDialog* configureDialog();
 
-    QWidget *widget() { return &mButton; }
-    QDialog *configureDialog();
+  bool isSeparate() const { return true; }
 
-    bool isSeparate() const { return true; }
+ protected:
+  bool eventFilter(QObject* obj, QEvent* event);
 
-protected:
-    bool eventFilter(QObject *obj, QEvent *event);
+ private:
+  void setMenuFontSize();
+  void setButtonIcon();
 
-private:
-    void setMenuFontSize();
-    void setButtonIcon();
+ private:
+  QToolButton mButton;
+  QString mLogDir;
+  LXQtFancyMenuWindow* mWindow;
+  bool mFilterClear;  //!< search field should be cleared upon showing the menu
 
-private:
-    QToolButton mButton;
-    QString mLogDir;
-    LXQtFancyMenuWindow *mWindow;
-    GlobalKeyShortcut::Action *mShortcut;
-    bool mFilterClear; //!< search field should be cleared upon showing the menu
+  XdgMenu mXdgMenu;
 
-    XdgMenu mXdgMenu;
+  QTimer mDelayedPopup;
+  QTimer mHideTimer;
+  QString mMenuFile;
 
-    QTimer mDelayedPopup;
-    QTimer mHideTimer;
-    QString mShortcutSeq;
-    QString mMenuFile;
+ protected slots:
 
-protected slots:
+  virtual void settingsChanged();
+  void buildMenu();
 
-    virtual void settingsChanged();
-    void buildMenu();
+  void loadFavorites();
+  void saveFavorites();
 
-    void loadFavorites();
-    void saveFavorites();
-
-private slots:
-    void showMenu();
-    void showHideMenu();
+ private slots:
+  void showMenu();
+  void showHideMenu();
 };
 
-class LXQtFancyMenuPluginLibrary: public QObject, public ILXQtPanelPluginLibrary
-{
-    Q_OBJECT
-    // Q_PLUGIN_METADATA(IID "lxqt.org/Panel/PluginInterface/3.0")
-    Q_INTERFACES(ILXQtPanelPluginLibrary)
-public:
-    ILXQtPanelPlugin *instance(const ILXQtPanelPluginStartupInfo &startupInfo) const { return new LXQtFancyMenu(startupInfo);}
+class LXQtFancyMenuPluginLibrary : public QObject, public ILXQtPanelPluginLibrary {
+  Q_OBJECT
+  // Q_PLUGIN_METADATA(IID "lxqt.org/Panel/PluginInterface/3.0")
+  Q_INTERFACES(ILXQtPanelPluginLibrary)
+ public:
+  ILXQtPanelPlugin* instance(const ILXQtPanelPluginStartupInfo& startupInfo) const {
+    return new LXQtFancyMenu(startupInfo);
+  }
 };
 
 #endif

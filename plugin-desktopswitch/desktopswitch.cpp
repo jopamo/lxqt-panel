@@ -31,7 +31,6 @@
 #include <QtDebug>
 #include <QSignalMapper>
 #include <QTimer>
-#include <lxqt-globalkeys.h>
 #include <LXQt/GridLayout>
 
 #include "../panel/lxqtpanelapplication.h"
@@ -44,7 +43,6 @@
 #include "desktopswitchbutton.h"
 #include "desktopswitchconfiguration.h"
 
-static const QString DEFAULT_SHORTCUT_TEMPLATE(QStringLiteral("Control+F%1"));
 
 DesktopSwitch::DesktopSwitch(const ILXQtPanelPluginStartupInfo &startupInfo) :
     QObject(),
@@ -72,7 +70,6 @@ DesktopSwitch::DesktopSwitch(const ILXQtPanelPluginStartupInfo &startupInfo) :
     settingsChanged();
 
     onCurrentDesktopChanged(mBackend->getCurrentWorkspace(getScreen()));
-    QTimer::singleShot(0, this, SLOT(registerShortcuts()));
 
     connect(m_buttons, &QButtonGroup::idClicked, this, &DesktopSwitch::setDesktop);
 
@@ -97,44 +94,7 @@ QScreen* DesktopSwitch::getScreen() const
     return nullptr;
 }
 
-void DesktopSwitch::registerShortcuts()
-{
-    // Register shortcuts to change desktop
-    GlobalKeyShortcut::Action * gshortcut;
-    QString path;
-    QString description;
-    for (int i = 0; i < 12; ++i)
-    {
-        path = QStringLiteral("/panel/%1/desktop_%2").arg(settings()->group()).arg(i + 1);
-        description = tr("Switch to desktop %1").arg(i + 1);
 
-        gshortcut = GlobalKeyShortcut::Client::instance()->addAction(QString(), path, description, this);
-        if (nullptr != gshortcut)
-        {
-            m_keys << gshortcut;
-            connect(gshortcut, &GlobalKeyShortcut::Action::registrationFinished, this, &DesktopSwitch::shortcutRegistered);
-            connect(gshortcut, &GlobalKeyShortcut::Action::activated, m_pSignalMapper, [this] {
-                m_pSignalMapper->map();
-            });
-            m_pSignalMapper->setMapping(gshortcut, i);
-        }
-    }
-}
-
-void DesktopSwitch::shortcutRegistered()
-{
-    GlobalKeyShortcut::Action * const shortcut = qobject_cast<GlobalKeyShortcut::Action*>(sender());
-
-    disconnect(shortcut, &GlobalKeyShortcut::Action::registrationFinished, this, &DesktopSwitch::shortcutRegistered);
-
-    const int i = m_keys.indexOf(shortcut);
-    Q_ASSERT(-1 != i);
-
-    if (shortcut->shortcut().isEmpty())
-    {
-        shortcut->changeShortcut(DEFAULT_SHORTCUT_TEMPLATE.arg(i + 1));
-    }
-}
 
 void DesktopSwitch::onWindowChanged(WId id, int prop)
 {

@@ -26,7 +26,7 @@ A plugin to launch applications from the panel. By default it is empty and displ
 
 Status notifier plugin provides a notification area within the panel, that is an area where arbitrary applications can place informational icons. This is frequently used e. g. by chat or mail clients to inform about incoming messages or tools configuring the network to inform about connections. (So it's some kind of counterpart to the desktop notifications displayed by [lxqt-notificationd](https://github.com/lxqt/lxqt-notificationd)).
 The difference between the two plugins is a technical one:
-* **plugin-tray** is implementing the so-called [System Tray Protocol](https://www.freedesktop.org/wiki/Specifications/systemtray-spec). It's a specification that has been around for years but has some serious technical limitations and in particular won't work under Wayland. This plugin only translates "System Tray Protocol" entities into SNI ones, so it does not provide any visible area in panel.
+* **plugin-tray** is implementing the so-called [System Tray Protocol](https://www.freedesktop.org/wiki/Specifications/systemtray-spec). It's a specification that has been around for years but has some serious technical limitations. This plugin only translates "System Tray Protocol" entities into SNI ones, so it does not provide any visible area in panel.
 * **plugin-statusnotifier** is implementing the so-called [StatusNotifierItem (SNI)](https://www.freedesktop.org/wiki/Specifications/StatusNotifierItem) specification which can be considered a successor of the System Tray Protocol.
 
 Both plugins are maintained in parallel as not all relevant applications are compatible with SNI so far. In particular both Qt 4 and all GTK applications need some kind of wrapper to deal with it. Both plugins can be used in parallel without any issue, applications supporting both specifications will normally chose to display their icons in plugin-statusnotifier.
@@ -35,24 +35,12 @@ Both plugins are maintained in parallel as not all relevant applications are com
 
 As indicated by the name, a volume control. Technically Alsa, OSS and PulseAudio can be used as backend. The plugin itself is providing a control to adjust the main volume only but it allows for launching specific UIs of the backend in use like e. g. [pavucontrol-qt](https://github.com/lxqt/pavucontrol-qt) to adjust PulseAudio.
 
-### Wayland Backends
-
-Wayland backends enable some functionalities related to task-bar as well as desktop switching and showing desktop. Three Wayland backends are available: kwin_wayland, Wayfire and one for wlroots-compatible compositors. They are automatically detected for all seven compositors that are currently supported.
-
-In addition, the backend to load can be forced manually for any desktop specified in XDG_CURRENT_DESKTOP by a comma-separated list in ~/.config/lxqt/panel.conf:
-
-```
-[General]
-…
-preferred_backend=labwc:wlroots, niri:wlroots, xyz:my_own_backend
-…
-```
 
 ## Installation
 
 ### Compiling source code
 
-The runtime dependencies are libxtst, layershell-qt, KGuiAddons, KWindowSystem, Solid, [lxqt-menu-data](https://github.com/lxqt/lxqt-menu-data), [liblxqt](https://github.com/lxqt/liblxqt), [libdbusmenu-lxqt](https://github.com/lxqt/libdbusmenu-lxqt) and [lxqt-globalkeys](https://github.com/lxqt/lxqt-globalkeys).
+The runtime dependencies are libxtst, KGuiAddons, KWindowSystem, Solid, [lxqt-menu-data](https://github.com/lxqt/lxqt-menu-data), [liblxqt](https://github.com/lxqt/liblxqt) and [libdbusmenu-lxqt](https://github.com/lxqt/libdbusmenu-lxqt).
 Several plugins or features thereof are optional and need additional runtime dependencies. Namely these are (plugin / feature in parenthesis) Alsa library (Alsa support in plugin-volume), PulseAudio client library (PulseAudio support in plugin-volume), lm-sensors (plugin-sensors), libstatgrab (plugin-cpuload, plugin-networkmonitor), [libsysstat](https://github.com/lxqt/libsysstat) (plugin-sysstat). All of them are enabled by default and have to be disabled by CMake variables as required, see below.
 In addition CMake and [lxqt-build-tools](https://github.com/lxqt/lxqt-build-tools) are mandatory build dependencies. Git is optionally needed to pull latest VCS checkouts.
 

@@ -15,11 +15,3 @@ install(FILES
     COMPONENT Runtime
 )
 
-configure_file(lxqt-panel_wayland.desktop.in lxqt-panel_wayland.desktop @ONLY)
-
-install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/lxqt-panel_wayland.desktop"
-    DESTINATION "${LXQT_DATA_DIR}/applications"
-    RENAME "lxqt-panel.desktop"
-    COMPONENT Runtime
-)

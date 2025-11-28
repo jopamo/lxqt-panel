@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQTMAINMENUCONFIGURATION_H
 #define LXQTMAINMENUCONFIGURATION_H
 
@@ -35,44 +34,36 @@
 class QAbstractButton;
 
 namespace Ui {
-    class LXQtMainMenuConfiguration;
+class LXQtMainMenuConfiguration;
 }
 
-namespace GlobalKeyShortcut {
-    class Action;
-}
+class LXQtMainMenuConfiguration : public LXQtPanelPluginConfigDialog {
+  Q_OBJECT
 
-class LXQtMainMenuConfiguration : public LXQtPanelPluginConfigDialog
-{
-    Q_OBJECT
+ public:
+  explicit LXQtMainMenuConfiguration(PluginSettings* settings,
+                                     const QString& defaultShortcut,
+                                     QWidget* parent = nullptr);
+  ~LXQtMainMenuConfiguration();
 
-public:
-    explicit LXQtMainMenuConfiguration(PluginSettings *settings,
-                                       GlobalKeyShortcut::Action *shortcut,
-                                       const QString &defaultShortcut,
-                                       QWidget *parent = nullptr);
-    ~LXQtMainMenuConfiguration();
+ private:
+  Ui::LXQtMainMenuConfiguration* ui;
+  QString mDefaultShortcut;
+  bool mLockSettingChanges;
 
-private:
-    Ui::LXQtMainMenuConfiguration *ui;
-    QString mDefaultShortcut;
-    GlobalKeyShortcut::Action * mShortcut;
-    bool mLockSettingChanges;
-
-private slots:
-    void globalShortcutChanged(const QString &oldShortcut, const QString &newShortcut);
-    void shortcutChanged(const QString &value);
-    /*
-      Saves settings in conf file.
-    */
-    void loadSettings();
-    void textButtonChanged(const QString &value);
-    void showTextChanged(bool value);
-    void chooseIcon();
-    void chooseMenuFile();
-    void shortcutReset();
-    void customFontChanged(bool value);
-    void customFontSizeChanged(int value);
+ private slots:
+  void shortcutChanged(const QString& value);
+  /*
+    Saves settings in conf file.
+  */
+  void loadSettings();
+  void textButtonChanged(const QString& value);
+  void showTextChanged(bool value);
+  void chooseIcon();
+  void chooseMenuFile();
+  void shortcutReset();
+  void customFontChanged(bool value);
+  void customFontSizeChanged(int value);
 };
 
-#endif // LXQTMAINMENUCONFIGURATION_H
+#endif  // LXQTMAINMENUCONFIGURATION_H

@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQTFANCYMENUCONFIGURATION_H
 #define LXQTFANCYMENUCONFIGURATION_H
 
@@ -35,50 +34,44 @@
 class QAbstractButton;
 
 namespace Ui {
-    class LXQtFancyMenuConfiguration;
+class LXQtFancyMenuConfiguration;
 }
 
-namespace GlobalKeyShortcut {
-    class Action;
-}
+class LXQtFancyMenuConfiguration : public LXQtPanelPluginConfigDialog {
+  Q_OBJECT
 
-class LXQtFancyMenuConfiguration : public LXQtPanelPluginConfigDialog
-{
-    Q_OBJECT
+ public:
+  explicit LXQtFancyMenuConfiguration(PluginSettings* settings,
+                                      const QString& defaultShortcut,
+                                      QWidget* parent = nullptr);
+  ~LXQtFancyMenuConfiguration();
 
-public:
-    explicit LXQtFancyMenuConfiguration(PluginSettings *settings,
-                                       GlobalKeyShortcut::Action *shortcut,
-                                       const QString &defaultShortcut,
-                                       QWidget *parent = nullptr);
-    ~LXQtFancyMenuConfiguration();
+ private:
+  void fillButtonPositionComboBox();
+  void fillCategoryPositionComboBox();
 
-private:
-    void fillButtonPositionComboBox();
-    void fillCategoryPositionComboBox();
+ private:
+  Ui::LXQtFancyMenuConfiguration* ui;
+  QString mDefaultShortcut;
+  GlobalKeyShortcut::Action* mShortcut;
+  bool mLockSettingChanges;
 
-private:
-    Ui::LXQtFancyMenuConfiguration *ui;
-    QString mDefaultShortcut;
-    GlobalKeyShortcut::Action * mShortcut;
-    bool mLockSettingChanges;
-
-private slots:
-    void globalShortcutChanged(const QString &oldShortcut, const QString &newShortcut);
-    void shortcutChanged(const QString &value);
-    /*
-      Saves settings in conf file.
-    */
-    void loadSettings();
-    void textButtonChanged(const QString &value);
-    void showTextChanged(bool value);
-    void chooseIcon();
-    void chooseMenuFile();
-    void shortcutReset();
-    void customFontChanged(bool value);
-    void customFontSizeChanged(int value);
-    void buttonRowPositionChanged(int idx);
-    void categoryPositionChanged(int idx);
+ private slots:
+  void globalShortcutChanged(const QString& oldShortcut, const QString& newShortcut);
+  void shortcutChanged(const QString& value);
+  /*
+    Saves settings in conf file.
+  */
+  void loadSettings();
+  void textButtonChanged(const QString& value);
+  void showTextChanged(bool value);
+  void chooseIcon();
+  void chooseMenuFile();
+  void shortcutReset();
+  void customFontChanged(bool value);
+  void customFontSizeChanged(int value);
+  void buttonRowPositionChanged(int idx);
+  void categoryPositionChanged(int idx);
 };
 
-#endif // LXQTFANCYMENUCONFIGURATION_H
+#endif  // LXQTFANCYMENUCONFIGURATION_H

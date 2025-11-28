@@ -106,7 +106,6 @@ target_link_libraries(${PROJECT}
     ${LIBRARIES}
     ${QTX_LIBRARIES}
     KF6::WindowSystem
-    LayerShellQt::Interface
     ${STATIC_PLUGINS}
     lxqt-panel-backend-common
 )

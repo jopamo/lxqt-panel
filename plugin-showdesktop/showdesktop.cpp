@@ -28,7 +28,6 @@
 #include <QAction>
 #include <QDragEnterEvent>
 #include <QDragLeaveEvent>
-#include <lxqt-globalkeys.h>
 #include <XdgIcon>
 #include <LXQt/Notification>
 #include "showdesktop.h"
@@ -37,19 +36,11 @@
 #include "../panel/lxqtpanelapplication.h"
 #include "../panel/backends/ilxqtabstractwmiface.h"
 
-#define DEFAULT_SHORTCUT "Control+Alt+D"
 
 ShowDesktop::ShowDesktop(const ILXQtPanelPluginStartupInfo &startupInfo) :
     QObject(),
     ILXQtPanelPlugin(startupInfo)
 {
-    m_key = GlobalKeyShortcut::Client::instance()->addAction(QString(), QStringLiteral("/panel/%1/show_hide").arg(settings()->group()), tr("Show desktop"), this);
-    if (m_key)
-    {
-        connect(m_key, &GlobalKeyShortcut::Action::registrationFinished, this, &ShowDesktop::shortcutRegistered);
-        connect(m_key, &GlobalKeyShortcut::Action::activated,            this, &ShowDesktop::toggleShowingDesktop);
-    }
-
     QAction * act = new QAction(XdgIcon::fromTheme(QStringLiteral("user-desktop")), tr("Show Desktop"), this);
     connect(act, &QAction::triggered, this, &ShowDesktop::toggleShowingDesktop);
 
@@ -81,17 +72,6 @@ bool ShowDesktop::eventFilter(QObject * watched, QEvent * event)
     return QObject::eventFilter(watched, event);
 }
 
-void ShowDesktop::shortcutRegistered()
-{
-    if (m_key->shortcut().isEmpty())
-    {
-        m_key->changeShortcut(QStringLiteral(DEFAULT_SHORTCUT));
-        if (m_key->shortcut().isEmpty())
-        {
-            LXQt::Notification::notify(tr("Show Desktop: Global shortcut '%1' cannot be registered").arg(QStringLiteral(DEFAULT_SHORTCUT)));
-        }
-    }
-}
 
 void ShowDesktop::toggleShowingDesktop()
 {
@@ -99,5 +79,3 @@ void ShowDesktop::toggleShowingDesktop()
     auto wmBackend = a->getWMBackend();
     wmBackend->showDesktop(!wmBackend->isShowingDesktop());
 }
-
-#undef DEFAULT_SHORTCUT

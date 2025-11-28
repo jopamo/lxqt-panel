@@ -134,8 +134,6 @@ protected:
 LXQtFancyMenuWindow::LXQtFancyMenuWindow(QWidget *parent)
     : QWidget{parent, Qt::Popup}
 {
-    // Under some Wayland compositors, setting window flags in the c-tor of the base class
-    // may not be enough for a correct positioning of the popup.
     setWindowFlags(Qt::Popup);
 
     mFocusedItem = FocusedItem::SearchEdit;

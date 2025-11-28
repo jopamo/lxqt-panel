@@ -17,6 +17,6 @@ set(UIS
 )
 
 
-set(LIBRARIES ${LIBRARIES} lxqt lxqt-globalkeys)
+set(LIBRARIES ${LIBRARIES} lxqt)
 
 BUILD_LXQT_PLUGIN(${PLUGIN})

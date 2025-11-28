@@ -20,8 +20,6 @@ set(UIS
 
 set(LIBRARIES
     lxqt
-    lxqt-globalkeys
-    lxqt-globalkeys-ui
     Qt6::Xml
     Qt6::DBus
 )

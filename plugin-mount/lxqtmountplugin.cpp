@@ -30,21 +30,17 @@
 #include "lxqtmountplugin.h"
 #include "configuration.h"
 
-#include <lxqt-globalkeys.h>
-
 #include <LXQt/Notification>
 
 #include <Solid/DeviceNotifier>
 
-#define DEFAULT_EJECT_SHORTCUT "XF86Eject"
 
 LXQtMountPlugin::LXQtMountPlugin(const ILXQtPanelPluginStartupInfo &startupInfo):
     QObject(),
     ILXQtPanelPlugin(startupInfo),
     mPopup(nullptr),
     mDeviceAction(nullptr),
-    mEjectAction(nullptr),
-    mKeyEject(nullptr)
+    mEjectAction(nullptr)
 {
     mButton = new Button;
     mPopup = new Popup(this);
@@ -62,27 +58,6 @@ LXQtMountPlugin::~LXQtMountPlugin()
 }
 
 
-void LXQtMountPlugin::shortcutRegistered()
-{
-    GlobalKeyShortcut::Action * const shortcut = qobject_cast<GlobalKeyShortcut::Action*>(sender());
-
-    if (shortcut == mKeyEject)
-    {
-        disconnect(mKeyEject, &GlobalKeyShortcut::Action::registrationFinished, this, &LXQtMountPlugin::shortcutRegistered);
-
-        if (mKeyEject->shortcut().isEmpty())
-        {
-            mKeyEject->changeShortcut(QStringLiteral(DEFAULT_EJECT_SHORTCUT));
-            if (mKeyEject->shortcut().isEmpty())
-            {
-//                QString errorMsg = tr("Failed to register shortcut <b><nobr>\"%1\"</nobr></b>");
-//                errorMsg = errorMsg.arg(DEFAULT_EJECT_SHORTCUT);
-//                LXQt::Notification::notify(tr("Removable media/devices manager"), errorMsg, "media-eject");
-                LXQt::Notification::notify(tr("Removable media/devices manager: Global shortcut '%1' cannot be registered").arg(QStringLiteral(DEFAULT_EJECT_SHORTCUT)));
-            }
-        }
-    }
-}
 
 QDialog *LXQtMountPlugin::configureDialog()
 {
@@ -104,14 +79,6 @@ void LXQtMountPlugin::settingsChanged()
     QString s = settings()->value(QLatin1String(CFG_KEY_ACTION)).toString();
     DeviceAction::ActionId devActionId = DeviceAction::stringToActionId(s, DeviceAction::ActionMenu);
 
-    if (devActionId == DeviceAction::ActionMenu
-        && QGuiApplication::platformName() == QStringLiteral("wayland"))
-    {
-        // WARNING: Wayland considers the popup as a standalone window until the first input
-        // interaction happens with the panel. To avoid this inconsistent behavior, the
-        // automatic showing of the popup is disabled on Wayland.
-        devActionId = DeviceAction::ActionInfo;
-    }
 
     if (mDeviceAction == nullptr || mDeviceAction->Type() != devActionId)
     {
@@ -122,26 +89,12 @@ void LXQtMountPlugin::settingsChanged()
         connect(mPopup, &Popup::deviceRemoved, mDeviceAction, &DeviceAction::onDeviceRemoved);
     }
 
-    if(mKeyEject == nullptr)
-    {
-        mKeyEject = GlobalKeyShortcut::Client::instance()->addAction(QString(), QStringLiteral("/panel/%1/eject").arg(settings()->group()), tr("Eject removable media"), this);
-        if(mKeyEject)
-        {
-             connect(mKeyEject, &GlobalKeyShortcut::Action::registrationFinished, this, &LXQtMountPlugin::shortcutRegistered);
-        }
-    }
-
     s = settings()->value(QLatin1String(CFG_EJECT_ACTION)).toString();
     EjectAction::ActionId ejActionId = EjectAction::stringToActionId(s, EjectAction::ActionNothing);
 
-    if ((mEjectAction == nullptr || mEjectAction->Type() != ejActionId) && mKeyEject)
+    if (mEjectAction == nullptr || mEjectAction->Type() != ejActionId)
     {
-         if(mEjectAction)
-             mKeyEject->disconnect(mEjectAction);
-
          delete mEjectAction;
          mEjectAction = EjectAction::create(ejActionId, this, this);
-
-         connect(mKeyEject, &GlobalKeyShortcut::Action::activated, mEjectAction, &EjectAction::onEjectPressed);
     }
 }

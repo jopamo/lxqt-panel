@@ -150,19 +150,13 @@ void ColorPickerWidget::mouseReleaseEvent(QMouseEvent *event)
 
     QColor col;
 
-    if (auto *x11Application = qGuiApp->nativeInterface<QNativeInterface::QX11Application>())
-    {
-        WId id = XDefaultRootWindow(x11Application->display());
-        QPoint point = event->globalPosition().toPoint();
-        QPixmap pixmap = qApp->primaryScreen()->grabWindow(id, point.x(), point.y(), 1, 1);
+    auto *x11Application = qGuiApp->nativeInterface<QNativeInterface::QX11Application>();
+    WId id = XDefaultRootWindow(x11Application->display());
+    QPoint point = event->globalPosition().toPoint();
+    QPixmap pixmap = qApp->primaryScreen()->grabWindow(id, point.x(), point.y(), 1, 1);
 
-        QImage img = pixmap.toImage();
-        col = QColor(img.pixel(0, 0));
-    }
-    else
-    {
-        qWarning() << "WAYLAND does not support grabbing windows";
-    }
+    QImage img = pixmap.toImage();
+    col = QColor(img.pixel(0, 0));
 
     mColorButton->setColor(col);
     paste(col.name());

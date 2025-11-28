@@ -44,7 +44,6 @@
 #include "../panel/ilxqtpanelplugin.h"
 #include "../panel/pluginsettings.h"
 
-#include <lxqt-globalkeys.h>
 #include <LXQt/GridLayout>
 
 #include "lxqttaskgroup.h"
@@ -102,7 +101,6 @@ LXQtTaskBar::LXQtTaskBar(ILXQtPanelPlugin *plugin, QWidget *parent) :
     setAcceptDrops(true);
 
     connect(mSignalMapper, &QSignalMapper::mappedInt, this, &LXQtTaskBar::activateTask);
-    QTimer::singleShot(0, this, &LXQtTaskBar::registerShortcuts);
 
     connect(mBackend, &ILXQtAbstractWMInterface::windowPropertyChanged, this, &LXQtTaskBar::onWindowChanged);
     connect(mBackend, &ILXQtAbstractWMInterface::windowAdded, this, &LXQtTaskBar::onWindowAdded);
@@ -632,51 +630,6 @@ void LXQtTaskBar::changeEvent(QEvent* event)
     QFrame::changeEvent(event);
 }
 
-/************************************************
-
- ************************************************/
-void LXQtTaskBar::registerShortcuts()
-{
-    // Register shortcuts to switch to the task
-    // mPlaceHolder is always at position 0
-    // tasks are at positions 1..10
-    GlobalKeyShortcut::Action * gshortcut;
-    QString path;
-    QString description;
-    for (int i = 1; i <= 10; ++i)
-    {
-        path = QStringLiteral("/panel/%1/task_%2").arg(mPlugin->settings()->group()).arg(i);
-        description = tr("Activate task %1").arg(i);
-
-        gshortcut = GlobalKeyShortcut::Client::instance()->addAction(QLatin1String(""), path, description, this);
-
-        if (nullptr != gshortcut)
-        {
-            mKeys << gshortcut;
-            connect(gshortcut, &GlobalKeyShortcut::Action::registrationFinished, this, &LXQtTaskBar::shortcutRegistered);
-            connect(gshortcut, &GlobalKeyShortcut::Action::activated, mSignalMapper, static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-            mSignalMapper->setMapping(gshortcut, i);
-        }
-    }
-}
-
-void LXQtTaskBar::shortcutRegistered()
-{
-    GlobalKeyShortcut::Action * const shortcut = qobject_cast<GlobalKeyShortcut::Action*>(sender());
-
-    disconnect(shortcut, &GlobalKeyShortcut::Action::registrationFinished, this, &LXQtTaskBar::shortcutRegistered);
-
-    const int i = mKeys.indexOf(shortcut);
-    Q_ASSERT(-1 != i);
-
-    if (shortcut->shortcut().isEmpty())
-    {
-        // Shortcuts come in order they were registered
-        // starting from index 0
-        const int key = (i + 1) % 10;
-        shortcut->changeShortcut(QStringLiteral("Meta+%1").arg(key));
-    }
-}
 
 void LXQtTaskBar::activateTask(int pos)
 {

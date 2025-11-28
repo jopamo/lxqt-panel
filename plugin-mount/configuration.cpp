@@ -57,12 +57,7 @@ Configuration::Configuration(PluginSettings *settings, QWidget *parent) :
     ui->ejectPressedCombo->setSizePolicy(sp);
 
     // Fill combo boxes
-    if (QGuiApplication::platformName() != QStringLiteral("wayland"))
-    {
-        // WARNING: The popup menu does not work consistently under Wayland.
-        // See LXQtMountPlugin::settingsChanged() for an explanation.
-        ui->devAddedCombo->addItem(tr("Popup menu"), QLatin1String(ACT_SHOW_MENU));
-    }
+    ui->devAddedCombo->addItem(tr("Popup menu"), QLatin1String(ACT_SHOW_MENU));
     ui->devAddedCombo->addItem(tr("Show info"),  QLatin1String(ACT_SHOW_INFO));
     ui->devAddedCombo->addItem(tr("Do nothing"), QLatin1String(ACT_NOTHING));
 
@@ -88,13 +83,11 @@ void Configuration::loadSettings()
 {
     mLockSettingChanges = true;
 
-    int defaultIndex = QGuiApplication::platformName() == QStringLiteral("wayland") ? 0 : 1;
-
     QVariant value = settings().value(QLatin1String(CFG_KEY_ACTION), QLatin1String(ACT_SHOW_INFO));
-    setComboboxIndexByData(ui->devAddedCombo, value, defaultIndex);
+    setComboboxIndexByData(ui->devAddedCombo, value, 1);
 
     value = settings().value(QLatin1String(CFG_EJECT_ACTION), QLatin1String(ACT_NOTHING));
-    setComboboxIndexByData(ui->ejectPressedCombo, value, defaultIndex);
+    setComboboxIndexByData(ui->ejectPressedCombo, value, 0);
 
     mLockSettingChanges = false;
 }

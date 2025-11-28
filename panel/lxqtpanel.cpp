@@ -58,7 +58,6 @@
 #include "backends/ilxqtabstractwmiface.h"
 
 
-#include <LayerShellQt/Window>
 
 // Turn on this to show the time required to load each plugin during startup
 // #define DEBUG_PLUGIN_LOADTIME
@@ -141,7 +140,6 @@ LXQtPanel::LXQtPanel(const QString &configGroup, LXQt::Settings *settings, QWidg
     mPosition(ILXQtPanel::PositionBottom),
     mScreenNum(0), //whatever (avoid conditional on uninitialized value)
     mActualScreenNum(0),
-    mWaylandScreenNum(-1), // not set yet (on Wayland)
     mHidable(false),
     mVisibleMargin(true),
     mHideOnOverlap(false),
@@ -218,11 +216,8 @@ LXQtPanel::LXQtPanel(const QString &configGroup, LXQt::Settings *settings, QWidg
     connect(qApp, &QApplication::screenRemoved, this, [this] (QScreen* oldScreen) {
         disconnect(oldScreen, &QScreen::virtualGeometryChanged, this, &LXQtPanel::ensureVisible);
         disconnect(oldScreen, &QScreen::geometryChanged, this, &LXQtPanel::ensureVisible);
-        if (QGuiApplication::platformName() != QStringLiteral("wayland"))
-        {
-            // wait until the screen is really removed because it may contain the panel
-            QTimer::singleShot(0, this, &LXQtPanel::ensureVisible);
-        }
+        // wait until the screen is really removed because it may contain the panel
+        QTimer::singleShot(0, this, &LXQtPanel::ensureVisible);
     });
     const auto screens = QApplication::screens();
     for(const auto& screen : screens)
@@ -243,46 +238,6 @@ LXQtPanel::LXQtPanel(const QString &configGroup, LXQt::Settings *settings, QWidg
 
     loadPlugins();
 
-    if(qGuiApp->nativeInterface<QNativeInterface::QWaylandApplication>())
-    {
-        // Create backing QWindow for LayerShellQt integration
-        create();
-
-        if(!windowHandle())
-        {
-            qWarning() << "LXQtPanel: could not create QWindow for LayerShellQt integration.";
-        }
-        else
-        {
-            // Init Layer Shell (Must be done before showing widget)
-            mLayerWindow = LayerShellQt::Window::get(windowHandle());
-            mLayerWindow->setLayer(LayerShellQt::Window::LayerTop);
-
-            mLayerWindow->setScope(QStringLiteral("dock"));
-
-            LayerShellQt::Window::Anchors anchors;
-            anchors.setFlag(LayerShellQt::Window::AnchorLeft);
-            anchors.setFlag(LayerShellQt::Window::AnchorBottom);
-            anchors.setFlag(LayerShellQt::Window::AnchorRight);
-            mLayerWindow->setAnchors(anchors);
-
-#if (QT_VERSION >= QT_VERSION_CHECK(6,8,0))
-            // WARNING: Only the following desktops are known to give the focus to child popups
-            // when the panel does not accept focus.
-            const QRegularExpression desktops(QStringLiteral("(?i)(kde|kwin|wayfire|hyprland)"));
-
-            if (desktops.match(qEnvironmentVariable("XDG_CURRENT_DESKTOP")).hasMatch())
-                mLayerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
-            else
-#endif
-                mLayerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityOnDemand);
-
-            mLayerWindow->setCloseOnDismissed(false);
-
-            mLayerWindow->setExclusiveEdge(LayerShellQt::Window::AnchorBottom);
-            mLayerWindow->setExclusiveZone(height());
-        }
-    }
 
     // NOTE: Some (X11) WMs may need the geometry to be set before QWidget::show().
     setPanelGeometry();
@@ -330,9 +285,7 @@ LXQtPanel::LXQtPanel(const QString &configGroup, LXQt::Settings *settings, QWidg
         if (mHidable && mHideOnOverlap
             // when a window is moved, resized, shaded, or minimized
             && (prop == int(LXQtTaskBarWindowProperty::Geometry)
-                || prop == int(LXQtTaskBarWindowProperty::State)
-                // on Wayland, workspace change is not seen as geometry change
-                || (mLayerWindow && prop == int(LXQtTaskBarWindowProperty::Workspace))))
+                || prop == int(LXQtTaskBarWindowProperty::State)))
         {
             if (!mHidden)
             {
@@ -378,37 +331,9 @@ void LXQtPanel::readSettings()
 
     const auto screens = QApplication::screens();
     mScreenNum = std::clamp<int>(mSettings->value(QStringLiteral(CFG_KEY_SCREENNUM), 0).toInt(), 0, screens.size() - 1);
-    if (QGuiApplication::platformName() == QStringLiteral("wayland"))
-    {
-        // On Wayland, first check the screen name, and if it does not exist, add it.
-        mScreenName = mSettings->value(QStringLiteral(CFG_KEY_SCREENNAME)).toString();
-        mWaylandScreenNum = mScreenNum;
-        if (mScreenName.isEmpty())
-        {
-            mScreenName = screens.at(mWaylandScreenNum)->name();
-            QTimer::singleShot(0, this, [this] { saveSettings(true); }); // save the found name
-        }
-        else
-        {
-            for (int i = 0; i < screens.size(); ++i)
-            {
-                if (screens.at(i)->name() == mScreenName)
-                {
-                    mWaylandScreenNum = i;
-                    break;
-                }
-            }
-        }
-        setPosition(mWaylandScreenNum,
-                    strToPosition(mSettings->value(QStringLiteral(CFG_KEY_POSITION)).toString(), PositionBottom),
-                    false);
-    }
-    else
-    {
-        setPosition(mScreenNum,
-                    strToPosition(mSettings->value(QStringLiteral(CFG_KEY_POSITION)).toString(), PositionBottom),
-                    false);
-    }
+    setPosition(mScreenNum,
+                strToPosition(mSettings->value(QStringLiteral(CFG_KEY_POSITION)).toString(), PositionBottom),
+                false);
 
     setAlignment(Alignment(mSettings->value(QStringLiteral(CFG_KEY_ALIGNMENT), mAlignment).toInt()), false);
 
@@ -457,16 +382,6 @@ void LXQtPanel::saveSettings(bool later)
     mSettings->setValue(QStringLiteral(CFG_KEY_PERCENT), mLengthInPercents);
 
     mSettings->setValue(QStringLiteral(CFG_KEY_SCREENNUM), mScreenNum);
-    if (mWaylandScreenNum >= 0) // on Wayland
-    {
-        if (mScreenName.isEmpty())
-        {
-            const auto screens = QApplication::screens();
-            if (mWaylandScreenNum < screens.size())
-                mScreenName = screens.at(mWaylandScreenNum)->name();
-        }
-        mSettings->setValue(QStringLiteral(CFG_KEY_SCREENNAME), mScreenName);
-    }
     mSettings->setValue(QStringLiteral(CFG_KEY_POSITION), positionToStr(mPosition));
 
     mSettings->setValue(QStringLiteral(CFG_KEY_ALIGNMENT), mAlignment);
@@ -494,33 +409,10 @@ void LXQtPanel::saveSettings(bool later)
  ************************************************/
 void LXQtPanel::ensureVisible()
 {
-    if (!mScreenName.isEmpty() && QGuiApplication::platformName() == QStringLiteral("wayland"))
-    {
-        // Find the Wayland screen number based on the screen name.
-        mWaylandScreenNum = -1; // first unset it
-        const auto screens = QApplication::screens();
-        for (int i = 0; i < screens.size(); ++i)
-        {
-            if (screens.at(i)->name() == mScreenName)
-            {
-                mWaylandScreenNum = i;
-                break;
-            }
-        }
-        if (mWaylandScreenNum < 0)
-            return;
-        if (!canPlacedOn(mWaylandScreenNum, mPosition))
-            setPosition(findAvailableScreen(mPosition), mPosition, false);
-        else
-            mActualScreenNum = mWaylandScreenNum;
-    }
+    if (!canPlacedOn(mScreenNum, mPosition))
+        setPosition(findAvailableScreen(mPosition), mPosition, false);
     else
-    {
-        if (!canPlacedOn(mScreenNum, mPosition))
-            setPosition(findAvailableScreen(mPosition), mPosition, false);
-        else
-            mActualScreenNum = mScreenNum;
-    }
+        mActualScreenNum = mScreenNum;
 
     // the screen size might be changed
     realign();
@@ -630,7 +522,6 @@ void LXQtPanel::setPanelGeometry(bool animate)
     const QRect currentScreen = screens.at(mActualScreenNum)->geometry();
 
     QRect rect;
-    LayerShellQt::Window::Anchors anchors;
 
     if (isHorizontal())
     {
@@ -652,7 +543,6 @@ void LXQtPanel::setPanelGeometry(bool animate)
         switch (mAlignment)
         {
         case LXQtPanel::AlignmentLeft:
-            anchors.setFlag(LayerShellQt::Window::AnchorLeft);
             rect.moveLeft(currentScreen.left());
             break;
 
@@ -661,23 +551,13 @@ void LXQtPanel::setPanelGeometry(bool animate)
             break;
 
         case LXQtPanel::AlignmentRight:
-            anchors.setFlag(LayerShellQt::Window::AnchorRight);
             rect.moveRight(currentScreen.right());
             break;
-        }
-
-        if(lengthInPercents() && mLength == 100)
-        {
-            //Fill all available width
-            anchors.setFlag(LayerShellQt::Window::AnchorLeft);
-            anchors.setFlag(LayerShellQt::Window::AnchorRight);
         }
 
         // Vert .......................
         if (mPosition == ILXQtPanel::PositionTop)
         {
-            anchors.setFlag(LayerShellQt::Window::AnchorTop);
-
             if (mHidden)
                 rect.moveBottom(currentScreen.top() + PANEL_HIDE_SIZE - 1);
             else
@@ -685,8 +565,6 @@ void LXQtPanel::setPanelGeometry(bool animate)
         }
         else
         {
-            anchors.setFlag(LayerShellQt::Window::AnchorBottom);
-
             if (mHidden)
                 rect.moveTop(currentScreen.bottom() - PANEL_HIDE_SIZE + 1);
             else
@@ -713,7 +591,6 @@ void LXQtPanel::setPanelGeometry(bool animate)
         switch (mAlignment)
         {
         case LXQtPanel::AlignmentLeft:
-            anchors.setFlag(LayerShellQt::Window::AnchorTop);
             rect.moveTop(currentScreen.top());
             break;
 
@@ -722,23 +599,13 @@ void LXQtPanel::setPanelGeometry(bool animate)
             break;
 
         case LXQtPanel::AlignmentRight:
-            anchors.setFlag(LayerShellQt::Window::AnchorBottom);
             rect.moveBottom(currentScreen.bottom());
             break;
-        }
-
-        if(lengthInPercents() && mLength == 100)
-        {
-            //Fill all available width
-            anchors.setFlag(LayerShellQt::Window::AnchorTop);
-            anchors.setFlag(LayerShellQt::Window::AnchorBottom);
         }
 
         // Horiz ......................
         if (mPosition == ILXQtPanel::PositionLeft)
         {
-            anchors.setFlag(LayerShellQt::Window::AnchorLeft);
-
             if (mHidden)
                 rect.moveRight(currentScreen.left() + PANEL_HIDE_SIZE - 1);
             else
@@ -746,8 +613,6 @@ void LXQtPanel::setPanelGeometry(bool animate)
         }
         else
         {
-            anchors.setFlag(LayerShellQt::Window::AnchorRight);
-
             if (mHidden)
                 rect.moveLeft(currentScreen.right() - PANEL_HIDE_SIZE + 1);
             else
@@ -756,68 +621,7 @@ void LXQtPanel::setPanelGeometry(bool animate)
     }
 
     if (!mHidden || !mGeometry.isValid()) mGeometry = rect;
-    if (mLayerWindow)
-    {
-        // NOTE: On Wayland, QVariantAnimation is used to set appropriate negative margins.
-        auto screen = screens.at(mActualScreenNum);
-        if (screen != windowHandle()->screen())
-        {
-            // WARNING: An already visible window is not shown on a new screen under Wayland.
-            if (isVisible())
-            {
-                hide();
-                QTimer::singleShot(0, this, &QWidget::show);
-            }
-            windowHandle()->setScreen(screen);
-        }
-        mLayerWindow->setAnchors(anchors);
-        setFixedSize(rect.size());
-        if (animate)
-        {
-            if (mWAnimation == nullptr)
-            {
-                mWAnimation = new QVariantAnimation(this);
-                mWAnimation->setEasingCurve(QEasingCurve::Linear);
-                mWAnimation->setStartValue(static_cast<qreal>(0));
-                mWAnimation->setEndValue(static_cast<qreal>(1));
-                connect(mWAnimation, &QVariantAnimation::finished, this, [this] {
-                    if (mHidden)
-                    {
-                        setMargins();
-                        // "setWindowOpacity()" does not work on Wayland
-                        if (!mVisibleMargin)
-                            LXQtPanelWidget->setVisible(false);
-                    }
-                });
-                connect(mWAnimation, &QVariantAnimation::valueChanged, this,
-                        [this] (const QVariant &value) {
-                    QMargins margins = layerWindowMargins();
-                    QMarginsF m((mWAnimation->endValue().toReal() - value.toReal())
-                                * mLayerWindow->margins().toMarginsF()
-                                + value.toReal() * margins.toMarginsF());
-                    mLayerWindow->setMargins(m.toMargins());
-                    windowHandle()->requestUpdate();
-                });
-            }
-            mWAnimation->setDuration(mAnimationTime);
-            if (!mHidden)
-            {
-                setMargins();
-                if (!mVisibleMargin)
-                    LXQtPanelWidget->setVisible(true);
-            }
-            mWAnimation->start();
-        }
-        else
-        {
-            if (!mVisibleMargin)
-                LXQtPanelWidget->setVisible(!mHidden);
-            setMargins();
-            mLayerWindow->setMargins(layerWindowMargins());
-            windowHandle()->requestUpdate();
-        }
-    }
-    else if (rect != geometry())
+    if (rect != geometry())
     {
         setFixedSize(rect.size());
         if (animate)
@@ -964,46 +768,6 @@ void LXQtPanel::updateWmStrut()
                                          );
         }
     }
-    else if(mLayerWindow && qGuiApp->nativeInterface<QNativeInterface::QWaylandApplication>())
-    {
-        if (mReserveSpace
-            // NOTE: For some reason, no space is reserved with a negative layer margin.
-            // However, there is no reason to reserve space for a hiding panel on Wayland.
-            && !mHidable)
-        {
-            LayerShellQt::Window::Anchor edge = LayerShellQt::Window::AnchorBottom;
-
-            switch (mPosition)
-            {
-            case LXQtPanel::PositionTop:
-                edge = LayerShellQt::Window::AnchorTop;
-                break;
-
-            case LXQtPanel::PositionBottom:
-                edge = LayerShellQt::Window::AnchorBottom;
-                break;
-
-            case LXQtPanel::PositionLeft:
-                edge = LayerShellQt::Window::AnchorLeft;
-                break;
-
-            case LXQtPanel::PositionRight:
-                edge = LayerShellQt::Window::AnchorRight;
-                break;
-            }
-
-            mLayerWindow->setExclusiveEdge(edge);
-            mLayerWindow->setExclusiveZone(getReserveDimension());
-        }
-        else
-        {
-            mLayerWindow->setExclusiveEdge(LayerShellQt::Window::AnchorNone);
-            mLayerWindow->setExclusiveZone(0);
-        }
-
-        // Make LayerShellQt apply changes immediatly
-        windowHandle()->requestUpdate();
-    }
 }
 
 
@@ -1080,8 +844,7 @@ bool LXQtPanel::canPlacedOn(int screenNum, LXQtPanel::Position position)
  ************************************************/
 int LXQtPanel::findAvailableScreen(LXQtPanel::Position position)
 {
-    int current = (mWaylandScreenNum >= 0 ? mWaylandScreenNum // on Wayland
-                                          : mScreenNum);
+    int current = mScreenNum;
 
     for (int i = current; i < QApplication::screens().size(); ++i)
         if (canPlacedOn(i, position))
@@ -1250,8 +1013,7 @@ void LXQtPanel::setLength(int length, bool inPercents, bool save)
  ************************************************/
 void LXQtPanel::setPosition(int screen, ILXQtPanel::Position position, bool save)
 {
-    if ((mWaylandScreenNum >= 0 ? mWaylandScreenNum // on Wayland
-                                : mScreenNum) == screen
+    if (mScreenNum == screen
         && mPosition == position)
         return;
 
@@ -1261,13 +1023,7 @@ void LXQtPanel::setPosition(int screen, ILXQtPanel::Position position, bool save
 
     if (save)
     {
-        if (mWaylandScreenNum >= 0)
-        {
-            mWaylandScreenNum = screen;
-            mScreenName = qApp->screens().at(screen)->name();
-        }
-        else
-            mScreenNum = screen;
+        mScreenNum = screen;
         saveSettings(true);
     }
 
@@ -1275,8 +1031,7 @@ void LXQtPanel::setPosition(int screen, ILXQtPanel::Position position, bool save
     // so we had better use it. However, without this, our program should still work
     // as long as XRandR is used. Since XRandR combined all screens into a large virtual desktop
     // every screen and their virtual siblings are actually on the same virtual desktop.
-    // So things still work if we don't set the screen correctly, but this is not the case
-    // for other backends, such as the upcoming wayland support. Hence it's better to set it.
+    // So things still work if we don't set the screen correctly.
     if(windowHandle())
     {
         // QScreen* newScreen = qApp->screens().at(screen);
@@ -1290,15 +1045,6 @@ void LXQtPanel::setPosition(int screen, ILXQtPanel::Position position, bool save
         // this corner case triggers #40681.)
         // When using other kind of multihead settings, such as Xinerama, this might be different and
         // unless Qt developers can fix their bug, we have no way to workaround that.
-        if (mLayerWindow)
-        {
-            // WARNING: An already visible window is not shown on a new screen under Wayland.
-            if (isVisible())
-            {
-                hide();
-                QTimer::singleShot(0, this, &QWidget::show);
-            }
-        }
         windowHandle()->setScreen(qApp->screens().at(screen));
     }
 
@@ -1453,21 +1199,6 @@ bool LXQtPanel::event(QEvent *event)
         hidePanel();
         break;
 
-#if (QT_VERSION >= QT_VERSION_CHECK(6,8,0))
-    case QEvent::Paint:
-    // NOTE: Starting from Qt 6.8.0, random artifacts are possible in
-    // translucent windows under Wayland. This a workaround.
-    if (QGuiApplication::platformName() == QStringLiteral("wayland"))
-    {
-        QPainter p(this);
-        p.setClipRegion(static_cast<QPaintEvent*>(event)->region());
-        auto origMode = p.compositionMode();
-        p.setCompositionMode(QPainter::CompositionMode_Clear);
-        p.fillRect(rect(), Qt::transparent);
-        p.setCompositionMode(origMode);
-    }
-    break;
-#endif
 
     default:
         break;
@@ -1577,9 +1308,7 @@ Plugin* LXQtPanel::findPlugin(const ILXQtPanelPlugin* iPlugin) const
  ************************************************/
 QRect LXQtPanel::calculatePopupWindowPos(QPoint const & absolutePos, QSize const & windowSize) const
 {
-    // Using of anchors makes coordinates be absolute under some Wayland compositors.
-    // Therefore, to cover both X11 and Wayland, we first use the local coordinates
-    // and then map them to the global coordinates.
+    // We use local coordinates and then map them to global coordinates.
     QPoint localPos = mapFromGlobal(absolutePos);
     int x = localPos.x(), y = localPos.y();
 
@@ -1603,9 +1332,6 @@ QRect LXQtPanel::calculatePopupWindowPos(QPoint const & absolutePos, QSize const
     }
 
     QRect res(mapToGlobal(QPoint(x, y)), windowSize);
-
-    if (qGuiApp->nativeInterface<QNativeInterface::QWaylandApplication>())
-        return res;
 
     QRect panelScreen;
     const auto screens = QApplication::screens();
@@ -1732,7 +1458,6 @@ bool LXQtPanel::isPanelOverlapped() const
 {
     LXQtPanelApplication *a = reinterpret_cast<LXQtPanelApplication*>(qApp);
 
-    //TODO: calculate geometry on wayland
     QRect area = mGeometry;
     return a->getWMBackend()->isAreaOverlapped(area);
 }

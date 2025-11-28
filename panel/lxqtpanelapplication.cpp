@@ -44,46 +44,6 @@
 
 #include "backends/lxqtdummywmbackend.h"
 
-static inline QMap<QString, int> getBackendScoreMap( QString compositor )
-{
-    QStringList dirs;
-    dirs << QProcessEnvironment::systemEnvironment().value(QStringLiteral("LXQTPANEL_PLUGIN_PATH")).split(QStringLiteral(":"));
-    dirs << QStringLiteral(PLUGIN_DIR);
-
-    QMap<QString, int> backendScoreMap;
-
-    for(const QString& dir : std::as_const(dirs))
-    {
-        QDir backendsDir(dir);
-        if ( QFile::exists( dir + QStringLiteral("/backend") ) ) {
-            backendsDir.cd(QLatin1String("backend"));
-        }
-
-        const auto entryList = backendsDir.entryInfoList(QStringList() << QStringLiteral("*.so"), QDir::Files|QDir::System|QDir::Readable);
-        for(QFileInfo info: entryList)
-        {
-            QPluginLoader loader(info.absoluteFilePath());
-            if(!loader.load())
-            {
-                QString err = loader.errorString();
-                qWarning() << "Backend error:" << err;
-            }
-
-            QObject *plugin = loader.instance();
-            if(!plugin)
-                continue;
-
-            ILXQtWMBackendLibrary *backend = qobject_cast<ILXQtWMBackendLibrary *>(plugin);
-            if(backend)
-            {
-                backendScoreMap[ info.fileName() ] = backend->getBackendScore( compositor );
-            }
-            loader.unload();
-        }
-    }
-
-    return backendScoreMap;
-}
 
 static inline QString getBackendFilePath( QString name )
 {
@@ -190,84 +150,8 @@ ILXQtPanel::Position LXQtPanelApplicationPrivate::computeNewPanelPosition(const 
 
 void LXQtPanelApplicationPrivate::loadBackend()
 {
-    /**
-     * 1. Get the XDG_CURRENT_DESKTOP. It's a colon separate list.
-     * 2. Get the preferredBackend. It's a comma separated list.
-     * 3. First attempt to match some value in XDG_CURRENT_DESKTOP with any value in preferredBackend.
-     * 4. If it matches, end of story. Else, we attempt to deduce the backend based on XDG_CURRENT_DESKTOP:
-     *    a. X11 -> xcb
-     *    b. kwin_wayland -> plasma
-     *    c. wayfire -> wayfire
-     *    d. wayland -> wlroots
-     *    e. other -> dummy
-     */
-
-    // Get and split XDG_CURRENT_DESKTOP.
-    QStringList xdgCurrentDesktops = qEnvironmentVariable( "XDG_CURRENT_DESKTOP" ).split( QStringLiteral(":") );
-
-    // Get and split XDG_SESSION_TYPE.
-    QString xdgSessionType = qEnvironmentVariable( "XDG_SESSION_TYPE" );
-
-    // Get the preferred backends
-    QStringList preferredBackends = mSettings->value(QStringLiteral("preferred_backend")).toStringList();
-
-    // The preferred backend
-    QString preferredBackend;
-
-	for ( QString xdgCurrentDesktop: xdgCurrentDesktops )
-	{
-		for ( QString backend: preferredBackends )
-		{
-			QStringList parts = backend.split(QStringLiteral(":"));
-            // Invalid format
-            if (parts.count() != 2)
-            {
-                continue;
-            }
-
-			if (parts[0].compare(xdgCurrentDesktop, Qt::CaseInsensitive) == 0 && testBackend(parts[1]))
-			{
-				preferredBackend = parts[1];
-				break;
-			}
-		}
-	}
-
-    /** No special considerations. Attempt auto-detection of the platform */
-    if ( preferredBackend.isEmpty() ) {
-        qDebug() << "No user preferences available. Attempting auto-detection.";
-
-        // It's XCB/X11
-        if ( xdgSessionType == QStringLiteral("x11") ) {
-            preferredBackend = QStringLiteral("xcb");
-        }
-
-        // It's wayland
-        else {
-            int bestScore = 0;
-            for ( QString xdgCurrentDesktop: xdgCurrentDesktops )
-        	{
-                QMap<QString, int> backendScoreMap = getBackendScoreMap( xdgCurrentDesktop );
-                for( QString backend: backendScoreMap.keys() )
-                {
-                    if ( backendScoreMap[ backend ] > bestScore )
-                    {
-                        bestScore = backendScoreMap[ backend ];
-                        // No need to call testBackend().
-                        // We can be sure the plugin can be loaded.
-                        // Because we have a score.
-                        preferredBackend = backend;
-                    }
-                }
-            }
-        }
-    }
-
-    if (preferredBackend.isEmpty() && xdgCurrentDesktops.contains(QStringLiteral("wlroots"), Qt::CaseInsensitive))
-    {
-        qDebug() << "Specialized backend unavailable. Falling back to generic wlroots";
-        preferredBackend = QStringLiteral("wlroots");
-    }
+    // Only X11/XCB backend is supported
+    QString preferredBackend = QStringLiteral("xcb");
 
     QPluginLoader loader;
 
@@ -354,19 +238,12 @@ LXQtPanelApplication::LXQtPanelApplication(int& argc, char** argv)
 
     const auto allScreens = screens();
 
-    if (QGuiApplication::platformName() != QStringLiteral("wayland"))
+    // This is a workaround for Qt 5 bug #40681.
+    for(QScreen* screen : allScreens)
     {
-        // This is a workaround for Qt 5 bug #40681.
-        for(QScreen* screen : allScreens)
-        {
-            connect(screen, &QScreen::destroyed, this, &LXQtPanelApplication::screenDestroyed);
-        }
-        connect(this, &QGuiApplication::screenAdded, this, &LXQtPanelApplication::handleScreenAdded);
+        connect(screen, &QScreen::destroyed, this, &LXQtPanelApplication::screenDestroyed);
     }
-    else
-    {
-        connect(this, &QGuiApplication::screenAdded, this, &LXQtPanelApplication::handleWaylandScreenAdded);
-    }
+    connect(this, &QGuiApplication::screenAdded, this, &LXQtPanelApplication::handleScreenAdded);
 
     connect(this, &QCoreApplication::aboutToQuit, this, &LXQtPanelApplication::cleanup);
 
@@ -389,35 +266,8 @@ LXQtPanelApplication::LXQtPanelApplication(int& argc, char** argv)
 
     for (const QString& i : std::as_const(panels))
     {
-        if (QGuiApplication::platformName() == QStringLiteral("wayland"))
-        {
-            // On Wayland, add a panel that has screen name only if its screen exists.
-            bool found = false;
-            d->mSettings->beginGroup(i);
-            auto screenName = d->mSettings->value(QStringLiteral(CFG_KEY_SCREENNAME)).toString();
-            d->mSettings->endGroup();
-            if (screenName.isEmpty())
-                found = true; // add the panel, anyway
-            else
-            {
-                for (const auto& screen : allScreens)
-                {
-                    if (screen->name() == screenName)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            if (!found)
-                continue;
-        }
-
         addPanel(i);
     }
-    // if no panel can be added on Wayland, forcefully add the first one
-    if (mPanels.isEmpty())
-        addPanel(panels.at(0));
 }
 
 LXQtPanelApplication::~LXQtPanelApplication()
@@ -469,33 +319,6 @@ void LXQtPanelApplication::handleScreenAdded(QScreen* newScreen)
     connect(newScreen, &QScreen::destroyed, this, &LXQtPanelApplication::screenDestroyed);
 }
 
-void LXQtPanelApplication::handleWaylandScreenAdded(QScreen* newScreen)
-{
-    Q_D(LXQtPanelApplication);
-
-    const QStringList names = d->mSettings->value(QStringLiteral("panels")).toStringList();
-    for (const QString& name : names)
-    {
-        d->mSettings->beginGroup(name);
-        auto screenName = d->mSettings->value(QStringLiteral(CFG_KEY_SCREENNAME)).toString();
-        d->mSettings->endGroup();
-        if (screenName == newScreen->name())
-        {
-            bool alreadyExists = false;
-            for (const auto& panel : std::as_const(mPanels))
-            {
-                if (panel->name() == name)
-                { // the panel already exists (and is hidden)
-                    alreadyExists = true;
-                    break;
-                }
-            }
-            if (alreadyExists)
-                continue;
-            addPanel(name);
-        }
-    }
-}
 
 void LXQtPanelApplication::reloadPanelsAsNeeded()
 {

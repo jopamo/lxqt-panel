@@ -35,6 +35,6 @@ set(UIS
 )
 
 find_package(KF6Solid ${QT_MINIMUM_VERSION} REQUIRED)
-set(LIBRARIES Qt6Xdg lxqt-globalkeys KF6::Solid)
+set(LIBRARIES Qt6Xdg KF6::Solid)
 
 BUILD_LXQT_PLUGIN(${PLUGIN})

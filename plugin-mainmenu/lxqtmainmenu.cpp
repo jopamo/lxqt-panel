@@ -38,7 +38,6 @@
 #include <QResizeEvent>
 #include <QWidgetAction>
 #include <QLineEdit>
-#include <lxqt-globalkeys.h>
 #include <algorithm> // for find_if()
 #include <QApplication>
 #include <QMetaEnum>
@@ -115,27 +114,7 @@ LXQtMainMenu::LXQtMainMenu(const ILXQtPanelPluginStartupInfo &startupInfo):
         settingsChanged();
     });
 
-    mShortcut = GlobalKeyShortcut::Client::instance()->addAction(QString{}, QStringLiteral("/panel/%1/show_hide").arg(settings()->group()), LXQtMainMenu::tr("Show/hide main menu"), this);
-    if (mShortcut)
-    {
-        connect(mShortcut, &GlobalKeyShortcut::Action::shortcutChanged, this, [this](const QString &, const QString & shortcut) {
-                mShortcutSeq = shortcut;
-        });
-        connect(mShortcut, &GlobalKeyShortcut::Action::registrationFinished, this, [this] {
-            if (mShortcut->shortcut().isEmpty())
-                mShortcut->changeShortcut(QStringLiteral(DEFAULT_SHORTCUT));
-            else
-                mShortcutSeq = mShortcut->shortcut();
-        });
-        connect(mShortcut, &GlobalKeyShortcut::Action::activated, this, [this] {
-            if (!mHideTimer.isActive())
-                // Delay this a little -- if we don't do this, search field
-                // won't be able to capture focus
-                // See <https://github.com/lxqt/lxqt-panel/pull/131> and
-                // <https://github.com/lxqt/lxqt-panel/pull/312>
-                mDelayedPopup.start();
-        });
-    }
+    // Global shortcuts removed - using button click only
 }
 
 
@@ -562,7 +541,7 @@ void LXQtMainMenu::setButtonIcon()
  ************************************************/
 QDialog *LXQtMainMenu::configureDialog()
 {
-    return new LXQtMainMenuConfiguration(settings(), mShortcut, QStringLiteral(DEFAULT_SHORTCUT));
+    return new LXQtMainMenuConfiguration(settings(), QStringLiteral(DEFAULT_SHORTCUT));
 }
 /************************************************
 
@@ -593,39 +572,7 @@ bool LXQtMainMenu::eventFilter(QObject *obj, QEvent *event)
         {
            QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
 
-           // if our shortcut key is pressed while the menu is open, close the menu
-            if (!mShortcutSeq.isEmpty()) {
-                static const auto key_meta = QMetaEnum::fromType<Qt::Key>();
-                QFlags<Qt::KeyboardModifier> mod = keyEvent->modifiers();
-                QList<Qt::Key> keys = {static_cast<Qt::Key>(keyEvent->key())};
-                switch (keyEvent->key()) {
-                    case Qt::Key_Alt:
-                        mod &= ~Qt::AltModifier;
-                        break;
-                    case Qt::Key_Control:
-                        mod &= ~Qt::ControlModifier;
-                        break;
-                    case Qt::Key_Shift:
-                        mod &= ~Qt::ShiftModifier;
-                        break;
-                    case Qt::Key_Meta:
-                        keys << Qt::Key_Super_L << Qt::Key_Super_R;
-                        [[fallthrough]];
-                    case Qt::Key_Super_L:
-                    case Qt::Key_Super_R:
-                        mod &= ~Qt::MetaModifier;
-                        break;
-                }
-                for (const auto & key : std::as_const(keys))
-                {
-                    const QString press = QKeySequence{static_cast<int>(mod)}.toString() % QString::fromLatin1(key_meta.valueToKey(key)).remove(0, 4);
-                    if (press == mShortcutSeq)
-                    {
-                        mMenu->hide(); // close the app menu
-                        return true;
-                    }
-                }
-            }
+            // Global shortcuts removed - no shortcut handling
 
             // go to the menu item which starts with the pressed key if there is an active action.
             QString key = keyEvent->text();

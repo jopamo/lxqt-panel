@@ -30,7 +30,6 @@
 #include "ui_lxqtfancymenuconfiguration.h"
 #include <XdgMenu>
 #include <XdgIcon>
-#include <lxqt-globalkeys.h>
 #include <LXQt/Settings>
 
 #include <QAction>
@@ -38,11 +37,10 @@
 
 #include "lxqtfancymenutypes.h"
 
-LXQtFancyMenuConfiguration::LXQtFancyMenuConfiguration(PluginSettings *settings, GlobalKeyShortcut::Action * shortcut, const QString &defaultShortcut, QWidget *parent) :
+LXQtFancyMenuConfiguration::LXQtFancyMenuConfiguration(PluginSettings *settings, const QString &defaultShortcut, QWidget *parent) :
     LXQtPanelPluginConfigDialog(settings, parent),
     ui(new Ui::LXQtFancyMenuConfiguration),
     mDefaultShortcut(defaultShortcut),
-    mShortcut(shortcut),
     mLockSettingChanges(false)
 {
     setAttribute(Qt::WA_DeleteOnClose);
@@ -90,8 +88,6 @@ LXQtFancyMenuConfiguration::LXQtFancyMenuConfiguration(PluginSettings *settings,
         this->settings().setValue(QStringLiteral("autoSelDelay"), value);
     });
 
-    connect(mShortcut, &GlobalKeyShortcut::Action::shortcutChanged, this, &LXQtFancyMenuConfiguration::globalShortcutChanged);
-
     connect(ui->filterClearCB, &QCheckBox::toggled, this, [this] (bool value) {
         if (!mLockSettingChanges)
             this->settings().setValue(QStringLiteral("filterClear"), value);
@@ -133,7 +129,7 @@ void LXQtFancyMenuConfiguration::loadSettings()
     else if (!menuFile.contains(QLatin1String("/")))
         menuFile = XdgMenu::getMenuFileName(menuFile);
     ui->menuFilePathLE->setText(menuFile);
-    ui->shortcutEd->setText(nullptr != mShortcut ? mShortcut->shortcut() : mDefaultShortcut);
+    ui->shortcutEd->setText(mDefaultShortcut);
 
     ui->customFontCB->setChecked(settings().value(QStringLiteral("customFont"), false).toBool());
     LXQt::Settings lxqtSettings(QStringLiteral("lxqt")); //load system font size as init value
@@ -201,15 +197,9 @@ void LXQtFancyMenuConfiguration::chooseMenuFile()
     d->show();
 }
 
-void LXQtFancyMenuConfiguration::globalShortcutChanged(const QString &/*oldShortcut*/, const QString &newShortcut)
-{
-    ui->shortcutEd->setText(newShortcut);
-}
-
 void LXQtFancyMenuConfiguration::shortcutChanged(const QString &value)
 {
-    if (mShortcut)
-        mShortcut->changeShortcut(value);
+    // Global shortcuts removed - no action needed
 }
 
 void LXQtFancyMenuConfiguration::shortcutReset()
