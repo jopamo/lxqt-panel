@@ -1,32 +1,6 @@
-/* BEGIN_COMMON_COPYRIGHT_HEADER
- * (c)LGPL2+
- *
- * LXQt - a lightweight, Qt based, desktop toolset
- * https://lxqt.org
- *
- * Copyright: 2014 LXQt team
- * Authors:
- *   Hong Jen Yee (PCMan) <pcman.tw@gmail.com>
- *
- * This program or library is free software; you can redistribute it
- * and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA
- *
- * END_COMMON_COPYRIGHT_HEADER */
-
 #include "ossengine.h"
 #include "audiodevice.h"
+
 #include <QDebug>
 
 #include <sys/types.h>
@@ -35,14 +9,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <cerrno>
-
-#if defined(__FreeBSD__) || defined(__NetBSD__)
-#include <sys/soundcard.h>
-#elif defined(__linux__) || defined(__Linux__)
 #include <linux/soundcard.h>
-#else
-#error "Not supported platform"
-#endif
 
 OssEngine::OssEngine(QObject* parent)
     : AudioEngine(parent), m_mixer(-1), m_device(nullptr), m_leftVolume(0), m_rightVolume(0) {
@@ -56,7 +23,7 @@ OssEngine::~OssEngine() {
 }
 
 void OssEngine::initMixer() {
-  m_mixer = open("/dev/mixer", O_RDWR, 0);
+  m_mixer = open("/dev/mixer", O_RDWR | O_CLOEXEC);
   if (m_mixer < 0) {
     qDebug() << "/dev/mixer cannot be opened";
     return;
@@ -77,10 +44,13 @@ void OssEngine::initMixer() {
 void OssEngine::updateVolume() {
   if (m_mixer < 0 || !m_device)
     return;
-  int volumes;
+
+  int volumes = 0;
   if (ioctl(m_mixer, MIXER_READ(SOUND_MIXER_VOLUME), &volumes) < 0) {
     qDebug() << "updateVolume() failed" << errno;
+    return;
   }
+
   m_leftVolume = volumes & 0xff;          // left
   m_rightVolume = (volumes >> 8) & 0xff;  // right
   qDebug() << "volume:" << m_leftVolume << m_rightVolume;
@@ -91,28 +61,31 @@ void OssEngine::updateVolume() {
 void OssEngine::setVolume(int volume) {
   if (m_mixer < 0)
     return;
-  int volumes = (volume << 8) + volume;
-  if (ioctl(m_mixer, MIXER_WRITE(SOUND_MIXER_VOLUME), &volumes) < 0) {
+
+  const int volumes = (volume << 8) | volume;
+  if (ioctl(m_mixer, MIXER_WRITE(SOUND_MIXER_VOLUME), &volumes) < 0)
     qDebug() << "setVolume() failed" << errno;
-  }
-  else {
+  else
     qDebug() << "setVolume()" << volume;
-  }
 }
 
 void OssEngine::commitDeviceVolume(AudioDevice* device) {
   if (!device)
     return;
+
   setVolume(device->volume());
 }
 
-void OssEngine::setMute(AudioDevice* /*device*/, bool state) {
+void OssEngine::setMute(AudioDevice* device, bool state) {
+  Q_UNUSED(device)
+
   if (state)
     setVolume(0);
   else
     setVolume(m_leftVolume);
 }
 
-void OssEngine::setIgnoreMaxVolume(bool /*ignore*/) {
-  // TODO
+void OssEngine::setIgnoreMaxVolume(bool ignore) {
+  Q_UNUSED(ignore)
+  // OSS backend does not support configurable max volume mapping yet
 }
