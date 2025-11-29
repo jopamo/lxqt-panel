@@ -20,10 +20,12 @@
 #include <QMouseEvent>
 #include <QMimeData>
 #include <QApplication>
+#include <QGuiApplication>
 #include <QDragEnterEvent>
 #include <QStylePainter>
 #include <QStyleOptionToolButton>
 #include <QScreen>
+#include <QPointer>
 
 #include "../panel/backends/ilxqtabstractwmiface.h"
 
@@ -216,7 +218,7 @@ void LXQtTaskButton::wheelEvent(QWheelEvent* event) {
   int delta = (orient == Qt::Horizontal ? angleDelta.x() : angleDelta.y());
 
   if (!mWheelTimer->isActive())
-    mWheelDelta += abs(delta);
+    mWheelDelta += qAbs(delta);
   else {
     // NOTE: We should consider a short delay after the last wheel event
     // in order to distinguish between separate wheel rotations; otherwise,
@@ -256,10 +258,10 @@ void LXQtTaskButton::wheelEvent(QWheelEvent* event) {
 
  ************************************************/
 QMimeData* LXQtTaskButton::mimeData() {
-  QMimeData* mimedata = new QMimeData;
+  auto* mimedata = new QMimeData;
   QByteArray ba;
   QDataStream stream(&ba, QIODevice::WriteOnly);
-  stream << (qlonglong)(mWindow);
+  stream << static_cast<qlonglong>(mWindow);
   mimedata->setData(mimeDataFormat(), ba);
   return mimedata;
 }
