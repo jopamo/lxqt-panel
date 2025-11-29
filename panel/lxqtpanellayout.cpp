@@ -1,3 +1,7 @@
+/* panel/lxqtpanellayout.cpp
+ * Main panel implementation, window management
+ */
+
 #include <QWidget>
 #include <QSize>
 #include <QPoint>

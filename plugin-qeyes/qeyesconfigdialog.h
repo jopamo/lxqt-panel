@@ -1,3 +1,7 @@
+/* plugin-qeyes/qeyesconfigdialog.h
+ * Header file for qeyesconfigdialog
+ */
+
 /*
  *  qeyes - an xeyes clone
  *

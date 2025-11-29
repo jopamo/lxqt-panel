@@ -1,3 +1,7 @@
+/* plugin-worldclock/lxqtworldclockconfiguration.cpp
+ * Configuration implementation for plugin-worldclock
+ */
+
 #include "lxqtworldclockconfiguration.h"
 
 #include "ui_lxqtworldclockconfiguration.h"

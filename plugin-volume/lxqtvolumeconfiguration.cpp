@@ -1,3 +1,7 @@
+/* plugin-volume/lxqtvolumeconfiguration.cpp
+ * Volume control plugin implementation
+ */
+
 #include "lxqtvolumeconfiguration.h"
 #include "ui_lxqtvolumeconfiguration.h"
 

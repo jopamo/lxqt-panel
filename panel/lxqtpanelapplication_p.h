@@ -1,3 +1,7 @@
+/* panel/lxqtpanelapplication_p.h
+ * Main panel implementation, window management
+ */
+
 /*
  * LXQt - a lightweight, Qt based, desktop toolset
  * Copyright (C) 2016  Luís Pereira <luis.artur.pereira@gmail.com>

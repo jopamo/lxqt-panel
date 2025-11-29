@@ -1,3 +1,7 @@
+/* plugin-qeyes/qeyesimagewidget.h
+ * Header file for qeyesimagewidget
+ */
+
 /*
  *  qeyes - an xeyes clone
  *

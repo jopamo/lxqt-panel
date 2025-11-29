@@ -1,3 +1,7 @@
+/* panel/backends/xcb/lxqtwmbackend_x11.cpp
+ * Window manager backend interfaces
+ */
+
 #include "lxqtwmbackend_x11.h"
 
 #include <KX11Extras>

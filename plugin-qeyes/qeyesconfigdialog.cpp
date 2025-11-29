@@ -1,3 +1,7 @@
+/* plugin-qeyes/qeyesconfigdialog.cpp
+ * Implementation file for qeyesconfigdialog
+ */
+
 /*
  *  qeyes - an xeyes clone
  *

@@ -1,3 +1,7 @@
+/* plugin-colorpicker/colorbutton.h
+ * Header file for colorbutton
+ */
+
 #ifndef COLORBUTTON_H
 #define COLORBUTTON_H
 

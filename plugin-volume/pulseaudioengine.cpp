@@ -1,3 +1,7 @@
+/* plugin-volume/pulseaudioengine.cpp
+ * Volume control plugin implementation
+ */
+
 #include "pulseaudioengine.h"
 
 #include "audiodevice.h"

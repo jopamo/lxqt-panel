@@ -1,3 +1,7 @@
+/* plugin-colorpicker/colorbutton.cpp
+ * Implementation file for colorbutton
+ */
+
 #include "colorbutton.h"
 #include <QPainter>
 #include <QPainterPath>

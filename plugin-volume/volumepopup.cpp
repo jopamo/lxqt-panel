@@ -1,3 +1,7 @@
+/* plugin-volume/volumepopup.cpp
+ * Volume control plugin implementation
+ */
+
 #include "volumepopup.h"
 
 #include "audiodevice.h"

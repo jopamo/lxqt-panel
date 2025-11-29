@@ -1,3 +1,7 @@
+/* panel/lxqtpanel.cpp
+ * Main panel implementation, window management
+ */
+
 #include "lxqtpanel.h"
 #include "lxqtpanellimits.h"
 #include "ilxqtpanelplugin.h"
