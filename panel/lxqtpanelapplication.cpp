@@ -1,30 +1,3 @@
-/* BEGIN_COMMON_COPYRIGHT_HEADER
- * (c)LGPL2+
- *
- * LXQt - a lightweight, Qt based, desktop toolset
- * https://lxqt.org
- *
- * Copyright: 2010-2011 Razor team
- * Authors:
- *   Alexander Sokoloff <sokoloff.a@gmail.com>
- *
- * This program or library is free software; you can redistribute it
- * and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA
- *
- * END_COMMON_COPYRIGHT_HEADER */
-
 #include "lxqtpanelapplication.h"
 #include "lxqtpanelapplication_p.h"
 
@@ -45,24 +18,22 @@
 #include "backends/lxqtdummywmbackend.h"
 
 static inline QString getBackendFilePath(QString name) {
-  // If we do not have a full library name, line lib_labwc_backend.so,
+  // if we do not have a full library name like libwmbackend_xcb.so
   // then build a name based on default heuristic: libwmbackend_<name>.so
   if (!name.startsWith(QStringLiteral("lib")) || !name.endsWith(QStringLiteral(".so"))) {
     if (!name.startsWith(QStringLiteral("libwmbackend_"))) {
-      name = QString(QStringLiteral("libwmbackend_%1")).arg(name);
+      name = QStringLiteral("libwmbackend_%1").arg(name);
     }
     if (!name.endsWith(QStringLiteral(".so"))) {
-      name = QString(QStringLiteral("%1.so")).arg(name);
+      name = QStringLiteral("%1.so").arg(name);
     }
   }
 
   QStringList dirs;
   dirs << QProcessEnvironment::systemEnvironment()
               .value(QStringLiteral("LXQTPANEL_PLUGIN_PATH"))
-              .split(QStringLiteral(":"));
+              .split(QStringLiteral(":"), Qt::SkipEmptyParts);
   dirs << QStringLiteral(PLUGIN_DIR);
-
-  QMap<QString, int> backendScoreMap;
 
   for (const QString& dir : std::as_const(dirs)) {
     QDir backendsDir(dir);
@@ -70,16 +41,17 @@ static inline QString getBackendFilePath(QString name) {
       backendsDir.cd(QLatin1String("backend"));
     }
 
-    if (backendsDir.exists(name)) {
+    if (backendsDir.exists(name))
       return backendsDir.absoluteFilePath(name);
-    }
   }
 
   return QString();
 }
 
-static inline bool testBackend(QString backendName) {
-  QString backendPath = getBackendFilePath(backendName);
+static inline bool testBackend(const QString& backendName) {
+  const QString backendPath = getBackendFilePath(backendName);
+  if (backendPath.isEmpty())
+    return false;
 
   QPluginLoader loader(backendPath);
   if (!loader.load()) {
@@ -90,14 +62,12 @@ static inline bool testBackend(QString backendName) {
   QObject* plugin = loader.instance();
   if (!plugin) {
     qWarning() << "Failed to create the plugin instance";
+    loader.unload();
     return false;
   }
 
   ILXQtWMBackendLibrary* backend = qobject_cast<ILXQtWMBackendLibrary*>(plugin);
-  bool okay = false;
-  if (backend) {
-    okay = true;
-  }
+  const bool okay = backend != nullptr;
 
   loader.unload();
 
@@ -113,17 +83,19 @@ ILXQtPanel::Position LXQtPanelApplicationPrivate::computeNewPanelPosition(const 
 
   for (int i = 0; i < q->mPanels.size(); ++i) {
     if (p != q->mPanels.at(i)) {
-      // We are not the newly added one
-      if (screenNum == q->mPanels.at(i)->screenNum()) {  // Panels on the same screen
-        int p = static_cast<int>(q->mPanels.at(i)->position());
-        screenPositions[p] = true;  // occupied
+      // we are not the newly added one
+      if (screenNum == q->mPanels.at(i)->screenNum()) {  // panels on the same screen
+        const int posIndex = static_cast<int>(q->mPanels.at(i)->position());
+        if (posIndex >= 0 && posIndex < screenPositions.size())
+          screenPositions[posIndex] = true;  // occupied
       }
     }
   }
 
   int availablePosition = 0;
 
-  for (int i = 0; i < 4; ++i) {  // Bottom, Top, Left, Right
+  // Bottom, Top, Left, Right
+  for (int i = 0; i < 4; ++i) {
     if (!screenPositions[i]) {
       availablePosition = i;
       break;
@@ -134,29 +106,29 @@ ILXQtPanel::Position LXQtPanelApplicationPrivate::computeNewPanelPosition(const 
 }
 
 void LXQtPanelApplicationPrivate::loadBackend() {
-  // Only X11/XCB backend is supported
-  QString preferredBackend = QStringLiteral("xcb");
+  // only X11/XCB backend is supported
+  const QString preferredBackend = QStringLiteral("xcb");
 
   QPluginLoader loader;
 
-  // We now have the preferred backend.
-  // We have taken into consideration, the user's choice.
-  // In case it was unavailable, a default one has been chosen.
   if (!preferredBackend.isEmpty()) {
-    loader.setFileName(getBackendFilePath(preferredBackend));
-    if (loader.load()) {
+    const QString backendPath = getBackendFilePath(preferredBackend);
+    if (!backendPath.isEmpty())
+      loader.setFileName(backendPath);
+
+    if (loader.fileName().isEmpty() || !loader.load()) {
+      qWarning() << "Failed to load backend" << preferredBackend << ":" << loader.errorString();
+    }
+    else {
       QObject* plugin = loader.instance();
       ILXQtWMBackendLibrary* backend = qobject_cast<ILXQtWMBackendLibrary*>(plugin);
       if (backend) {
         mWMBackend = backend->instance();
       }
       else {
-        // Plugin not valid
+        // plugin not valid
         loader.unload();
       }
-    }
-    else {
-      qWarning() << loader.errorString();
     }
   }
 
@@ -164,13 +136,13 @@ void LXQtPanelApplicationPrivate::loadBackend() {
     qDebug() << "\nPanel backend:" << preferredBackend << "\n";
   }
   else {
-    // If no backend can be found fall back to dummy backend
+    // if no backend can be found fall back to dummy backend
     loader.unload();
     mWMBackend = new LXQtDummyWMBackend;
 
     qWarning() << "\n"
-               << "ERROR: Could not create a backend for window managment operations.\n"
-               << "Falling back to dummy backend. Some functions will not be available.\n"
+               << "ERROR: Could not create a backend for window managment operations\n"
+               << "Falling back to dummy backend. Some functions will not be available\n"
                << "\n";
   }
 
@@ -178,10 +150,7 @@ void LXQtPanelApplicationPrivate::loadBackend() {
 }
 
 LXQtPanelApplication::LXQtPanelApplication(int& argc, char** argv)
-    : LXQt::Application(argc, argv, true),
-      d_ptr(new LXQtPanelApplicationPrivate(this))
-
-{
+    : LXQt::Application(argc, argv, true), d_ptr(new LXQtPanelApplicationPrivate(this)) {
   Q_D(LXQtPanelApplication);
 
   QCoreApplication::setApplicationName(QLatin1String("lxqt-panel"));
@@ -213,7 +182,7 @@ LXQtPanelApplication::LXQtPanelApplication(int& argc, char** argv)
 
   const auto allScreens = screens();
 
-  // This is a workaround for Qt 5 bug #40681.
+  // workaround for historical multihead screen handling bugs in Qt
   for (QScreen* screen : allScreens) {
     connect(screen, &QScreen::destroyed, this, &LXQtPanelApplication::screenDestroyed);
   }
@@ -223,18 +192,16 @@ LXQtPanelApplication::LXQtPanelApplication(int& argc, char** argv)
 
   QStringList panels = d->mSettings->value(QStringLiteral("panels")).toStringList();
 
-  // WARNING: Giving a separate icon theme to the panel is wrong and has side effects.
-  // However, it is optional and can be used as the last resort for avoiding a low
-  // contrast in the case of symbolic SVG icons. (The correct way of doing that is
-  // using a Qt widget style that can assign a separate theme/QPalette to the panel.)
+  // giving a separate icon theme to the panel can have side effects
+  // it is optional and can be used as the last resort for avoiding a low contrast
+  // in the case of symbolic SVG icons
   mGlobalIconTheme = QIcon::themeName();
   const QString iconTheme = d->mSettings->value(QStringLiteral("iconTheme")).toString();
   if (!iconTheme.isEmpty())
     QIcon::setThemeName(iconTheme);
 
-  if (panels.isEmpty()) {
+  if (panels.isEmpty())
     panels << QStringLiteral("panel1");
-  }
 
   for (const QString& i : std::as_const(panels)) {
     addPanel(i);
@@ -252,17 +219,17 @@ void LXQtPanelApplication::cleanup() {
 void LXQtPanelApplication::addNewPanel() {
   Q_D(LXQtPanelApplication);
 
-  QString name(QStringLiteral("panel_") + QUuid::createUuid().toString());
+  const QString name = QStringLiteral("panel_") + QUuid::createUuid().toString();
 
   LXQtPanel* p = addPanel(name);
-  int screenNum = p->screenNum();
-  ILXQtPanel::Position newPanelPosition = d->computeNewPanelPosition(p, screenNum);
+  const int screenNum = p->screenNum();
+  const ILXQtPanel::Position newPanelPosition = d->computeNewPanelPosition(p, screenNum);
   p->setPosition(screenNum, newPanelPosition, true);
   QStringList panels = d->mSettings->value(QStringLiteral("panels")).toStringList();
   panels << name;
   d->mSettings->setValue(QStringLiteral("panels"), panels);
 
-  // Poupup the configuration dialog to allow user configuration right away
+  // popup the configuration dialog to allow user configuration right away
   p->showConfigDialog();
 }
 
@@ -288,11 +255,7 @@ void LXQtPanelApplication::handleScreenAdded(QScreen* newScreen) {
 void LXQtPanelApplication::reloadPanelsAsNeeded() {
   Q_D(LXQtPanelApplication);
 
-  // NOTE by PCMan: This is a workaround for Qt 5 bug #40681.
-  // Here we try to re-create the missing panels which are deleted in
-  // LXQtPanelApplication::screenDestroyed().
-
-  // qDebug() << "LXQtPanelApplication::reloadPanelsAsNeeded()";
+  // recreate missing panels which were deleted when their screen was destroyed
   const QStringList names = d->mSettings->value(QStringLiteral("panels")).toStringList();
   for (const QString& name : names) {
     bool found = false;
@@ -303,8 +266,7 @@ void LXQtPanelApplication::reloadPanelsAsNeeded() {
       }
     }
     if (!found) {
-      // the panel is found in the config file but does not exist, create it.
-      qDebug() << "Workaround Qt 5 bug #40681: re-create panel:" << name;
+      qDebug() << "Re-create panel after screen change:" << name;
       addPanel(name);
     }
   }
@@ -312,29 +274,8 @@ void LXQtPanelApplication::reloadPanelsAsNeeded() {
 }
 
 void LXQtPanelApplication::screenDestroyed(QObject* screenObj) {
-  // NOTE by PCMan: This is a workaround for Qt 5 bug #40681.
-  // With this very dirty workaround, we can fix lxqt/lxqt bug #204, #205, and #206.
-  // Qt 5 has two new regression bugs which breaks lxqt-panel in a multihead environment.
-  // #40681: Regression bug: QWidget::winId() returns old value and QEvent::WinIdChange event is not emitted sometimes.
-  // (multihead setup) #40791: Regression: QPlatformWindow, QWindow, and QWidget::winId() are out of sync. Explanations
-  // for the workaround: Internally, Qt maintains a list of QScreens and update it when XRandR configuration changes.
-  // When the user turn off an monitor with xrandr --output <xxx> --off, this will destroy the QScreen
-  // object which represent the output. If the QScreen being destroyed contains our panel widget,
-  // Qt will call QWindow::setScreen(0) on the internal windowHandle() of our panel widget to move it
-  // to the primary screen. However, moving a window to a different screen is more than just changing
-  // its position. With XRandR, all screens are actually part of the same virtual desktop. However,
-  // this is not the case in other setups, such as Xinerama and moving a window to another screen is
-  // not possible unless you destroy the widget and create it again for a new screen.
-  // Therefore, Qt destroy the widget and re-create it when moving our panel to a new screen.
-  // Unfortunately, destroying the window also destroy the child windows embedded into it,
-  // using XEMBED such as the tray icons. (#206)
-  // Second, when the window is re-created, the winId of the QWidget is changed, but Qt failed to
-  // generate QEvent::WinIdChange event so we have no way to know that. We have to set
-  // some X11 window properties using the native winId() to make it a dock, but this stop working
-  // because we cannot get the correct winId(), so this causes #204 and #205.
-  //
-  // The workaround is very simple. Just completely destroy the panel before Qt has a chance to do
-  // QWindow::setScreen() for it. Later, we reload the panel ourselves. So this can bypassing the Qt bugs.
+  // Workaround for multihead screen changes that would otherwise leave panels in a broken state
+  // Destroy panels whose QWindow is associated with the disappearing QScreen and recreate them later
   QScreen* screen = static_cast<QScreen*>(screenObj);
   bool reloadNeeded = false;
   qApp->setQuitOnLastWindowClosed(false);
@@ -343,12 +284,12 @@ void LXQtPanelApplication::screenDestroyed(QObject* screenObj) {
     if (panelWindow && panelWindow->screen() == screen) {
       // the screen containing the panel is destroyed
       // delete and then re-create the panel ourselves
-      QString name = panel->name();
+      const QString name = panel->name();
       panel->saveSettings(false);
       mPanels.removeAll(panel);
-      delete panel;  // delete the panel, so Qt does not have a chance to set a new screen to it.
+      delete panel;
       reloadNeeded = true;
-      qDebug() << "Workaround Qt 5 bug #40681: delete panel:" << name;
+      qDebug() << "Delete panel on screen removal:" << name;
     }
   }
   if (reloadNeeded)
@@ -383,12 +324,12 @@ ILXQtAbstractWMInterface* LXQtPanelApplication::getWMBackend() const {
   return d->mWMBackend;
 }
 
-// See LXQtPanelApplication::LXQtPanelApplication for why this isn't good.
+// see LXQtPanelApplication::LXQtPanelApplication for why this is not ideal
 void LXQtPanelApplication::setIconTheme(const QString& iconTheme) {
   Q_D(LXQtPanelApplication);
 
   d->mSettings->setValue(QStringLiteral("iconTheme"), iconTheme == mGlobalIconTheme ? QString() : iconTheme);
-  QString newTheme = iconTheme.isEmpty() ? mGlobalIconTheme : iconTheme;
+  const QString newTheme = iconTheme.isEmpty() ? mGlobalIconTheme : iconTheme;
   if (newTheme != QIcon::themeName()) {
     QIcon::setThemeName(newTheme);
     for (LXQtPanel* panel : std::as_const(mPanels)) {
