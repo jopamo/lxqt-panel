@@ -1,30 +1,3 @@
-/* BEGIN_COMMON_COPYRIGHT_HEADER
- * (c)LGPL2+
- *
- * LXQt - a lightweight, Qt based, desktop toolset
- * https://lxqt.org
- *
- * Copyright: 2012 Razor team
- * Authors:
- *   Johannes Zellner <webmaster@nebulon.de>
- *
- * This program or library is free software; you can redistribute it
- * and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA
- *
- * END_COMMON_COPYRIGHT_HEADER */
-
 #include "volumepopup.h"
 
 #include "audiodevice.h"
@@ -37,16 +10,21 @@
 #include <QVBoxLayout>
 #include <QApplication>
 #include <QToolTip>
-#include "audioengine.h"
 #include <QDebug>
 #include <QWheelEvent>
 #include <QScreen>
+#include <QTimer>
+#include <QCursor>
+#include <QGuiApplication>
+#include <QEnterEvent>
+#include <QResizeEvent>
+#include "audioengine.h"
 
-VolumePopup::VolumePopup(QWidget* parent):
-    QDialog(parent, Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint | Qt::Popup | Qt::X11BypassWindowManagerHint),
-    m_pos(0, 0),
-    m_anchor(Qt::TopLeftCorner),
-    m_device(nullptr)
+VolumePopup::VolumePopup(QWidget *parent)
+    : QDialog(parent, Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint | Qt::Popup | Qt::X11BypassWindowManagerHint)
+    , m_pos(0, 0)
+    , m_anchor(Qt::TopLeftCorner)
+    , m_device(nullptr)
 {
     setWindowFlags(Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint | Qt::Popup | Qt::X11BypassWindowManagerHint);
 
@@ -61,7 +39,7 @@ VolumePopup::VolumePopup(QWidget* parent):
     m_volumeSlider->setTickPosition(QSlider::TicksBothSides);
     m_volumeSlider->setTickInterval(10);
     // the volume slider shows 0-100 and volumes of all devices
-    // should be converted to percentages.
+    // should be converted to percentages
     m_volumeSlider->setRange(0, 100);
     m_volumeSlider->installEventFilter(this);
 
@@ -70,36 +48,33 @@ VolumePopup::VolumePopup(QWidget* parent):
     m_muteToggleButton->setCheckable(true);
     m_muteToggleButton->setAutoDefault(false);
 
-    QVBoxLayout *l = new QVBoxLayout(this);
-    l->setSpacing(0);
-    l->setContentsMargins(QMargins());
+    auto *layout = new QVBoxLayout(this);
+    layout->setSpacing(0);
+    layout->setContentsMargins(QMargins());
 
-    l->addWidget(m_mixerButton, 0, Qt::AlignHCenter);
-    l->addWidget(m_volumeSlider, 0, Qt::AlignHCenter);
-    l->addWidget(m_muteToggleButton, 0, Qt::AlignHCenter);
+    layout->addWidget(m_mixerButton, 0, Qt::AlignHCenter);
+    layout->addWidget(m_volumeSlider, 0, Qt::AlignHCenter);
+    layout->addWidget(m_muteToggleButton, 0, Qt::AlignHCenter);
 
-    connect(m_mixerButton,      &QPushButton::released, this, &VolumePopup::launchMixer);
-    connect(m_volumeSlider,     &QSlider::valueChanged, this, &VolumePopup::handleSliderValueChanged);
-    connect(m_muteToggleButton, &QPushButton::clicked,  this, &VolumePopup::handleMuteToggleClicked);
+    connect(m_mixerButton, &QPushButton::released, this, &VolumePopup::launchMixer);
+    connect(m_volumeSlider, &QSlider::valueChanged, this, &VolumePopup::handleSliderValueChanged);
+    connect(m_muteToggleButton, &QPushButton::clicked, this, &VolumePopup::handleMuteToggleClicked);
 }
 
 bool VolumePopup::event(QEvent *event)
 {
-    if(event->type() == QEvent::WindowDeactivate)
-    {
+    if (event->type() == QEvent::WindowDeactivate) {
         // qDebug("QEvent::WindowDeactivate");
         hide();
     }
     return QDialog::event(event);
 }
 
-bool VolumePopup::eventFilter(QObject * watched, QEvent * event)
+bool VolumePopup::eventFilter(QObject *watched, QEvent *event)
 {
-    if (watched == m_volumeSlider)
-    {
-        if (event->type() == QEvent::Wheel)
-        {
-            handleWheelEvent(dynamic_cast<QWheelEvent *>(event));
+    if (watched == m_volumeSlider) {
+        if (event->type() == QEvent::Wheel) {
+            handleWheelEvent(static_cast<QWheelEvent *>(event));
             return true;
         }
         return false;
@@ -122,9 +97,12 @@ void VolumePopup::handleSliderValueChanged(int value)
 {
     if (!m_device)
         return;
+
     // qDebug("VolumePopup::handleSliderValueChanged: %d\n", value);
     m_device->setVolume(value);
-    QTimer::singleShot(0, this, [this] { QToolTip::showText(QCursor::pos(), m_volumeSlider->toolTip(), this); });
+    QTimer::singleShot(0, this, [this] {
+        QToolTip::showText(QCursor::pos(), m_volumeSlider->toolTip(), this);
+    });
 }
 
 void VolumePopup::handleMuteToggleClicked()
@@ -141,11 +119,14 @@ void VolumePopup::handleDeviceVolumeChanged(int volume)
     // calling m_volumeSlider->setValue will trigger
     // handleSliderValueChanged(), which set the device volume
     // again, so we have to block the signals to avoid recursive
-    // signal emission.
+    // signal emission
     m_volumeSlider->blockSignals(true);
     m_volumeSlider->setValue(volume);
     m_volumeSlider->setToolTip(QStringLiteral("%1%").arg(volume));
-    dynamic_cast<QWidget&>(*parent()).setToolTip(m_volumeSlider->toolTip()); //parent is the button on panel
+
+    if (auto *parentWidget = parentWidget())
+        parentWidget->setToolTip(m_volumeSlider->toolTip()); // parent is the button on panel
+
     m_volumeSlider->blockSignals(false);
 
     // emit volumeChanged(percent);
@@ -194,8 +175,9 @@ void VolumePopup::openAt(QPoint pos, Qt::Corner anchor)
 
 void VolumePopup::handleWheelEvent(QWheelEvent *event)
 {
-    m_volumeSlider->setSliderPosition(m_volumeSlider->sliderPosition()
-            + (event->angleDelta().y() / QWheelEvent::DefaultDeltasPerStep * m_volumeSlider->singleStep()));
+    m_volumeSlider->setSliderPosition(
+        m_volumeSlider->sliderPosition()
+        + (event->angleDelta().y() / QWheelEvent::DefaultDeltasPerStep * m_volumeSlider->singleStep()));
 }
 
 void VolumePopup::setDevice(AudioDevice *device)
@@ -213,10 +195,11 @@ void VolumePopup::setDevice(AudioDevice *device)
         m_muteToggleButton->setChecked(m_device->mute());
         handleDeviceVolumeChanged(m_device->volume());
         connect(m_device, &AudioDevice::volumeChanged, this, &VolumePopup::handleDeviceVolumeChanged);
-        connect(m_device, &AudioDevice::muteChanged,   this, &VolumePopup::handleDeviceMuteChanged);
-    }
-    else
+        connect(m_device, &AudioDevice::muteChanged, this, &VolumePopup::handleDeviceMuteChanged);
+    } else {
         updateStockIcon();
+    }
+
     emit deviceChanged();
 }
 
@@ -230,8 +213,7 @@ void VolumePopup::realign()
 {
     QRect rect;
     rect.setSize(sizeHint());
-    switch (m_anchor)
-    {
+    switch (m_anchor) {
     case Qt::TopLeftCorner:
         rect.moveTopLeft(m_pos);
         break;
@@ -247,12 +229,10 @@ void VolumePopup::realign()
     case Qt::BottomRightCorner:
         rect.moveBottomRight(m_pos);
         break;
-
     }
 
-    if (QScreen const * const screen = QGuiApplication::screenAt(m_pos))
-    {
-        auto const & geometry = screen->availableGeometry();
+    if (const QScreen *screen = QGuiApplication::screenAt(m_pos)) {
+        const auto &geometry = screen->availableGeometry();
 
         if (rect.right() > geometry.right())
             rect.moveRight(geometry.right());
