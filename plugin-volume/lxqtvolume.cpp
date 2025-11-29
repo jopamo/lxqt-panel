@@ -1,30 +1,3 @@
-/* BEGIN_COMMON_COPYRIGHT_HEADER
- * (c)LGPL2+
- *
- * LXQt - a lightweight, Qt based, desktop toolset
- * https://lxqt.org
- *
- * Copyright: 2012 Razor team
- * Authors:
- *   Johannes Zellner <webmaster@nebulon.de>
- *
- * This program or library is free software; you can redistribute it
- * and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA
- *
- * END_COMMON_COPYRIGHT_HEADER */
-
 #include "lxqtvolume.h"
 
 #include "volumebutton.h"
@@ -42,6 +15,7 @@
 #include <QMessageBox>
 #include <XdgIcon>
 #include <LXQt/Notification>
+#include <algorithm>
 
 LXQtVolume::LXQtVolume(const ILXQtPanelPluginStartupInfo& startupInfo)
     : QObject(),
@@ -63,16 +37,20 @@ LXQtVolume::~LXQtVolume() {
 }
 
 void LXQtVolume::setAudioEngine(AudioEngine* engine) {
-  if (m_engine) {
-    if (m_engine->backendName() == engine->backendName())
-      return;
+  if (!engine)
+    return;
 
+  if (m_engine && m_engine->backendName() == engine->backendName()) {
+    delete engine;
+    return;
+  }
+
+  if (m_engine) {
     if (m_defaultSink) {
-      disconnect(m_defaultSink, nullptr, this, nullptr);
       disconnect(m_defaultSink, nullptr, this, nullptr);
       m_defaultSink = nullptr;
     }
-    m_volumeButton->volumePopup()->setDevice(m_defaultSink);
+    m_volumeButton->volumePopup()->setDevice(nullptr);
 
     disconnect(m_engine, nullptr, nullptr, nullptr);
     delete m_engine;
@@ -87,30 +65,31 @@ void LXQtVolume::setAudioEngine(AudioEngine* engine) {
 
 void LXQtVolume::settingsChanged() {
   m_defaultSinkIndex = settings()->value(QStringLiteral(SETTINGS_DEVICE), SETTINGS_DEFAULT_DEVICE).toInt();
-  QString engineName = settings()
-                           ->value(QStringLiteral(SETTINGS_AUDIO_ENGINE), QStringLiteral(SETTINGS_DEFAULT_AUDIO_ENGINE))
-                           .toString();
-  const bool new_engine = !m_engine || m_engine->backendName() != engineName;
-  if (new_engine) {
+  const QString engineName =
+      settings()
+          ->value(QStringLiteral(SETTINGS_AUDIO_ENGINE), QStringLiteral(SETTINGS_DEFAULT_AUDIO_ENGINE))
+          .toString();
+  const bool newEngine = !m_engine || m_engine->backendName() != engineName;
+  if (newEngine) {
 #if defined(USE_PULSEAUDIO) && defined(USE_ALSA)
     if (engineName == QLatin1String("PulseAudio"))
       setAudioEngine(new PulseAudioEngine(this));
     else if (engineName == QLatin1String("Alsa"))
       setAudioEngine(new AlsaEngine(this));
-    else  // fallback to OSS
-      setAudioEngine(new OssEngine(this));
+    else
+      setAudioEngine(new OssEngine(this));  // fallback to OSS
 #elif defined(USE_PULSEAUDIO)
     if (engineName == QLatin1String("PulseAudio"))
       setAudioEngine(new PulseAudioEngine(this));
-    else  // fallback to OSS
-      setAudioEngine(new OssEngine(this));
+    else
+      setAudioEngine(new OssEngine(this));  // fallback to OSS
 #elif defined(USE_ALSA)
     if (engineName == QLatin1String("Alsa"))
       setAudioEngine(new AlsaEngine(this));
-    else  // fallback to OSS
-      setAudioEngine(new OssEngine(this));
+    else
+      setAudioEngine(new OssEngine(this));  // fallback to OSS
 #else
-    // No other backends are available, fallback to OSS
+    // no other backends are available, fallback to OSS
     setAudioEngine(new OssEngine(this));
 #endif
   }
@@ -123,6 +102,7 @@ void LXQtVolume::settingsChanged() {
           .toString());
   m_volumeButton->volumePopup()->setSliderStep(
       settings()->value(QStringLiteral(SETTINGS_STEP), SETTINGS_DEFAULT_STEP).toInt());
+
   m_alwaysShowNotifications =
       settings()
           ->value(QStringLiteral(SETTINGS_ALWAYS_SHOW_NOTIFICATIONS), SETTINGS_DEFAULT_ALWAYS_SHOW_NOTIFICATIONS)
@@ -134,25 +114,43 @@ void LXQtVolume::settingsChanged() {
       // in case the config file was edited manually (see LXQtVolumeConfiguration)
       || m_alwaysShowNotifications;
 
-  if (!new_engine)
+  if (!newEngine)
     handleSinkListChanged();
 }
 
 void LXQtVolume::handleSinkListChanged() {
-  if (m_engine) {
-    if (m_engine->sinks().count() > 0) {
-      m_defaultSink = m_engine->sinks().at(std::clamp<qsizetype>(m_defaultSinkIndex, 0, m_engine->sinks().count() - 1));
+  if (!m_engine)
+    return;
+
+  const auto& sinks = m_engine->sinks();
+  if (!sinks.isEmpty()) {
+    const qsizetype idx = std::clamp<qsizetype>(m_defaultSinkIndex, 0, sinks.count() - 1);
+    AudioDevice* newDefaultSink = sinks.at(idx);
+
+    if (newDefaultSink != m_defaultSink) {
+      if (m_defaultSink)
+        disconnect(m_defaultSink, nullptr, this, nullptr);
+
+      m_defaultSink = newDefaultSink;
       m_volumeButton->volumePopup()->setDevice(m_defaultSink);
+
       connect(m_defaultSink, &AudioDevice::volumeChanged, this, [this] { LXQtVolume::showNotification(false); });
       connect(m_defaultSink, &AudioDevice::muteChanged, this, [this] { LXQtVolume::showNotification(false); });
-
-      m_engine->setIgnoreMaxVolume(
-          settings()->value(QStringLiteral(SETTINGS_IGNORE_MAX_VOLUME), SETTINGS_DEFAULT_IGNORE_MAX_VOLUME).toBool());
     }
 
-    if (m_configDialog)
-      m_configDialog->setSinkList(m_engine->sinks());
+    m_engine->setIgnoreMaxVolume(
+        settings()->value(QStringLiteral(SETTINGS_IGNORE_MAX_VOLUME), SETTINGS_DEFAULT_IGNORE_MAX_VOLUME).toBool());
   }
+  else {
+    if (m_defaultSink) {
+      disconnect(m_defaultSink, nullptr, this, nullptr);
+      m_defaultSink = nullptr;
+      m_volumeButton->volumePopup()->setDevice(nullptr);
+    }
+  }
+
+  if (m_configDialog)
+    m_configDialog->setSinkList(sinks);
 }
 
 QWidget* LXQtVolume::widget() {
@@ -163,10 +161,11 @@ void LXQtVolume::realign() {}
 
 QDialog* LXQtVolume::configureDialog() {
   if (!m_configDialog) {
-    const bool oss_available = (m_engine && m_engine->backendName() == QLatin1String("Oss"))
-                                   ? m_engine->sinks().size() > 0
-                                   : OssEngine().sinks().size() > 0;
-    m_configDialog = new LXQtVolumeConfiguration(settings(), oss_available);
+    const bool ossAvailable = (m_engine && m_engine->backendName() == QLatin1String("Oss"))
+                                  ? !m_engine->sinks().isEmpty()
+                                  : !OssEngine().sinks().isEmpty();
+
+    m_configDialog = new LXQtVolumeConfiguration(settings(), ossAvailable);
     m_configDialog->setAttribute(Qt::WA_DeleteOnClose, true);
 
     if (m_engine)
@@ -176,8 +175,8 @@ QDialog* LXQtVolume::configureDialog() {
 }
 
 void LXQtVolume::showNotification(bool forceShow) const {
-  if ((forceShow && m_showKeyboardNotifications)  // force only if volume change should be notified with keyboard
-      || m_alwaysShowNotifications) {
+  // force only if volume change should be notified with keyboard
+  if ((forceShow && m_showKeyboardNotifications) || m_alwaysShowNotifications) {
     if (Q_LIKELY(m_defaultSink)) {
       m_notification->setSummary(tr("Volume: %1%%2")
                                      .arg(QString::number(m_defaultSink->volume()))
