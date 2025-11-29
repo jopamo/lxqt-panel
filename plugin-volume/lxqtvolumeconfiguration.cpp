@@ -51,7 +51,7 @@ LXQtVolumeConfiguration::~LXQtVolumeConfiguration() {
   delete ui;
 }
 
-void LXQtVolumeConfiguration::setSinkList(const QList<AudioDevice*>& sinks) {
+void LXQtVolumeConfiguration::setSinkList(const QList<AudioDevice*> sinks) {
   // preserve selection based on stored device index while updating the list
   const QVariant savedIndex = settings().value(QStringLiteral(SETTINGS_DEVICE), SETTINGS_DEFAULT_DEVICE);
 

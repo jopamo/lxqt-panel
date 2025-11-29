@@ -116,8 +116,8 @@ void VolumePopup::handleDeviceVolumeChanged(int volume) {
   m_volumeSlider->setValue(volume);
   m_volumeSlider->setToolTip(QStringLiteral("%1%").arg(volume));
 
-  if (auto* parentWidget = parentWidget())
-    parentWidget->setToolTip(m_volumeSlider->toolTip());  // parent is the button on panel
+  if (auto* parent = parentWidget())
+    parent->setToolTip(m_volumeSlider->toolTip());  // parent is the button on panel
 
   m_volumeSlider->blockSignals(false);
 
