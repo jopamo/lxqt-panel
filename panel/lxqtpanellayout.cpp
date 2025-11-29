@@ -1,60 +1,32 @@
-/* BEGIN_COMMON_COPYRIGHT_HEADER
- * (c)LGPL2+
- *
- * LXQt - a lightweight, Qt based, desktop toolset
- * https://lxqt.org
- *
- * Copyright: 2010-2011 Razor team
- * Authors:
- *   Alexander Sokoloff <sokoloff.a@gmail.com>
- *
- * This program or library is free software; you can redistribute it
- * and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+#include <QWidget>
+#include <QSize>
+#include <QPoint>
+#include <QRect>
+#include <QVariantAnimation>
+#include <QEasingCurve>
+#include <QLayoutItem>
+#include <QLayout>
+#include <QList>
+#include <QtGlobal>
 
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA
- *
- * END_COMMON_COPYRIGHT_HEADER */
+#include <algorithm>
 
 #include "lxqtpanellayout.h"
-#include <QSize>
-#include <QWidget>
-#include <QEvent>
-#include <QCursor>
-#include <QApplication>
-#include <QDebug>
-#include <QPoint>
-#include <QMouseEvent>
-#include <QtAlgorithms>
-#include <QPoint>
-#include <QMouseEvent>
-#include <QPropertyAnimation>
 #include "plugin.h"
 #include "lxqtpanellimits.h"
 #include "ilxqtpanelplugin.h"
 #include "lxqtpanel.h"
 #include "pluginmoveprocessor.h"
-#include <QToolButton>
-#include <QStyle>
 
-#include <algorithm>
-
-#define ANIMATION_DURATION 250
+namespace {
+constexpr int kAnimationDurationMs = 250;
+}
 
 class ItemMoveAnimation : public QVariantAnimation {
  public:
-  ItemMoveAnimation(QLayoutItem* item) : mItem(item) {
+  explicit ItemMoveAnimation(QLayoutItem* item) : mItem(item) {
     setEasingCurve(QEasingCurve::OutBack);
-    setDuration(ANIMATION_DURATION);
+    setDuration(kAnimationDurationMs);
   }
 
   void updateCurrentValue(const QVariant& current) override { mItem->setGeometry(current.toRect()); }
@@ -531,10 +503,10 @@ void LXQtPanelLayout::setGeometry(const QRect& geometry) {
 void LXQtPanelLayout::setItemGeometry(QLayoutItem* item, const QRect& geometry, bool withAnimation) {
   Plugin* plugin = qobject_cast<Plugin*>(item->widget());
   if (withAnimation && plugin) {
-    ItemMoveAnimation* animation = new ItemMoveAnimation(item);
+    auto* animation = new ItemMoveAnimation(item);
     animation->setStartValue(item->geometry());
     animation->setEndValue(geometry);
-    animation->start(animation->DeleteWhenStopped);
+    animation->start(QAbstractAnimation::DeleteWhenStopped);
   }
   else {
     item->setGeometry(geometry);
@@ -546,7 +518,7 @@ void LXQtPanelLayout::setItemGeometry(QLayoutItem* item, const QRect& geometry, 
  ************************************************/
 void LXQtPanelLayout::setGeometryHoriz(const QRect& geometry) {
   const bool visual_h_reversed = parentWidget() && parentWidget()->isRightToLeft();
-  // Calc expFactor for expandable plugins like TaskBar.
+  // Calc expFactor for expandable plugins like TaskBar
   double expFactor;
   {
     int expWidth = mLeftGrid->expandableSize() + mRightGrid->expandableSize();
@@ -555,7 +527,7 @@ void LXQtPanelLayout::setGeometryHoriz(const QRect& geometry) {
     expFactor = expWidth ? ((1.0 * geometry.width() - nonExpWidth) / expWidth) : 1;
   }
 
-  // Calc baselines for plugins like button.
+  // Calc baselines for plugins like button
   QList<int> baseLines(std::max(mLeftGrid->colCount(), mRightGrid->colCount()));
   const int bh = geometry.height() / baseLines.count();
   const int base_center = bh >> 1;
@@ -567,20 +539,7 @@ void LXQtPanelLayout::setGeometryHoriz(const QRect& geometry) {
     }
   }
 
-#if 0
-    qDebug() << "** LXQtPanelLayout::setGeometryHoriz **************";
-    qDebug() << "geometry: " << geometry;
-
-    qDebug() << "Left grid";
-    qDebug() << "  cols:" << mLeftGrid->colCount() << " rows:" << mLeftGrid->rowCount();
-    qDebug() << "  usedCols" << mLeftGrid->usedColCount();
-
-    qDebug() << "Right grid";
-    qDebug() << "  cols:" << mRightGrid->colCount() << " rows:" << mRightGrid->rowCount();
-    qDebug() << "  usedCols" << mRightGrid->usedColCount();
-#endif
-
-  // Left aligned plugins.
+  // Left aligned plugins
   int left = geometry.left();
   for (int r = 0; r < mLeftGrid->rowCount(); ++r) {
     int rw = 0;
@@ -622,7 +581,7 @@ void LXQtPanelLayout::setGeometryHoriz(const QRect& geometry) {
     left += rw;
   }
 
-  // Right aligned plugins.
+  // Right aligned plugins
   int right = geometry.right();
   for (int r = mRightGrid->rowCount() - 1; r >= 0; --r) {
     int rw = 0;
@@ -671,7 +630,7 @@ void LXQtPanelLayout::setGeometryHoriz(const QRect& geometry) {
  ************************************************/
 void LXQtPanelLayout::setGeometryVert(const QRect& geometry) {
   const bool visual_h_reversed = parentWidget() && parentWidget()->isRightToLeft();
-  // Calc expFactor for expandable plugins like TaskBar.
+  // Calc expFactor for expandable plugins like TaskBar
   double expFactor;
   {
     int expHeight = mLeftGrid->expandableSize() + mRightGrid->expandableSize();
@@ -680,7 +639,7 @@ void LXQtPanelLayout::setGeometryVert(const QRect& geometry) {
     expFactor = expHeight ? ((1.0 * geometry.height() - nonExpHeight) / expHeight) : 1;
   }
 
-  // Calc baselines for plugins like button.
+  // Calc baselines for plugins like button
   QList<int> baseLines(std::max(mLeftGrid->colCount(), mRightGrid->colCount()));
   const int bw = geometry.width() / baseLines.count();
   const int base_center = bw >> 1;
@@ -692,20 +651,7 @@ void LXQtPanelLayout::setGeometryVert(const QRect& geometry) {
     }
   }
 
-#if 0
-    qDebug() << "** LXQtPanelLayout::setGeometryVert **************";
-    qDebug() << "geometry: " << geometry;
-
-    qDebug() << "Left grid";
-    qDebug() << "  cols:" << mLeftGrid->colCount() << " rows:" << mLeftGrid->rowCount();
-    qDebug() << "  usedCols" << mLeftGrid->usedColCount();
-
-    qDebug() << "Right grid";
-    qDebug() << "  cols:" << mRightGrid->colCount() << " rows:" << mRightGrid->rowCount();
-    qDebug() << "  usedCols" << mRightGrid->usedColCount();
-#endif
-
-  // Top aligned plugins.
+  // Top aligned plugins
   int top = geometry.top();
   for (int r = 0; r < mLeftGrid->rowCount(); ++r) {
     int rh = 0;
@@ -747,7 +693,7 @@ void LXQtPanelLayout::setGeometryVert(const QRect& geometry) {
     top += rh;
   }
 
-  // Bottom aligned plugins.
+  // Bottom aligned plugins
   int bottom = geometry.bottom();
   for (int r = mRightGrid->rowCount() - 1; r >= 0; --r) {
     int rh = 0;
@@ -876,9 +822,9 @@ bool LXQtPanelLayout::itemIsSeparate(QLayoutItem* item) {
 void LXQtPanelLayout::startMovePlugin() {
   Plugin* plugin = qobject_cast<Plugin*>(sender());
   if (plugin) {
-    // We have not memoryleaks there.
-    // The processor will be automatically deleted when stopped.
-    PluginMoveProcessor* moveProcessor = new PluginMoveProcessor(this, plugin);
+    // We have not memoryleaks there
+    // The processor will be automatically deleted when stopped
+    auto* moveProcessor = new PluginMoveProcessor(this, plugin);
     moveProcessor->start();
     connect(moveProcessor, &PluginMoveProcessor::finished, this, &LXQtPanelLayout::finishMovePlugin);
   }
@@ -888,7 +834,7 @@ void LXQtPanelLayout::startMovePlugin() {
 
  ************************************************/
 void LXQtPanelLayout::finishMovePlugin() {
-  PluginMoveProcessor* moveProcessor = qobject_cast<PluginMoveProcessor*>(sender());
+  auto* moveProcessor = qobject_cast<PluginMoveProcessor*>(sender());
   if (moveProcessor) {
     Plugin* plugin = moveProcessor->plugin();
     int n = indexOf(plugin);
