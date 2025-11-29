@@ -4,13 +4,7 @@
 #include "volumepopup.h"
 #include "lxqtvolumeconfiguration.h"
 #include "audiodevice.h"
-#ifdef USE_PULSEAUDIO
 #include "pulseaudioengine.h"
-#endif
-#ifdef USE_ALSA
-#include "alsaengine.h"
-#endif
-#include "ossengine.h"
 
 #include <QMessageBox>
 #include <XdgIcon>
@@ -71,27 +65,7 @@ void LXQtVolume::settingsChanged() {
           .toString();
   const bool newEngine = !m_engine || m_engine->backendName() != engineName;
   if (newEngine) {
-#if defined(USE_PULSEAUDIO) && defined(USE_ALSA)
-    if (engineName == QLatin1String("PulseAudio"))
-      setAudioEngine(new PulseAudioEngine(this));
-    else if (engineName == QLatin1String("Alsa"))
-      setAudioEngine(new AlsaEngine(this));
-    else
-      setAudioEngine(new OssEngine(this));  // fallback to OSS
-#elif defined(USE_PULSEAUDIO)
-    if (engineName == QLatin1String("PulseAudio"))
-      setAudioEngine(new PulseAudioEngine(this));
-    else
-      setAudioEngine(new OssEngine(this));  // fallback to OSS
-#elif defined(USE_ALSA)
-    if (engineName == QLatin1String("Alsa"))
-      setAudioEngine(new AlsaEngine(this));
-    else
-      setAudioEngine(new OssEngine(this));  // fallback to OSS
-#else
-    // no other backends are available, fallback to OSS
-    setAudioEngine(new OssEngine(this));
-#endif
+    setAudioEngine(new PulseAudioEngine(this));
   }
 
   m_volumeButton->setMuteOnMiddleClick(
@@ -161,11 +135,7 @@ void LXQtVolume::realign() {}
 
 QDialog* LXQtVolume::configureDialog() {
   if (!m_configDialog) {
-    const bool ossAvailable = (m_engine && m_engine->backendName() == QLatin1String("Oss"))
-                                  ? !m_engine->sinks().isEmpty()
-                                  : !OssEngine().sinks().isEmpty();
-
-    m_configDialog = new LXQtVolumeConfiguration(settings(), ossAvailable);
+    m_configDialog = new LXQtVolumeConfiguration(settings(), false);
     m_configDialog->setAttribute(Qt::WA_DeleteOnClose, true);
 
     if (m_engine)

@@ -12,7 +12,7 @@
 #include <QAbstractButton>
 #include <QVariant>
 
-LXQtVolumeConfiguration::LXQtVolumeConfiguration(PluginSettings* settings, bool ossAvailable, QWidget* parent)
+LXQtVolumeConfiguration::LXQtVolumeConfiguration(PluginSettings* settings, bool /*ossAvailable*/, QWidget* parent)
     : LXQtPanelPluginConfigDialog(settings, parent), ui(new Ui::LXQtVolumeConfiguration), mLockSettingChanges(false) {
   ui->setupUi(this);
 
@@ -29,22 +29,7 @@ LXQtVolumeConfiguration::LXQtVolumeConfiguration(PluginSettings* settings, bool 
   connect(ui->showKeyboardNotificationsCheckBox, &QAbstractButton::toggled, this,
           &LXQtVolumeConfiguration::showKeyboardNotificationsCheckBoxChanged);
 
-  if (ossAvailable)
-    connect(ui->ossRadioButton, &QRadioButton::toggled, this, &LXQtVolumeConfiguration::audioEngineChanged);
-  else
-    ui->ossRadioButton->setVisible(false);
-
-#ifdef USE_PULSEAUDIO
   connect(ui->pulseAudioRadioButton, &QRadioButton::toggled, this, &LXQtVolumeConfiguration::audioEngineChanged);
-#else
-  ui->pulseAudioRadioButton->setVisible(false);
-#endif
-
-#ifdef USE_ALSA
-  connect(ui->alsaRadioButton, &QRadioButton::toggled, this, &LXQtVolumeConfiguration::audioEngineChanged);
-#else
-  ui->alsaRadioButton->setVisible(false);
-#endif
 }
 
 LXQtVolumeConfiguration::~LXQtVolumeConfiguration() {
@@ -77,21 +62,10 @@ void LXQtVolumeConfiguration::audioEngineChanged(bool checked) {
   if (!checked)
     return;
 
-  bool canIgnoreMaxVolume = false;
+  if (!mLockSettingChanges)
+    settings().setValue(QStringLiteral(SETTINGS_AUDIO_ENGINE), QStringLiteral("PulseAudio"));
 
-  if (ui->pulseAudioRadioButton->isChecked()) {
-    if (!mLockSettingChanges)
-      settings().setValue(QStringLiteral(SETTINGS_AUDIO_ENGINE), QStringLiteral("PulseAudio"));
-    canIgnoreMaxVolume = true;
-  }
-  else if (!mLockSettingChanges) {
-    if (ui->alsaRadioButton->isChecked())
-      settings().setValue(QStringLiteral(SETTINGS_AUDIO_ENGINE), QStringLiteral("Alsa"));
-    else
-      settings().setValue(QStringLiteral(SETTINGS_AUDIO_ENGINE), QStringLiteral("Oss"));
-  }
-
-  ui->ignoreMaxVolumeCheckBox->setEnabled(canIgnoreMaxVolume);
+  ui->ignoreMaxVolumeCheckBox->setEnabled(true);
 }
 
 void LXQtVolumeConfiguration::sinkSelectionChanged(int index) {
@@ -140,22 +114,10 @@ void LXQtVolumeConfiguration::showKeyboardNotificationsCheckBoxChanged(bool stat
 void LXQtVolumeConfiguration::loadSettings() {
   mLockSettingChanges = true;
 
-  const QString engine =
-      settings()
-          .value(QStringLiteral(SETTINGS_AUDIO_ENGINE), QStringLiteral(SETTINGS_DEFAULT_AUDIO_ENGINE))
-          .toString()
-          .toLower();
-
-  if (engine == QLatin1String("pulseaudio"))
-    ui->pulseAudioRadioButton->setChecked(true);
-  else if (engine == QLatin1String("alsa"))
-    ui->alsaRadioButton->setChecked(true);
-  else
-    ui->ossRadioButton->setChecked(true);
+  ui->pulseAudioRadioButton->setChecked(true);
 
   // currently, this option is only supported by the pulse audio backend
-  if (!ui->pulseAudioRadioButton->isChecked())
-    ui->ignoreMaxVolumeCheckBox->setEnabled(false);
+  ui->ignoreMaxVolumeCheckBox->setEnabled(true);
 
   setComboboxIndexByData(ui->devAddedCombo, settings().value(QStringLiteral(SETTINGS_DEVICE), SETTINGS_DEFAULT_DEVICE),
                          1);

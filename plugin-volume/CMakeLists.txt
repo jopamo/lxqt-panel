@@ -17,7 +17,7 @@ set(SOURCES
     audiodevice.cpp
     lxqtvolumeconfiguration.cpp
     audioengine.cpp
-    ossengine.cpp
+    pulseaudioengine.cpp
 )
 
 set(UIS
@@ -29,21 +29,11 @@ set(LIBRARIES
     Qt6Xdg
 )
 
-if(PULSEAUDIO_FOUND)
-    add_definitions(-DUSE_PULSEAUDIO)
-    include_directories(${PULSEAUDIO_INCLUDE_DIR})
-    set(HEADERS ${HEADERS} pulseaudioengine.h)
-    set(SOURCES ${SOURCES} pulseaudioengine.cpp)
-    set(MOCS ${MOCS} pulseaudioengine.h)
-    set(LIBRARIES ${LIBRARIES} ${PULSEAUDIO_LIBRARY})
-endif()
-
-if(ALSA_FOUND)
-    add_definitions(-DUSE_ALSA)
-    set(HEADERS ${HEADERS} alsaengine.h alsadevice.h)
-    set(SOURCES ${SOURCES} alsaengine.cpp alsadevice.cpp)
-    set(MOCS ${MOCS} alsaengine.h alsadevice.h)
-    set(LIBRARIES ${LIBRARIES} ${ALSA_LIBRARIES})
-endif()
+add_definitions(-DUSE_PULSEAUDIO)
+include_directories(${PULSEAUDIO_INCLUDE_DIR})
+set(HEADERS ${HEADERS} pulseaudioengine.h)
+set(SOURCES ${SOURCES} pulseaudioengine.cpp)
+set(MOCS ${MOCS} pulseaudioengine.h)
+set(LIBRARIES ${LIBRARIES} ${PULSEAUDIO_LIBRARY})
 
 BUILD_LXQT_PLUGIN(${PLUGIN})
