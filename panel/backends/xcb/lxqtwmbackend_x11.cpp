@@ -1,30 +1,3 @@
-/* BEGIN_COMMON_COPYRIGHT_HEADER
- * (c)LGPL2+
- *
- * LXQt - a lightweight, Qt based, desktop toolset
- * https://lxqt.org
- *
- * Copyright: 2023 LXQt team
- * Authors:
- *  Filippo Gentile <filippogentile@disroot.org>
- *
- * This program or library is free software; you can redistribute it
- * and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA
- *
- * END_COMMON_COPYRIGHT_HEADER */
-
 #include "lxqtwmbackend_x11.h"
 
 #include <KX11Extras>
@@ -36,8 +9,8 @@
 
 #include <QGuiApplication>
 #include <QScreen>
-
 #include <QTimer>
+#include <QCursor>
 
 // NOTE: Xlib.h defines Bool which conflicts with QJsonValue::Type enum
 #include <X11/Xlib.h>
@@ -55,12 +28,9 @@ LXQtWMBackendX11::LXQtWMBackendX11(QObject* parent) : ILXQtAbstractWMInterface(p
 
   connect(KX11Extras::self(), &KX11Extras::numberOfDesktopsChanged, this,
           &ILXQtAbstractWMInterface::workspacesCountChanged);
-  connect(KX11Extras::self(), &KX11Extras::currentDesktopChanged, this, [this](int x) {
-    emit currentWorkspaceChanged(x, QString());  // without specifying an output name
-  });
-  connect(KX11Extras::self(), &KX11Extras::desktopNamesChanged, this, [this]() {
-    emit workspaceNameChanged(-1);  // without specifying an index
-  });
+  connect(KX11Extras::self(), &KX11Extras::currentDesktopChanged, this,
+          [this](int x) { emit currentWorkspaceChanged(x, QString()); });
+  connect(KX11Extras::self(), &KX11Extras::desktopNamesChanged, this, [this]() { emit workspaceNameChanged(-1); });
 
   connect(KX11Extras::self(), &KX11Extras::activeWindowChanged, this, &ILXQtAbstractWMInterface::activeWindowChanged);
 }
@@ -70,49 +40,42 @@ LXQtWMBackendX11::LXQtWMBackendX11(QObject* parent) : ILXQtAbstractWMInterface(p
  ************************************************/
 void LXQtWMBackendX11::onWindowChanged(WId windowId, NET::Properties prop, NET::Properties2 prop2) {
   if (!m_windows.contains(windowId)) {
-    // If already known window changes its property in a way
-    // it's now acceptable, add it again to taskbar
+    // if an unknown window changes in a way that makes it acceptable, add it to the taskbar
     if (acceptWindow(windowId))
       onWindowAdded(windowId);
     return;
   }
 
   if (!acceptWindow(windowId)) {
-    // If already known window changes its property in a way
-    // it's not anymore accepted, remove it from taskbar
+    // if a known window changes in a way that makes it unacceptable, remove it from the taskbar
     onWindowRemoved(windowId);
     return;
   }
 
-  if (prop.testFlag(NET::WMGeometry)) {
+  if (prop.testFlag(NET::WMGeometry))
     emit windowPropertyChanged(windowId, int(LXQtTaskBarWindowProperty::Geometry));
-  }
 
-  if (prop2.testFlag(NET::WM2WindowClass)) {
+  if (prop2.testFlag(NET::WM2WindowClass))
     emit windowPropertyChanged(windowId, int(LXQtTaskBarWindowProperty::WindowClass));
-  }
 
   // window changed virtual desktop
-  if (prop.testFlag(NET::WMDesktop)) {
+  if (prop.testFlag(NET::WMDesktop))
     emit windowPropertyChanged(windowId, int(LXQtTaskBarWindowProperty::Workspace));
-  }
 
   if (prop.testFlag(NET::WMVisibleName) || prop.testFlag(NET::WMName))
     emit windowPropertyChanged(windowId, int(LXQtTaskBarWindowProperty::Title));
 
-  // XXX: we are setting window icon geometry -> don't need to handle NET::WMIconGeometry
-  // Icon of the button can be based on windowClass
+  // we are setting window icon geometry, no need to handle NET::WMIconGeometry
+  // icon of the button can be based on windowClass
   if (prop.testFlag(NET::WMIcon) || prop2.testFlag(NET::WM2WindowClass))
     emit windowPropertyChanged(windowId, int(LXQtTaskBarWindowProperty::Icon));
 
   bool update_urgency = false;
-  if (prop2.testFlag(NET::WM2Urgency)) {
+  if (prop2.testFlag(NET::WM2Urgency))
     update_urgency = true;
-  }
 
   if (prop.testFlag(NET::WMState)) {
     update_urgency = true;
-
     emit windowPropertyChanged(windowId, int(LXQtTaskBarWindowProperty::State));
   }
 
@@ -163,7 +126,7 @@ bool LXQtWMBackendX11::acceptWindow(WId windowId) const {
   if (info.state() & NET::SkipTaskbar)
     return false;
 
-  // WM_TRANSIENT_FOR hint not set - normal window
+  // WM_TRANSIENT_FOR hint not set means a normal window
   WId transFor = info.transientFor();
 
   WId appRootWindow = XDefaultRootWindow(m_X11Display);
@@ -250,7 +213,7 @@ bool LXQtWMBackendX11::reloadWindows() {
   qSwap(knownWindows, m_windows);
   QList<WId> new_list;
 
-  // Just add new windows to groups, deleting is up to the groups
+  // just add new windows to groups, deleting is up to the groups
   const auto wnds = KX11Extras::stackingOrder();
   for (auto const wnd : wnds) {
     if (acceptWindow(wnd)) {
@@ -260,7 +223,7 @@ bool LXQtWMBackendX11::reloadWindows() {
   }
 
   // emulate windowRemoved if known window not reported by KWindowSystem
-  for (auto i = knownWindows.begin(), i_e = knownWindows.end(); i != i_e; i++) {
+  for (auto i = knownWindows.begin(), i_e = knownWindows.end(); i != i_e; ++i) {
     WId wnd = *i;
     if (!new_list.contains(wnd)) {
       emit windowRemoved(wnd);
@@ -350,7 +313,7 @@ LXQtTaskBarWindowState LXQtWMBackendX11::getWindowState(WId windowId) const {
 }
 
 bool LXQtWMBackendX11::setWindowState(WId windowId, LXQtTaskBarWindowState state, bool set) {
-  // NOTE: window activation is left to the caller
+  // window activation is left to the caller
 
   NET::State x11State;
 
@@ -375,7 +338,7 @@ bool LXQtWMBackendX11::setWindowState(WId windowId, LXQtTaskBarWindowState state
       break;
     }
     case LXQtTaskBarWindowState::Normal: {
-      x11State = NET::Max;  // TODO: correct?
+      x11State = NET::Max;  // treat Normal as clearing maximized state
       break;
     }
     case LXQtTaskBarWindowState::RolledUp: {
@@ -409,14 +372,14 @@ bool LXQtWMBackendX11::raiseWindow(WId windowId, bool onCurrentWorkSpace) {
   // bypass focus stealing prevention
   KX11Extras::forceActiveWindow(windowId);
 
-  // Clear urgency flag
+  // clear urgency flag
   emit windowPropertyChanged(windowId, int(LXQtTaskBarWindowProperty::Urgency));
 
   return true;
 }
 
 bool LXQtWMBackendX11::closeWindow(WId windowId) {
-  // FIXME: Why there is no such thing in KWindowSystem??
+  // no equivalent in KWindowSystem, use NETRootInfo directly
   NETRootInfo(m_xcbConnection, NET::CloseWindow).closeWindowRequest(windowId);
   return true;
 }
@@ -485,7 +448,7 @@ void LXQtWMBackendX11::moveApplicationToPrevNextMonitor(WId windowId, bool next,
         int Y = windowGeometry.y() - screenGeometry.y() + targetScreenGeometry.y();
         NET::States state = KWindowInfo(windowId, NET::WMState).state();
 
-        //      NW geometry |     y/x      |  from panel
+        // NW geometry | y/x | from panel
         const int flags = 1 | (0b011 << 8) | (0b010 << 12);
         KX11Extras::clearState(windowId, NET::MaxHoriz | NET::MaxVert | NET::Max | NET::FullScreen);
         NETRootInfo(m_xcbConnection, NET::Properties(), NET::WM2MoveResizeWindow)
@@ -505,10 +468,7 @@ int LXQtWMBackendX11::onAllWorkspacesEnum() const {
 }
 
 bool LXQtWMBackendX11::isWindowOnScreen(QScreen* screen, WId windowId) const {
-  // TODO: old code was:
-  // return QApplication::desktop()->screenGeometry(parentTaskBar()).intersects(KWindowInfo(mWindow,
-  // NET::WMFrameExtents).frameGeometry());
-
+  // if no screen is provided assume true
   if (!screen)
     return true;
 
@@ -569,8 +529,7 @@ void LXQtWMBackendX11::resizeApplication(WId windowId) {
 }
 
 void LXQtWMBackendX11::refreshIconGeometry(WId windowId, QRect const& geom) {
-  // NOTE: This function announces where the task icon is,
-  // such that X11 WMs can perform their related animations correctly.
+  // this function announces where the task icon is so X11 WMs can perform animations correctly
 
   WId appRootWindow = XDefaultRootWindow(m_X11Display);
 
@@ -594,7 +553,7 @@ void LXQtWMBackendX11::refreshIconGeometry(WId windowId, QRect const& geom) {
 }
 
 bool LXQtWMBackendX11::isAreaOverlapped(const QRect& area) const {
-  // TODO: reuse our m_windows cache?
+  // TODO: reuse our m_windows cache
   QFlags<NET::WindowTypeMask> ignoreList;
   ignoreList |= NET::DesktopMask;
   ignoreList |= NET::DockMask;
@@ -638,7 +597,7 @@ int LXQtWMBackendX11Library::getBackendScore(const QString& key) const {
   if (!x11Application)
     return 0;
 
-  // Generic X11 backend
+  // generic X11 backend
   return 80;
 }
 
