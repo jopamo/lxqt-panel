@@ -14,9 +14,8 @@
 #include <QDragLeaveEvent>
 #include <QStringBuilder>
 #include <QMenu>
+#include <QEnterEvent>
 #include <XdgIcon>
-
-#include <algorithm>
 
 #include "../panel/backends/ilxqtabstractwmiface.h"
 
@@ -68,9 +67,10 @@ void LXQtTaskGroup::contextMenuEvent(QContextMenuEvent* event) {
 
  ************************************************/
 void LXQtTaskGroup::closeGroup() {
-  for (LXQtTaskButton* button : std::as_const(mButtonHash))
+  for (LXQtTaskButton* button : std::as_const(mButtonHash)) {
     if (button->isOnDesktop(mBackend->getCurrentWorkspace()))
       button->closeApplication();
+  }
 }
 
 /************************************************
@@ -101,9 +101,10 @@ LXQtTaskButton* LXQtTaskGroup::addWindow(WId id) {
 
  ************************************************/
 LXQtTaskButton* LXQtTaskGroup::checkedButton() const {
-  for (LXQtTaskButton* button : std::as_const(mButtonHash))
+  for (LXQtTaskButton* button : std::as_const(mButtonHash)) {
     if (button->isChecked())
       return button;
+  }
 
   return nullptr;
 }
@@ -114,7 +115,7 @@ LXQtTaskButton* LXQtTaskGroup::checkedButton() const {
 LXQtTaskButton* LXQtTaskGroup::getNextPrevChildButton(bool next, bool circular) {
   LXQtTaskButton* button = checkedButton();
   int idx = mPopup->indexOf(button);
-  int inc = next ? 1 : -1;
+  const int inc = next ? 1 : -1;
   idx += inc;
 
   // if there is no checked button, get the first one if next equals true
@@ -122,14 +123,16 @@ LXQtTaskButton* LXQtTaskGroup::getNextPrevChildButton(bool next, bool circular) 
   if (!button) {
     idx = -1;
     if (next) {
-      for (int i = 0; i < mPopup->count() && idx == -1; i++)
+      for (int i = 0; i < mPopup->count() && idx == -1; ++i) {
         if (mPopup->itemAt(i)->widget()->isVisibleTo(mPopup))
           idx = i;
+      }
     }
     else {
-      for (int i = mPopup->count() - 1; i >= 0 && idx == -1; i--)
+      for (int i = mPopup->count() - 1; i >= 0 && idx == -1; --i) {
         if (mPopup->itemAt(i)->widget()->isVisibleTo(mPopup))
           idx = i;
+      }
     }
   }
 
@@ -162,7 +165,7 @@ void LXQtTaskGroup::onActiveWindowChanged(WId window) {
     if (button->hasUrgencyHint())
       button->setUrgencyHint(false);
   }
-  setChecked(nullptr != button && button->isVisibleTo(mPopup));
+  setChecked(button != nullptr && button->isVisibleTo(mPopup));
 }
 
 /************************************************
@@ -217,7 +220,7 @@ void LXQtTaskGroup::setToolButtonsStyle(Qt::ToolButtonStyle style) {
   setToolButtonStyle(style);
 
   const Qt::ToolButtonStyle styleInPopup = popupButtonStyle();
-  for (auto& button : mButtonHash) {
+  for (auto button : mButtonHash) {
     button->setToolButtonStyle(styleInPopup);
   }
 }
@@ -234,9 +237,10 @@ int LXQtTaskGroup::buttonsCount() const {
  ************************************************/
 int LXQtTaskGroup::visibleButtonsCount() const {
   int i = 0;
-  for (LXQtTaskButton* btn : std::as_const(mButtonHash))
+  for (LXQtTaskButton* btn : std::as_const(mButtonHash)) {
     if (btn->isVisibleTo(mPopup))
-      i++;
+      ++i;
+  }
   return i;
 }
 
@@ -262,7 +266,7 @@ void LXQtTaskGroup::onClicked(bool) {
 
  ************************************************/
 void LXQtTaskGroup::regroup() {
-  int cont = visibleButtonsCount();
+  const int cont = visibleButtonsCount();
   recalculateFrameIfVisible();
 
   if (cont == 1) {
@@ -282,11 +286,12 @@ void LXQtTaskGroup::regroup() {
       setWindowId(button->windowId());
     }
   }
-  else if (cont == 0)
+  else if (cont == 0) {
     hide();
+  }
   else {
     mSingleButton = false;
-    QString t = QString(QStringLiteral("%1 - %2 windows")).arg(mGroupName).arg(cont);
+    const QString t = QStringLiteral("%1 - %2 windows").arg(mGroupName).arg(cont);
     setTextExplicitly(t);
     setToolTip(parentTaskBar()->isShowGroupOnHover() ? QString() : t);
   }
@@ -318,11 +323,11 @@ void LXQtTaskGroup::setAutoRotation(bool value, ILXQtPanel::Position position) {
  ************************************************/
 void LXQtTaskGroup::refreshVisibility() {
   bool will = false;
-  LXQtTaskBar const* taskbar = parentTaskBar();
+  const LXQtTaskBar* taskbar = parentTaskBar();
   const int showDesktop = taskbar->showDesktopNum();
   for (LXQtTaskButton* btn : std::as_const(mButtonHash)) {
     bool visible = taskbar->isShowOnlyOneDesktopTasks()
-                       ? btn->isOnDesktop(0 == showDesktop ? mBackend->getCurrentWorkspace() : showDesktop)
+                       ? btn->isOnDesktop(showDesktop == 0 ? mBackend->getCurrentWorkspace() : showDesktop)
                        : true;
     visible &= taskbar->isShowOnlyCurrentScreenTasks() ? btn->isOnCurrentScreen() : true;
     visible &= taskbar->isShowOnlyMinimizedTasks() ? btn->isMinimized() : true;
@@ -333,7 +338,7 @@ void LXQtTaskGroup::refreshVisibility() {
       setChecked(visible);
   }
 
-  bool is = isVisible();
+  const bool is = isVisible();
   setVisible(will);
   regroup();
 
@@ -345,7 +350,7 @@ void LXQtTaskGroup::refreshVisibility() {
 
  ************************************************/
 QMimeData* LXQtTaskGroup::mimeData() {
-  QMimeData* mimedata = new QMimeData;
+  auto* mimedata = new QMimeData;
   QByteArray byteArray;
   QDataStream stream(&byteArray, QIODevice::WriteOnly);
   stream << groupName();
@@ -368,8 +373,9 @@ void LXQtTaskGroup::setPopupVisible(bool visible, bool fast) {
     mPopup->show();
     emit popupShown(this);
   }
-  else
+  else {
     mPopup->hide(fast);
+  }
 }
 
 /************************************************
@@ -394,15 +400,15 @@ void LXQtTaskGroup::refreshIconsGeometry() {
 
  ************************************************/
 QSize LXQtTaskGroup::recalculateFrameSize() {
-  int height = recalculateFrameHeight();
+  const int height = recalculateFrameHeight();
   mPopup->setMaximumHeight(1000);
   mPopup->setMinimumHeight(0);
 
-  int hh = recalculateFrameWidth();
-  mPopup->setMaximumWidth(hh);
+  const int width = recalculateFrameWidth();
+  mPopup->setMaximumWidth(width);
   mPopup->setMinimumWidth(0);
 
-  QSize newSize(hh, height);
+  const QSize newSize(width, height);
   mPopup->resize(newSize);
 
   return newSize;
@@ -412,8 +418,8 @@ QSize LXQtTaskGroup::recalculateFrameSize() {
 
  ************************************************/
 int LXQtTaskGroup::recalculateFrameHeight() const {
-  int cont = visibleButtonsCount();
-  int h = !plugin()->panel()->isHorizontal() && parentTaskBar()->isAutoRotate() ? width() : height();
+  const int cont = visibleButtonsCount();
+  const int h = !plugin()->panel()->isHorizontal() && parentTaskBar()->isAutoRotate() ? width() : height();
   return cont * h + (cont + 1) * mPopup->spacing();
 }
 
@@ -422,11 +428,11 @@ int LXQtTaskGroup::recalculateFrameHeight() const {
  ************************************************/
 int LXQtTaskGroup::recalculateFrameWidth() const {
   const QFontMetrics fm = fontMetrics();
-  int max = 100 * fm.horizontalAdvance(QLatin1Char(' '));  // elide after the max width
+  const int max = 100 * fm.horizontalAdvance(QLatin1Char(' '));  // elide after the max width
   int txtWidth = 0;
   for (LXQtTaskButton* btn : std::as_const(mButtonHash))
     txtWidth = std::max(fm.horizontalAdvance(btn->text()), txtWidth);
-  return iconSize().width() + std::min(txtWidth, max) + 30 /* give enough room to margins and borders*/;
+  return iconSize().width() + std::min(txtWidth, max) + 30;  // give enough room to margins and borders
 }
 
 /************************************************
@@ -434,7 +440,8 @@ int LXQtTaskGroup::recalculateFrameWidth() const {
  ************************************************/
 QPoint LXQtTaskGroup::recalculateFramePosition() {
   // Set position
-  int x_offset = 0, y_offset = 0;
+  int x_offset = 0;
+  int y_offset = 0;
   switch (plugin()->panel()->position()) {
     case ILXQtPanel::PositionTop:
       y_offset += height();
@@ -450,7 +457,7 @@ QPoint LXQtTaskGroup::recalculateFramePosition() {
       break;
   }
 
-  QPoint pos = mapToGlobal(QPoint(x_offset, y_offset));
+  const QPoint pos = mapToGlobal(QPoint(x_offset, y_offset));
   mPopup->move(pos);
 
   return pos;
@@ -509,7 +516,6 @@ void LXQtTaskGroup::mouseMoveEvent(QMouseEvent* event) {
 /************************************************
 
  ************************************************/
-
 void LXQtTaskGroup::mouseReleaseEvent(QMouseEvent* event) {
   // do nothing on left button release if there is a group
   if (event->button() == Qt::LeftButton && visibleButtonsCount() == 1)
@@ -521,7 +527,6 @@ void LXQtTaskGroup::mouseReleaseEvent(QMouseEvent* event) {
 /************************************************
 
  ************************************************/
-
 void LXQtTaskGroup::wheelEvent(QWheelEvent* event) {
   if (mSingleButton) {
     LXQtTaskButton::wheelEvent(event);
@@ -561,13 +566,17 @@ bool LXQtTaskGroup::onWindowChanged(WId window, LXQtTaskBarWindowProperty prop) 
       needsRefreshVisibility = true;
     }
 
-    if (prop == LXQtTaskBarWindowProperty::Title)
-      std::for_each(buttons.begin(), buttons.end(), std::mem_fn(&LXQtTaskButton::updateText));
+    if (prop == LXQtTaskBarWindowProperty::Title) {
+      for (auto* b : buttons)
+        b->updateText();
+    }
 
     // XXX: we are setting window icon geometry -> don't need to handle NET::WMIconGeometry
     // Icon of the button can be based on windowClass
-    if (prop == LXQtTaskBarWindowProperty::Icon)
-      std::for_each(buttons.begin(), buttons.end(), std::mem_fn(&LXQtTaskButton::updateIcon));
+    if (prop == LXQtTaskBarWindowProperty::Icon) {
+      for (auto* b : buttons)
+        b->updateIcon();
+    }
 
     bool set_urgency = false;
     bool urgency = false;
@@ -580,17 +589,19 @@ bool LXQtTaskGroup::onWindowChanged(WId window, LXQtTaskBarWindowProperty prop) 
     if (prop == LXQtTaskBarWindowProperty::State) {
       if (!set_urgency)
         urgency = mBackend->applicationDemandsAttention(window);
-      std::for_each(buttons.begin(), buttons.end(),
-                    std::bind(&LXQtTaskButton::setUrgencyHint, std::placeholders::_1, urgency));
+
+      for (auto* b : buttons)
+        b->setUrgencyHint(urgency);
+
       set_urgency = false;
 
-      if (parentTaskBar()->isShowOnlyMinimizedTasks()) {
+      if (parentTaskBar()->isShowOnlyMinimizedTasks())
         needsRefreshVisibility = true;
-      }
     }
-    if (set_urgency)
-      std::for_each(buttons.begin(), buttons.end(),
-                    std::bind(&LXQtTaskButton::setUrgencyHint, std::placeholders::_1, urgency));
+    if (set_urgency) {
+      for (auto* b : buttons)
+        b->setUrgencyHint(urgency);
+    }
   }
 
   if (needsRefreshVisibility)
