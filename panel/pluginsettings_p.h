@@ -30,10 +30,9 @@
 
 #include "pluginsettings.h"
 
-class PluginSettingsFactory
-{
-public:
-    static PluginSettings * create(LXQt::Settings *settings, const QString &group, QObject *parent = nullptr);
+class PluginSettingsFactory {
+ public:
+  static PluginSettings* create(LXQt::Settings* settings, const QString& group, QObject* parent = nullptr);
 };
 
-#endif //PLUGIN_SETTINGS_P_H
+#endif  // PLUGIN_SETTINGS_P_H

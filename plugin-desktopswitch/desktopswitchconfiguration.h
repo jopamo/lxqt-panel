@@ -24,7 +24,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef DESKTOPSWITCHCERCONFIGURATION_H
 #define DESKTOPSWITCHCERCONFIGURATION_H
 
@@ -37,28 +36,27 @@
 class QAbstractButton;
 
 namespace Ui {
-    class DesktopSwitchConfiguration;
+class DesktopSwitchConfiguration;
 }
 
-class DesktopSwitchConfiguration : public LXQtPanelPluginConfigDialog
-{
-    Q_OBJECT
+class DesktopSwitchConfiguration : public LXQtPanelPluginConfigDialog {
+  Q_OBJECT
 
-public:
-    explicit DesktopSwitchConfiguration(PluginSettings *settings, QWidget *parent = nullptr);
-    ~DesktopSwitchConfiguration();
+ public:
+  explicit DesktopSwitchConfiguration(PluginSettings* settings, QWidget* parent = nullptr);
+  ~DesktopSwitchConfiguration();
 
-private:
-    Ui::DesktopSwitchConfiguration *ui;
+ private:
+  Ui::DesktopSwitchConfiguration* ui;
 
-private slots:
-    /*
-       Saves settings in conf file.
-    */
-    void loadSettings();
-    void loadDesktopsNames();
-    void rowsChanged(int value);
-    void labelTypeChanged(int type);
+ private slots:
+  /*
+     Saves settings in conf file.
+  */
+  void loadSettings();
+  void loadDesktopsNames();
+  void rowsChanged(int value);
+  void labelTypeChanged(int type);
 };
 
-#endif // DESKTOPSWITCHCERCONFIGURATION_H
+#endif  // DESKTOPSWITCHCERCONFIGURATION_H

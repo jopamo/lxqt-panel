@@ -33,32 +33,31 @@
 #include <QWidget>
 
 namespace Ui {
-    class ConfigPluginsWidget;
+class ConfigPluginsWidget;
 }
 class AddPluginDialog;
 
-class ConfigPluginsWidget : public QWidget
-{
-    Q_OBJECT
+class ConfigPluginsWidget : public QWidget {
+  Q_OBJECT
 
-public:
-    ConfigPluginsWidget(LXQtPanel *panel, QWidget* parent = nullptr);
-    ~ConfigPluginsWidget();
+ public:
+  ConfigPluginsWidget(LXQtPanel* panel, QWidget* parent = nullptr);
+  ~ConfigPluginsWidget();
 
-signals:
-    void changed();
+ signals:
+  void changed();
 
-public slots:
-    void reset();
+ public slots:
+  void reset();
 
-private slots:
-    void showAddPluginDialog();
-    void resetButtons();
+ private slots:
+  void showAddPluginDialog();
+  void resetButtons();
 
-private:
-    Ui::ConfigPluginsWidget *ui;
-    std::unique_ptr<AddPluginDialog> mAddPluginDialog;
-    LXQtPanel *mPanel;
+ private:
+  Ui::ConfigPluginsWidget* ui;
+  std::unique_ptr<AddPluginDialog> mAddPluginDialog;
+  LXQtPanel* mPanel;
 };
 
 #endif

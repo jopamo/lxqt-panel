@@ -24,7 +24,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef SPACERCONFIGURATION_H
 #define SPACERCONFIGURATION_H
 
@@ -34,31 +33,30 @@
 class QAbstractButton;
 
 namespace Ui {
-    class SpacerConfiguration;
+class SpacerConfiguration;
 }
 
-class SpacerConfiguration : public LXQtPanelPluginConfigDialog
-{
-    Q_OBJECT
+class SpacerConfiguration : public LXQtPanelPluginConfigDialog {
+  Q_OBJECT
 
-public:
-    explicit SpacerConfiguration(PluginSettings *settings, QWidget *parent = nullptr);
-    ~SpacerConfiguration();
+ public:
+  explicit SpacerConfiguration(PluginSettings* settings, QWidget* parent = nullptr);
+  ~SpacerConfiguration();
 
-public:
-    static const QStringList msTypes;
+ public:
+  static const QStringList msTypes;
 
-private:
-    Ui::SpacerConfiguration *ui;
+ private:
+  Ui::SpacerConfiguration* ui;
 
-private slots:
-    /*
-       Saves settings in conf file.
-    */
-    void loadSettings();
-    void sizeChanged(int value);
-    void typeChanged(int index);
-    void widthTypeChanged(bool expandableChecked);
+ private slots:
+  /*
+     Saves settings in conf file.
+  */
+  void loadSettings();
+  void sizeChanged(int value);
+  void typeChanged(int index);
+  void widthTypeChanged(bool expandableChecked);
 };
 
-#endif // SPACERCONFIGURATION_H
+#endif  // SPACERCONFIGURATION_H

@@ -26,47 +26,45 @@
 
 #include "qeyesvectorwidget.h"
 
-QEyesVectorWidget::QEyesVectorWidget(QWidget *parent) : QAbstractEyesWidget(parent) {}
+QEyesVectorWidget::QEyesVectorWidget(QWidget* parent) : QAbstractEyesWidget(parent) {}
 
-void QEyesVectorWidget::drawEye(QPainter &painter, int x, int y, int dx, int dy) {
+void QEyesVectorWidget::drawEye(QPainter& painter, int x, int y, int dx, int dy) {
+  float w = width() / numEyes < height() ? width() / numEyes : height();
+  w *= lineWidth;
+  if (w < lineMinWidth)
+    w = lineMinWidth;
 
-    float w = width() / numEyes < height() ? width() / numEyes: height();
-    w *= lineWidth;
-    if (w < lineMinWidth)
-        w = lineMinWidth;
-
-    painter.setPen(borderColor);
-    auto pen = painter.pen();
-    pen.setWidth(w);
-    painter.setPen(pen);
-    QRadialGradient grad(x + dx / 2.0, y + dy / 2.0, std::max(dx, dy));
-    grad.setColorAt(0, centerColor);
-    grad.setColorAt(1, peripheralColor);
-    painter.setBrush(grad);
-    painter.drawEllipse(x + w, y + w, dx - 2.0 * w, dy - 2.0 * w);
-
+  painter.setPen(borderColor);
+  auto pen = painter.pen();
+  pen.setWidth(w);
+  painter.setPen(pen);
+  QRadialGradient grad(x + dx / 2.0, y + dy / 2.0, std::max(dx, dy));
+  grad.setColorAt(0, centerColor);
+  grad.setColorAt(1, peripheralColor);
+  painter.setBrush(grad);
+  painter.drawEllipse(x + w, y + w, dx - 2.0 * w, dy - 2.0 * w);
 }
-void QEyesVectorWidget::drawPupil(QPainter &painter, int x, int y) {
-    float w = width() / numEyes < height() ? width() / numEyes: height();
-    w *= lineWidth;
-    if (w < lineMinWidth)
-        w = lineMinWidth;
-    const auto psize = w * pupilSize;
+void QEyesVectorWidget::drawPupil(QPainter& painter, int x, int y) {
+  float w = width() / numEyes < height() ? width() / numEyes : height();
+  w *= lineWidth;
+  if (w < lineMinWidth)
+    w = lineMinWidth;
+  const auto psize = w * pupilSize;
 
-    auto pen = painter.pen();
-    pen.setWidth(1);
-    painter.setBrush(QColor(pupilColor));
-    painter.setPen(QColor(pupilColor));
+  auto pen = painter.pen();
+  pen.setWidth(1);
+  painter.setBrush(QColor(pupilColor));
+  painter.setPen(QColor(pupilColor));
 
-    painter.drawEllipse(QPoint(x, y), (int)(psize / 2.0), (int)(psize / 2.0));
+  painter.drawEllipse(QPoint(x, y), (int)(psize / 2.0), (int)(psize / 2.0));
 }
 
-void QEyesVectorWidget::eyeBorder(float &bx, float &by) {
-    float w = width() / numEyes < height() ? width() / numEyes: height();
-    w *= lineWidth;
-    if (w < lineMinWidth)
-        w = lineMinWidth;
-    const auto psize = w * pupilSize;
+void QEyesVectorWidget::eyeBorder(float& bx, float& by) {
+  float w = width() / numEyes < height() ? width() / numEyes : height();
+  w *= lineWidth;
+  if (w < lineMinWidth)
+    w = lineMinWidth;
+  const auto psize = w * pupilSize;
 
-    bx = by = 1.5 * w + psize/2;
+  bx = by = 1.5 * w + psize / 2;
 }

@@ -34,42 +34,34 @@
 
 class QLabel;
 
-class KbdState : public QObject, public ILXQtPanelPlugin
-{
-    Q_OBJECT
-public:
-    KbdState(const ILXQtPanelPluginStartupInfo &startupInfo);
-    virtual ~KbdState();
+class KbdState : public QObject, public ILXQtPanelPlugin {
+  Q_OBJECT
+ public:
+  KbdState(const ILXQtPanelPluginStartupInfo& startupInfo);
+  virtual ~KbdState();
 
-    virtual QString themeId() const
-    { return QStringLiteral("KbIndicator"); }
+  virtual QString themeId() const { return QStringLiteral("KbIndicator"); }
 
-    virtual ILXQtPanelPlugin::Flags flags() const
-    { return PreferRightAlignment | HaveConfigDialog; }
+  virtual ILXQtPanelPlugin::Flags flags() const { return PreferRightAlignment | HaveConfigDialog; }
 
-    virtual bool isSeparate() const
-    { return false; }
+  virtual bool isSeparate() const { return false; }
 
-    virtual QWidget *widget()
-    { return &m_content; }
+  virtual QWidget* widget() { return &m_content; }
 
-    QDialog *configureDialog();
-    virtual void realign();
+  QDialog* configureDialog();
+  virtual void realign();
 
-    const Settings & prefs() const
-    { return m_settings; }
+  const Settings& prefs() const { return m_settings; }
 
-    Settings & prefs()
-    { return m_settings; }
+  Settings& prefs() { return m_settings; }
 
-protected slots:
-    virtual void settingsChanged();
+ protected slots:
+  virtual void settingsChanged();
 
-private:
-    Settings    m_settings;
-    KbdWatcher  m_watcher;
-    Content     m_content;
+ private:
+  Settings m_settings;
+  KbdWatcher m_watcher;
+  Content m_content;
 };
-
 
 #endif

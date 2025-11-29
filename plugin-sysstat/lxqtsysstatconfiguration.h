@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQTSYSSTATCONFIGURATION_H
 #define LXQTSYSSTATCONFIGURATION_H
 
@@ -35,47 +34,46 @@
 #include <QMap>
 
 namespace Ui {
-    class LXQtSysStatConfiguration;
+class LXQtSysStatConfiguration;
 }
 
 namespace SysStat {
-    class BaseStat;
+class BaseStat;
 }
 
 class LXQtSysStatColours;
 
-class LXQtSysStatConfiguration : public LXQtPanelPluginConfigDialog
-{
-    Q_OBJECT
+class LXQtSysStatConfiguration : public LXQtPanelPluginConfigDialog {
+  Q_OBJECT
 
-public:
-    explicit LXQtSysStatConfiguration(PluginSettings *settings, QWidget *parent = nullptr);
-    ~LXQtSysStatConfiguration();
+ public:
+  explicit LXQtSysStatConfiguration(PluginSettings* settings, QWidget* parent = nullptr);
+  ~LXQtSysStatConfiguration();
 
-public slots:
-    void saveSettings();
+ public slots:
+  void saveSettings();
 
-    void on_typeCOB_currentIndexChanged(int);
-    void on_maximumHS_valueChanged(int);
-    void on_customColoursB_clicked();
+  void on_typeCOB_currentIndexChanged(int);
+  void on_maximumHS_valueChanged(int);
+  void on_customColoursB_clicked();
 
-    void coloursChanged();
+  void coloursChanged();
 
-public:
-    static const QStringList msStatTypes;
+ public:
+  static const QStringList msStatTypes;
 
-signals:
-    void maximumNetSpeedChanged(QString);
+ signals:
+  void maximumNetSpeedChanged(QString);
 
-private:
-    Ui::LXQtSysStatConfiguration *ui;
+ private:
+  Ui::LXQtSysStatConfiguration* ui;
 
-    SysStat::BaseStat *mStat;
-    LXQtSysStatColours *mColoursDialog;
+  SysStat::BaseStat* mStat;
+  LXQtSysStatColours* mColoursDialog;
 
-    bool mLockSettingChanges;
+  bool mLockSettingChanges;
 
-    void loadSettings();
+  void loadSettings();
 };
 
-#endif // LXQTSYSSTATCONFIGURATION_H
+#endif  // LXQTSYSSTATCONFIGURATION_H

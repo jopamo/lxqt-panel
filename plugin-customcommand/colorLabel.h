@@ -31,26 +31,26 @@
 #include <Qt>
 
 class ColorLabel : public QLabel {
-    Q_OBJECT
+  Q_OBJECT
 
-public:
-    explicit ColorLabel(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
-    ~ColorLabel();
+ public:
+  explicit ColorLabel(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+  ~ColorLabel();
 
-    void setColor(const QColor& color, bool announceChange = false);
-    QColor getColor() const;
+  void setColor(const QColor& color, bool announceChange = false);
+  QColor getColor() const;
 
-    void reset();
+  void reset();
 
-signals:
-    void colorChanged();
+ signals:
+  void colorChanged();
 
-protected:
-    void mousePressEvent(QMouseEvent* event) override;
-    void paintEvent(QPaintEvent* event) override;
+ protected:
+  void mousePressEvent(QMouseEvent* event) override;
+  void paintEvent(QPaintEvent* event) override;
 
-private:
-    QColor color_;
+ private:
+  QColor color_;
 };
 
-#endif // COLORLABEL_H
+#endif  // COLORLABEL_H

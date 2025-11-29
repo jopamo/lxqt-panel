@@ -39,155 +39,129 @@
 
 #define MIMETYPE "x-lxqt/quicklaunch-button"
 
+QuickLaunchButton::QuickLaunchButton(QuickLaunchAction* act, ILXQtPanelPlugin* plugin, QWidget* parent)
+    : QToolButton(parent), mAct(act), mPlugin(plugin) {
+  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  setAcceptDrops(true);
+  setAutoRaise(true);
 
-QuickLaunchButton::QuickLaunchButton(QuickLaunchAction * act, ILXQtPanelPlugin * plugin, QWidget * parent)
-    : QToolButton(parent),
-      mAct(act),
-      mPlugin(plugin)
-{
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    setAcceptDrops(true);
-    setAutoRaise(true);
+  setDefaultAction(mAct);
+  mAct->setParent(this);
 
-    setDefaultAction(mAct);
-    mAct->setParent(this);
+  const QString dndStr = QStringLiteral(" ") + tr("(Ctrl + DND)");
 
-    const QString dndStr = QStringLiteral(" ") + tr("(Ctrl + DND)");
+  mMoveLeftAct = new QAction(XdgIcon::fromTheme(QStringLiteral("go-previous")), tr("Move left") + dndStr, this);
+  connect(mMoveLeftAct, &QAction::triggered, this, &QuickLaunchButton::movedLeft);
 
-    mMoveLeftAct = new QAction(XdgIcon::fromTheme(QStringLiteral("go-previous")), tr("Move left") + dndStr, this);
-    connect(mMoveLeftAct, &QAction::triggered, this, &QuickLaunchButton::movedLeft);
+  mMoveRightAct = new QAction(XdgIcon::fromTheme(QStringLiteral("go-next")), tr("Move right") + dndStr, this);
+  connect(mMoveRightAct, &QAction::triggered, this, &QuickLaunchButton::movedRight);
 
-    mMoveRightAct = new QAction(XdgIcon::fromTheme(QStringLiteral("go-next")), tr("Move right") + dndStr, this);
-    connect(mMoveRightAct, &QAction::triggered, this, &QuickLaunchButton::movedRight);
+  mDeleteAct = new QAction(XdgIcon::fromTheme(QStringLiteral("dialog-close")), tr("Remove from quicklaunch"), this);
+  connect(mDeleteAct, &QAction::triggered, this, &QuickLaunchButton::selfRemove);
 
-    mDeleteAct = new QAction(XdgIcon::fromTheme(QStringLiteral("dialog-close")), tr("Remove from quicklaunch"), this);
-    connect(mDeleteAct, &QAction::triggered, this, &QuickLaunchButton::selfRemove);
-
-    mMenu = new QMenu(this);
-    mMenu->addAction(mAct);
-    mMenu->addActions(mAct->additionalActions());
-    mFirstSep = mMenu->addSeparator();
-    if (mAct->type() == QuickLaunchAction::ActionType::ActionXdg)
-    {
-        auto updateAct = new QAction(XdgIcon::fromTheme(QStringLiteral("view-refresh")), tr("Refresh"), this);
-        connect(updateAct, &QAction::triggered, this, [this]
+  mMenu = new QMenu(this);
+  mMenu->addAction(mAct);
+  mMenu->addActions(mAct->additionalActions());
+  mFirstSep = mMenu->addSeparator();
+  if (mAct->type() == QuickLaunchAction::ActionType::ActionXdg) {
+    auto updateAct = new QAction(XdgIcon::fromTheme(QStringLiteral("view-refresh")), tr("Refresh"), this);
+    connect(updateAct, &QAction::triggered, this, [this] {
+      const auto actions = mMenu->actions();
+      for (const auto& action : actions) {
+        if (action->isSeparator())  // mFirstSep
         {
-            const auto actions = mMenu->actions();
-            for (const auto &action : actions)
-            {
-                if (action->isSeparator()) // mFirstSep
-                {
-                    break;
-                }
-                mMenu->removeAction(action);
-            }
-            mAct->updateXdgAction();
-            mMenu->insertAction(mFirstSep, mAct);
-            const auto extraActions = mAct->additionalActions();
-            for (const auto &action : extraActions)
-            {
-                mMenu->insertAction(mFirstSep, action);
-            }
-        });
-        mMenu->addAction(updateAct);
-    }
-    mMenu->addAction(mMoveLeftAct);
-    mMenu->addAction(mMoveRightAct);
-    mMenu->addSeparator();
-    mMenu->addAction(mDeleteAct);
+          break;
+        }
+        mMenu->removeAction(action);
+      }
+      mAct->updateXdgAction();
+      mMenu->insertAction(mFirstSep, mAct);
+      const auto extraActions = mAct->additionalActions();
+      for (const auto& action : extraActions) {
+        mMenu->insertAction(mFirstSep, action);
+      }
+    });
+    mMenu->addAction(updateAct);
+  }
+  mMenu->addAction(mMoveLeftAct);
+  mMenu->addAction(mMoveRightAct);
+  mMenu->addSeparator();
+  mMenu->addAction(mDeleteAct);
 
-    setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, &QuickLaunchButton::customContextMenuRequested, this, &QuickLaunchButton::this_customContextMenuRequested);
+  setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(this, &QuickLaunchButton::customContextMenuRequested, this,
+          &QuickLaunchButton::this_customContextMenuRequested);
 }
 
 QuickLaunchButton::~QuickLaunchButton() = default;
 
-
-QHash<QString, QString> QuickLaunchButton::settingsMap()
-{
-    Q_ASSERT(mAct);
-    return mAct->settingsMap();
+QHash<QString, QString> QuickLaunchButton::settingsMap() {
+  Q_ASSERT(mAct);
+  return mAct->settingsMap();
 }
 
+void QuickLaunchButton::this_customContextMenuRequested(const QPoint& /*pos*/) {
+  LXQtQuickLaunch* panel = qobject_cast<LXQtQuickLaunch*>(parent());
 
-void QuickLaunchButton::this_customContextMenuRequested(const QPoint & /*pos*/)
-{
-    LXQtQuickLaunch *panel = qobject_cast<LXQtQuickLaunch*>(parent());
-
-    mMoveLeftAct->setEnabled(!mPlugin->panel()->isLocked() && panel && panel->indexOfButton(this) > 0);
-    mMoveRightAct->setEnabled(!mPlugin->panel()->isLocked() && panel && panel->indexOfButton(this) < panel->countOfButtons() - 1);
-    mDeleteAct->setEnabled(!mPlugin->panel()->isLocked());
-    mPlugin->willShowWindow(mMenu);
-    mMenu->popup(mPlugin->panel()->calculatePopupWindowPos(mapToGlobal(QPoint(0, 0)), mMenu->sizeHint()).topLeft());
+  mMoveLeftAct->setEnabled(!mPlugin->panel()->isLocked() && panel && panel->indexOfButton(this) > 0);
+  mMoveRightAct->setEnabled(!mPlugin->panel()->isLocked() && panel &&
+                            panel->indexOfButton(this) < panel->countOfButtons() - 1);
+  mDeleteAct->setEnabled(!mPlugin->panel()->isLocked());
+  mPlugin->willShowWindow(mMenu);
+  mMenu->popup(mPlugin->panel()->calculatePopupWindowPos(mapToGlobal(QPoint(0, 0)), mMenu->sizeHint()).topLeft());
 }
 
-
-void QuickLaunchButton::selfRemove()
-{
-    emit buttonDeleted();
+void QuickLaunchButton::selfRemove() {
+  emit buttonDeleted();
 }
 
+void QuickLaunchButton::mousePressEvent(QMouseEvent* e) {
+  if (e->button() == Qt::LeftButton && e->modifiers() == Qt::ControlModifier) {
+    mDragStart = e->position().toPoint();
+    return;
+  }
 
-void QuickLaunchButton::mousePressEvent(QMouseEvent *e)
-{
-    if (e->button() == Qt::LeftButton && e->modifiers() == Qt::ControlModifier)
-    {
-        mDragStart = e->position().toPoint();
-        return;
-    }
-
-    QToolButton::mousePressEvent(e);
+  QToolButton::mousePressEvent(e);
 }
 
+void QuickLaunchButton::mouseMoveEvent(QMouseEvent* e) {
+  if (mPlugin->panel()->isLocked() || !(e->buttons() & Qt::LeftButton)) {
+    return;
+  }
 
-void QuickLaunchButton::mouseMoveEvent(QMouseEvent *e)
-{
-    if (mPlugin->panel()->isLocked() || !(e->buttons() & Qt::LeftButton))
-    {
-        return;
-    }
+  if ((e->position().toPoint() - mDragStart).manhattanLength() < QApplication::startDragDistance()) {
+    return;
+  }
 
-    if ((e->position().toPoint() - mDragStart).manhattanLength() < QApplication::startDragDistance())
-    {
-        return;
-    }
+  if (e->modifiers() != Qt::ControlModifier) {
+    return;
+  }
 
-    if (e->modifiers() != Qt::ControlModifier)
-    {
-        return;
-    }
+  QPointer<QDrag> drag = new QDrag(this);
+  ButtonMimeData* mimeData = new ButtonMimeData();
+  mimeData->setButton(this);
+  drag->setMimeData(mimeData);
 
-    QPointer<QDrag> drag = new QDrag(this);
-    ButtonMimeData *mimeData = new ButtonMimeData();
-    mimeData->setButton(this);
-    drag->setMimeData(mimeData);
+  drag->exec(Qt::MoveAction);
 
-    drag->exec(Qt::MoveAction);
-
-    // Icon was dropped outside the panel, remove button
-    if (drag && !drag->target())
-    {
-        selfRemove();
-    }
+  // Icon was dropped outside the panel, remove button
+  if (drag && !drag->target()) {
+    selfRemove();
+  }
 }
 
-
-void QuickLaunchButton::dragMoveEvent(QDragMoveEvent * e)
-{
-    if (!mPlugin->panel()->isLocked() && e->mimeData()->hasFormat(QStringLiteral(MIMETYPE)))
-        e->acceptProposedAction();
-    else
-        e->ignore();
+void QuickLaunchButton::dragMoveEvent(QDragMoveEvent* e) {
+  if (!mPlugin->panel()->isLocked() && e->mimeData()->hasFormat(QStringLiteral(MIMETYPE)))
+    e->acceptProposedAction();
+  else
+    e->ignore();
 }
 
-
-void QuickLaunchButton::dragEnterEvent(QDragEnterEvent *e)
-{
-    if (!mPlugin->panel()->isLocked()) {
-        const ButtonMimeData *mimeData = qobject_cast<const ButtonMimeData*>(e->mimeData());
-        if (mimeData && mimeData->button())
-        {
-            emit switchButtons(mimeData->button(), this);
-        }
+void QuickLaunchButton::dragEnterEvent(QDragEnterEvent* e) {
+  if (!mPlugin->panel()->isLocked()) {
+    const ButtonMimeData* mimeData = qobject_cast<const ButtonMimeData*>(e->mimeData());
+    if (mimeData && mimeData->button()) {
+      emit switchButtons(mimeData->button(), this);
     }
+  }
 }

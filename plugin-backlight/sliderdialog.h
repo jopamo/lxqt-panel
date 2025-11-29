@@ -24,7 +24,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef SLIDERDIALOG_H
 #define SLIDERDIALOG_H
 
@@ -33,33 +32,30 @@
 #include <QToolButton>
 #include <LXQt/lxqtbacklight.h>
 
+class SliderDialog : public QDialog {
+  Q_OBJECT
 
-class SliderDialog: public QDialog
-{
-    Q_OBJECT
+ public:
+  SliderDialog(QWidget* parent);
+  void updateBacklight();
 
-public:
-    SliderDialog(QWidget *parent);
-    void updateBacklight();
+ public Q_SLOTS:
+  void downButtonClicked(bool);
+  void upButtonClicked(bool);
 
-public Q_SLOTS:
-    void downButtonClicked(bool);
-    void upButtonClicked(bool);
+ Q_SIGNALS:
+  void dialogClosed();
 
-Q_SIGNALS:
-    void dialogClosed();
+ protected:
+  bool event(QEvent* event) override;
 
-protected:
-    bool event(QEvent *event) override;
+ private:
+  QSlider* m_slider;
+  QToolButton *m_upButton, *m_downButton;
+  LXQt::Backlight* m_backlight;
 
-private:
-    QSlider *m_slider;
-    QToolButton *m_upButton, *m_downButton;
-    LXQt::Backlight *m_backlight;
-
-private Q_SLOTS:
-    void sliderValueChanged(int value);
-
+ private Q_SLOTS:
+  void sliderValueChanged(int value);
 };
 
-#endif // SLIDERDIALOG_H
+#endif  // SLIDERDIALOG_H

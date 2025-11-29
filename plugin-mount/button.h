@@ -31,13 +31,11 @@
 
 #include <QToolButton>
 
-
-class Button : public QToolButton
-{
-    Q_OBJECT
-public:
-    Button(QWidget *parent = nullptr);
-    ~Button();
+class Button : public QToolButton {
+  Q_OBJECT
+ public:
+  Button(QWidget* parent = nullptr);
+  ~Button();
 };
 
 #endif

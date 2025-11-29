@@ -31,113 +31,111 @@
 
 #include "qeyeswidget.h"
 
-QAbstractEyesWidget::QAbstractEyesWidget(QWidget *parent) : QWidget(parent) {
-    connect(&timer, &QTimer::timeout, this, &QAbstractEyesWidget::timeout);
-    setMouseTracking(true);
-    if (!underMouse()) {
-        timer.setInterval(timerTimeout);
-        timer.start();
-    }
-    //setContextMenuPolicy(Qt::CustomContextMenu);
+QAbstractEyesWidget::QAbstractEyesWidget(QWidget* parent) : QWidget(parent) {
+  connect(&timer, &QTimer::timeout, this, &QAbstractEyesWidget::timeout);
+  setMouseTracking(true);
+  if (!underMouse()) {
+    timer.setInterval(timerTimeout);
+    timer.start();
+  }
+  // setContextMenuPolicy(Qt::CustomContextMenu);
 
-    //connect(this, SIGNAL(customContextMenuRequested(const QPoint &)),
-      //  this, SLOT(showContextMenu(const QPoint &)));
+  // connect(this, SIGNAL(customContextMenuRequested(const QPoint &)),
+  //   this, SLOT(showContextMenu(const QPoint &)));
 }
 
 QAbstractEyesWidget::~QAbstractEyesWidget() {
-    timer.stop();
+  timer.stop();
 }
 
-void QAbstractEyesWidget::leaveEvent(QEvent *) {
-    timer.setInterval(timerTimeout);
-    timer.start();
+void QAbstractEyesWidget::leaveEvent(QEvent*) {
+  timer.setInterval(timerTimeout);
+  timer.start();
 }
 
-void QAbstractEyesWidget::enterEvent(QEnterEvent *) {
-    timer.stop();
+void QAbstractEyesWidget::enterEvent(QEnterEvent*) {
+  timer.stop();
 }
 
-void QAbstractEyesWidget::mouseMoveEvent(QMouseEvent  *) {
-    repaint();
+void QAbstractEyesWidget::mouseMoveEvent(QMouseEvent*) {
+  repaint();
 }
 
-void QAbstractEyesWidget::paintEvent(QPaintEvent *) {
-    QPainter painter(this);
+void QAbstractEyesWidget::paintEvent(QPaintEvent*) {
+  QPainter painter(this);
 
-    painter.setRenderHint(QPainter::Antialiasing, true);
-    if (!transparent) {
-        painter.fillRect(0, 0, width(), height(), bgColor);
-    } else {
-        painter.fillRect(0, 0, width(), height(), Qt::transparent);
-    }
-    const auto dx = 1.0 * width() / numEyes;
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  if (!transparent) {
+    painter.fillRect(0, 0, width(), height(), bgColor);
+  }
+  else {
+    painter.fillRect(0, 0, width(), height(), Qt::transparent);
+  }
+  const auto dx = 1.0 * width() / numEyes;
 
-    for (int i = 0 ; i < numEyes ; i++)
-        drawEye(painter, i * dx, 0, dx+0.9, height());
+  for (int i = 0; i < numEyes; i++)
+    drawEye(painter, i * dx, 0, dx + 0.9, height());
 
-    const auto pos = mapFromGlobal(QCursor::pos());
-    float borderX, borderY;
-    eyeBorder(borderX, borderY);
-    for (int i = 0 ; i < numEyes ; i++) {
+  const auto pos = mapFromGlobal(QCursor::pos());
+  float borderX, borderY;
+  eyeBorder(borderX, borderY);
+  for (int i = 0; i < numEyes; i++) {
+    /* center of the eye */
+    const auto x0 = i * dx + dx / 2;
+    const auto y0 = height() / 2;
 
-        /* center of the eye */
-        const auto x0 = i * dx + dx / 2 ;
-        const auto y0 = height() / 2;
+    /* radius of the ellipse */
+    const float ry = height() / 2 - borderY;
+    const float rx = dx / 2 - borderX;
 
-        /* radius of the ellipse */
-        const float ry = height() / 2 - borderY;
-        const float rx = dx / 2 - borderX;
+    /* angle */
+    const float dx = pos.x() - x0;
+    const float dy = pos.y() - y0;
 
-        /* angle */
-        const float dx = pos.x() - x0;
-        const float dy = pos.y() - y0;
+    /*
+     *  dy      y      ry      sin(alpha)
+     * ----  = --- =  ---- * -------------
+     *  dx      x      rx      cos(alpha)
+     *
+     *
+     *  dy / ry      sin(alpha)
+     * ---------  = ------------- = tan(alpha)
+     *  dx / rx      cos(alpha)
+     *
+     *
+     * alpha = atan2( dy/rx, dx/rx)
+     *
+     */
 
-        /*
-         *  dy      y      ry      sin(alpha)
-         * ----  = --- =  ---- * -------------  
-         *  dx      x      rx      cos(alpha)
-         * 
-         * 
-         *  dy / ry      sin(alpha)
-         * ---------  = ------------- = tan(alpha)
-         *  dx / rx      cos(alpha)
-         * 
-         * 
-         * alpha = atan2( dy/rx, dx/rx)
-         * 
-         */
+    const auto alpha = atan2(dy / ry, dx / rx);
 
-        const auto alpha = atan2(dy/ry, dx/rx);
+    /* pupil center */
+    auto y = ry * sin(alpha);
+    auto x = rx * cos(alpha);
 
-        /* pupil center */
-        auto y = ry * sin(alpha);
-        auto x = rx * cos(alpha);
+    /*
+     * if the cursor is inside the eye, the pupil position is
+     * the cursor
+     */
+    if (y <= 0 && dy <= 0 && dy > y)
+      y = dy;
+    else if (y >= 0 && dy >= 0 && dy < y)
+      y = dy;
+    if (x <= 0 && dx <= 0 && dx > x)
+      x = dx;
+    else if (x >= 0 && dx >= 0 && dx < x)
+      x = dx;
 
-        /* 
-         * if the cursor is inside the eye, the pupil position is
-         * the cursor
-         */
-        if (y <= 0 && dy <= 0 && dy > y)
-            y = dy;
-        else if (y >= 0 && dy >= 0 && dy < y)
-            y = dy;
-        if (x <= 0 && dx <= 0 && dx > x)
-            x = dx;
-        else if (x >= 0 && dx >= 0 && dx < x)
-            x = dx;
-
-        //painter.drawEllipse(QPoint(x0 + x, y0 + y), psize / 2, psize / 2);
-        drawPupil(painter, x0 +x, y0 + y);
-
-    }
-
+    // painter.drawEllipse(QPoint(x0 + x, y0 + y), psize / 2, psize / 2);
+    drawPupil(painter, x0 + x, y0 + y);
+  }
 }
 
 void QAbstractEyesWidget::timeout() {
-    const auto pos = mapFromGlobal(QCursor::pos());
-    if (pos == previousPos)
-        return;
-    previousPos = pos;
+  const auto pos = mapFromGlobal(QCursor::pos());
+  if (pos == previousPos)
+    return;
+  previousPos = pos;
 
-    update();
+  update();
 }

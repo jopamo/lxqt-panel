@@ -33,27 +33,26 @@
 class PluginSettings;
 
 namespace Ui {
-    class LXQtTaskbarConfiguration;
+class LXQtTaskbarConfiguration;
 }
 
-class LXQtTaskbarConfiguration : public LXQtPanelPluginConfigDialog
-{
-    Q_OBJECT
+class LXQtTaskbarConfiguration : public LXQtPanelPluginConfigDialog {
+  Q_OBJECT
 
-public:
-    explicit LXQtTaskbarConfiguration(PluginSettings *settings, QWidget *parent = nullptr);
-    ~LXQtTaskbarConfiguration();
+ public:
+  explicit LXQtTaskbarConfiguration(PluginSettings* settings, QWidget* parent = nullptr);
+  ~LXQtTaskbarConfiguration();
 
-private:
-    Ui::LXQtTaskbarConfiguration *ui;
+ private:
+  Ui::LXQtTaskbarConfiguration* ui;
 
-    /*
-      Read settings from conf file and put data into controls.
-    */
-    void loadSettings();
+  /*
+    Read settings from conf file and put data into controls.
+  */
+  void loadSettings();
 
-private slots:
-    void saveSettings();
+ private slots:
+  void saveSettings();
 };
 
-#endif // LXQTTASKBARCONFIGURATION_H
+#endif  // LXQTTASKBARCONFIGURATION_H

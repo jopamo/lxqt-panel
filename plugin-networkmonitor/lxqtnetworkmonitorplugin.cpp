@@ -25,34 +25,25 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #include "lxqtnetworkmonitorplugin.h"
 #include "lxqtnetworkmonitor.h"
 #include "lxqtnetworkmonitorconfiguration.h"
 
-LXQtNetworkMonitorPlugin::LXQtNetworkMonitorPlugin(const ILXQtPanelPluginStartupInfo &startupInfo):
-    QObject(),
-    ILXQtPanelPlugin(startupInfo),
-    mWidget(new LXQtNetworkMonitor(this))
-{
+LXQtNetworkMonitorPlugin::LXQtNetworkMonitorPlugin(const ILXQtPanelPluginStartupInfo& startupInfo)
+    : QObject(), ILXQtPanelPlugin(startupInfo), mWidget(new LXQtNetworkMonitor(this)) {}
+
+LXQtNetworkMonitorPlugin::~LXQtNetworkMonitorPlugin() {
+  delete mWidget;
 }
 
-LXQtNetworkMonitorPlugin::~LXQtNetworkMonitorPlugin()
-{
-    delete mWidget;
+QWidget* LXQtNetworkMonitorPlugin::widget() {
+  return mWidget;
 }
 
-QWidget *LXQtNetworkMonitorPlugin::widget()
-{
-    return mWidget;
+QDialog* LXQtNetworkMonitorPlugin::configureDialog() {
+  return new LXQtNetworkMonitorConfiguration(settings());
 }
 
-QDialog *LXQtNetworkMonitorPlugin::configureDialog()
-{
-    return new LXQtNetworkMonitorConfiguration(settings());
-}
-
-void LXQtNetworkMonitorPlugin::settingsChanged()
-{
-    mWidget->settingsChanged();
+void LXQtNetworkMonitorPlugin::settingsChanged() {
+  mWidget->settingsChanged();
 }

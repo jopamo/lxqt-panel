@@ -27,11 +27,6 @@
 
 #include "ejectaction_nothing.h"
 
-EjectActionNothing::EjectActionNothing(LXQtMountPlugin *plugin, QObject *parent):
-    EjectAction(plugin, parent)
-{
-}
+EjectActionNothing::EjectActionNothing(LXQtMountPlugin* plugin, QObject* parent) : EjectAction(plugin, parent) {}
 
-void EjectActionNothing::doEjectPressed(void)
-{
-}
+void EjectActionNothing::doEjectPressed(void) {}

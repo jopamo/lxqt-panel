@@ -29,22 +29,17 @@
 #include "../lxqtmountplugin.h"
 #include "../popup.h"
 
-DeviceActionMenu::DeviceActionMenu(LXQtMountPlugin *plugin, QObject *parent):
-    DeviceAction(plugin, parent)
-{
-    mPopup = plugin->popup();
+DeviceActionMenu::DeviceActionMenu(LXQtMountPlugin* plugin, QObject* parent) : DeviceAction(plugin, parent) {
+  mPopup = plugin->popup();
 
-    mHideTimer.setSingleShot(true);
-    mHideTimer.setInterval(5000);
-    connect(&mHideTimer, &QTimer::timeout, mPopup, &Popup::hide);
+  mHideTimer.setSingleShot(true);
+  mHideTimer.setInterval(5000);
+  connect(&mHideTimer, &QTimer::timeout, mPopup, &Popup::hide);
 }
 
-void DeviceActionMenu::doDeviceAdded(Solid::Device /*device*/)
-{
-    mHideTimer.start();
-    mPopup->show();
+void DeviceActionMenu::doDeviceAdded(Solid::Device /*device*/) {
+  mHideTimer.start();
+  mPopup->show();
 }
 
-void DeviceActionMenu::doDeviceRemoved(Solid::Device /*device*/)
-{
-}
+void DeviceActionMenu::doDeviceRemoved(Solid::Device /*device*/) {}

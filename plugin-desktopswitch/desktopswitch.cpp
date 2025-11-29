@@ -43,290 +43,250 @@
 #include "desktopswitchbutton.h"
 #include "desktopswitchconfiguration.h"
 
+DesktopSwitch::DesktopSwitch(const ILXQtPanelPluginStartupInfo& startupInfo)
+    : QObject(),
+      ILXQtPanelPlugin(startupInfo),
+      m_pSignalMapper(new QSignalMapper(this)),
+      m_desktopCount(0),
+      mRows(-1),
+      mShowOnlyActive(false),
+      mLabelType(DesktopSwitchButton::LABEL_TYPE_INVALID) {
+  LXQtPanelApplication* a = reinterpret_cast<LXQtPanelApplication*>(qApp);
+  mBackend = a->getWMBackend();
 
-DesktopSwitch::DesktopSwitch(const ILXQtPanelPluginStartupInfo &startupInfo) :
-    QObject(),
-    ILXQtPanelPlugin(startupInfo),
-    m_pSignalMapper(new QSignalMapper(this)),
-    m_desktopCount(0),
-    mRows(-1),
-    mShowOnlyActive(false),
-    mLabelType(DesktopSwitchButton::LABEL_TYPE_INVALID)
-{
-    LXQtPanelApplication *a = reinterpret_cast<LXQtPanelApplication*>(qApp);
-    mBackend = a->getWMBackend();
+  m_desktopCount = mBackend->getWorkspacesCount(getScreen());
 
+  m_buttons = new QButtonGroup(this);
 
-    m_desktopCount = mBackend->getWorkspacesCount(getScreen());
+  connect(m_pSignalMapper, &QSignalMapper::mappedInt, this, &DesktopSwitch::setDesktop);
 
-    m_buttons = new QButtonGroup(this);
+  mLayout = new LXQt::GridLayout(&mWidget);
+  mWidget.setLayout(mLayout);
 
-    connect (m_pSignalMapper, &QSignalMapper::mappedInt, this, &DesktopSwitch::setDesktop);
+  settingsChanged();
 
+  onCurrentDesktopChanged(mBackend->getCurrentWorkspace(getScreen()));
 
-    mLayout = new LXQt::GridLayout(&mWidget);
-    mWidget.setLayout(mLayout);
+  connect(m_buttons, &QButtonGroup::idClicked, this, &DesktopSwitch::setDesktop);
 
-    settingsChanged();
+  connect(mBackend, &ILXQtAbstractWMInterface::workspacesCountChanged, this, &DesktopSwitch::onNumberOfDesktopsChanged);
+  connect(mBackend, &ILXQtAbstractWMInterface::currentWorkspaceChanged, this, &DesktopSwitch::onCurrentDesktopChanged);
+  connect(mBackend, &ILXQtAbstractWMInterface::workspaceNameChanged, this, &DesktopSwitch::onDesktopNamesChanged);
 
-    onCurrentDesktopChanged(mBackend->getCurrentWorkspace(getScreen()));
-
-    connect(m_buttons, &QButtonGroup::idClicked, this, &DesktopSwitch::setDesktop);
-
-    connect(mBackend, &ILXQtAbstractWMInterface::workspacesCountChanged,  this, &DesktopSwitch::onNumberOfDesktopsChanged);
-    connect(mBackend, &ILXQtAbstractWMInterface::currentWorkspaceChanged, this, &DesktopSwitch::onCurrentDesktopChanged);
-    connect(mBackend, &ILXQtAbstractWMInterface::workspaceNameChanged,    this, &DesktopSwitch::onDesktopNamesChanged);
-
-    connect(mBackend, &ILXQtAbstractWMInterface::windowPropertyChanged, this, &DesktopSwitch::onWindowChanged);
-    connect(mBackend, &ILXQtAbstractWMInterface::windowRemoved, this, &DesktopSwitch::onWindowRemoved);
+  connect(mBackend, &ILXQtAbstractWMInterface::windowPropertyChanged, this, &DesktopSwitch::onWindowChanged);
+  connect(mBackend, &ILXQtAbstractWMInterface::windowRemoved, this, &DesktopSwitch::onWindowRemoved);
 }
 
-QScreen* DesktopSwitch::getScreen() const
-{
-    const auto screens = QApplication::screens();
-    for (const auto& screen : screens)
-    {
-        if (screen->name() == panel()->screenName())
-        {
-            return screen;
-        }
+QScreen* DesktopSwitch::getScreen() const {
+  const auto screens = QApplication::screens();
+  for (const auto& screen : screens) {
+    if (screen->name() == panel()->screenName()) {
+      return screen;
     }
-    return nullptr;
+  }
+  return nullptr;
 }
 
-
-
-void DesktopSwitch::onWindowChanged(WId id, int prop)
-{
-    if (prop == int(LXQtTaskBarWindowProperty::State)
-        || prop == int(LXQtTaskBarWindowProperty::Urgency)
-        || prop == int(LXQtTaskBarWindowProperty::Workspace))
-    {
-        int desktop = mBackend->getWindowWorkspace(id);
-        if (desktop == mBackend->onAllWorkspacesEnum())
-            return;
-        if (prop == int(LXQtTaskBarWindowProperty::Workspace))
-        { // remove the urgent hint from desktops that do not contain the window
-            const auto buttons = m_buttons->buttons();
-            for (auto button : buttons)
-            {
-                qobject_cast<DesktopSwitchButton*>(button)->setUrgencyHint(id, desktop != m_buttons->id(button) + 1 ? false : mBackend->applicationDemandsAttention(id));
-            }
-        }
-        else if (auto button = qobject_cast<DesktopSwitchButton *>(m_buttons->button(desktop - 1)))
-        { // set the urgent hint based on whether the window demands attention
-            button->setUrgencyHint(id, mBackend->applicationDemandsAttention(id));
-        }
+void DesktopSwitch::onWindowChanged(WId id, int prop) {
+  if (prop == int(LXQtTaskBarWindowProperty::State) || prop == int(LXQtTaskBarWindowProperty::Urgency) ||
+      prop == int(LXQtTaskBarWindowProperty::Workspace)) {
+    int desktop = mBackend->getWindowWorkspace(id);
+    if (desktop == mBackend->onAllWorkspacesEnum())
+      return;
+    if (prop == int(LXQtTaskBarWindowProperty::Workspace)) {  // remove the urgent hint from desktops that do not
+                                                              // contain the window
+      const auto buttons = m_buttons->buttons();
+      for (auto button : buttons) {
+        qobject_cast<DesktopSwitchButton*>(button)->setUrgencyHint(
+            id, desktop != m_buttons->id(button) + 1 ? false : mBackend->applicationDemandsAttention(id));
+      }
     }
+    else if (auto button = qobject_cast<DesktopSwitchButton*>(m_buttons->button(
+                 desktop - 1))) {  // set the urgent hint based on whether the window demands attention
+      button->setUrgencyHint(id, mBackend->applicationDemandsAttention(id));
+    }
+  }
 }
 
-void DesktopSwitch::onWindowRemoved(WId id)
-{
-    const auto buttons = m_buttons->buttons();
-    for (auto button : buttons)
-        qobject_cast<DesktopSwitchButton*>(button)->setUrgencyHint(id, false);
+void DesktopSwitch::onWindowRemoved(WId id) {
+  const auto buttons = m_buttons->buttons();
+  for (auto button : buttons)
+    qobject_cast<DesktopSwitchButton*>(button)->setUrgencyHint(id, false);
 }
 
-void DesktopSwitch::refresh()
-{
-    QScreen *scrn = getScreen();
-    const QString screenName = scrn ? scrn->name() : QString();
-    const QList<QAbstractButton*> btns = m_buttons->buttons();
+void DesktopSwitch::refresh() {
+  QScreen* scrn = getScreen();
+  const QString screenName = scrn ? scrn->name() : QString();
+  const QList<QAbstractButton*> btns = m_buttons->buttons();
 
-    int i = 0;
-    const int current_desktop = mBackend->getCurrentWorkspace(scrn);
-    const int current_cnt = btns.count();
-    const int border = std::min(btns.count(), (qsizetype) m_desktopCount);
-    //update existing buttons
-    for ( ; i < border; ++i)
-    {
-        DesktopSwitchButton * button = qobject_cast<DesktopSwitchButton*>(btns[i]);
-        auto deskName = mBackend->getWorkspaceName(i + 1, screenName);
-        button->update(i, mLabelType, deskName.isEmpty() ? tr("Desktop %1").arg(i + 1) : deskName);
-        button->setVisible(!mShowOnlyActive || i + 1 == current_desktop);
-    }
+  int i = 0;
+  const int current_desktop = mBackend->getCurrentWorkspace(scrn);
+  const int current_cnt = btns.count();
+  const int border = std::min(btns.count(), (qsizetype)m_desktopCount);
+  // update existing buttons
+  for (; i < border; ++i) {
+    DesktopSwitchButton* button = qobject_cast<DesktopSwitchButton*>(btns[i]);
+    auto deskName = mBackend->getWorkspaceName(i + 1, screenName);
+    button->update(i, mLabelType, deskName.isEmpty() ? tr("Desktop %1").arg(i + 1) : deskName);
+    button->setVisible(!mShowOnlyActive || i + 1 == current_desktop);
+  }
 
-    //create new buttons (if necessary)
-    QAbstractButton *b;
-    for ( ; i < m_desktopCount; ++i)
-    {
-        auto deskName = mBackend->getWorkspaceName(i + 1, screenName);
-        b = new DesktopSwitchButton(&mWidget, i, mLabelType,
-                deskName.isEmpty() ? tr("Desktop %1").arg(i+1) : deskName);
-        mWidget.layout()->addWidget(b);
-        m_buttons->addButton(b, i);
-        b->setVisible(!mShowOnlyActive || i + 1 == current_desktop);
-    }
+  // create new buttons (if necessary)
+  QAbstractButton* b;
+  for (; i < m_desktopCount; ++i) {
+    auto deskName = mBackend->getWorkspaceName(i + 1, screenName);
+    b = new DesktopSwitchButton(&mWidget, i, mLabelType, deskName.isEmpty() ? tr("Desktop %1").arg(i + 1) : deskName);
+    mWidget.layout()->addWidget(b);
+    m_buttons->addButton(b, i);
+    b->setVisible(!mShowOnlyActive || i + 1 == current_desktop);
+  }
 
-    //delete unneeded buttons (if necessary)
-    for ( ; i < current_cnt; ++i)
-    {
-        b = m_buttons->buttons().constLast();
-        m_buttons->removeButton(b);
-        mWidget.layout()->removeWidget(b);
-        delete b;
-    }
+  // delete unneeded buttons (if necessary)
+  for (; i < current_cnt; ++i) {
+    b = m_buttons->buttons().constLast();
+    m_buttons->removeButton(b);
+    mWidget.layout()->removeWidget(b);
+    delete b;
+  }
 }
 
 DesktopSwitch::~DesktopSwitch() = default;
 
-void DesktopSwitch::setDesktop(int desktop)
-{
-    mBackend->setCurrentWorkspace(desktop + 1, getScreen());
+void DesktopSwitch::setDesktop(int desktop) {
+  mBackend->setCurrentWorkspace(desktop + 1, getScreen());
 }
 
-void DesktopSwitch::onNumberOfDesktopsChanged()
-{
-    int count = mBackend->getWorkspacesCount(getScreen());
-    qDebug() << "Desktop count changed from" << m_desktopCount << "to" << count;
-    m_desktopCount = count;
-    refresh();
+void DesktopSwitch::onNumberOfDesktopsChanged() {
+  int count = mBackend->getWorkspacesCount(getScreen());
+  qDebug() << "Desktop count changed from" << m_desktopCount << "to" << count;
+  m_desktopCount = count;
+  refresh();
 }
 
-void DesktopSwitch::onCurrentDesktopChanged(int current, const QString& screenName)
-{
-    if (!screenName.isEmpty() && panel()->screenName() != screenName)
-        return;
+void DesktopSwitch::onCurrentDesktopChanged(int current, const QString& screenName) {
+  if (!screenName.isEmpty() && panel()->screenName() != screenName)
+    return;
 
-    if (mShowOnlyActive)
-    {
-        mLayout->setEnabled(false);
-        int i = 1;
-        const auto buttons = m_buttons->buttons();
-        for (const auto button : buttons)
-        {
-            if (current == i)
-            {
-                button->setChecked(true);
-                button->setVisible(true);
-            } else
-            {
-                button->setVisible(false);
-            }
-            ++i;
-        }
-        mLayout->setEnabled(true);
-    } else
-    {
-        QAbstractButton *button = m_buttons->button(current - 1);
-        if (button)
-            button->setChecked(true);
-    }
-}
-
-void DesktopSwitch::onDesktopNamesChanged()
-{
-    refresh();
-}
-
-void DesktopSwitch::settingsChanged()
-{
-    const int rows = settings()->value(QStringLiteral("rows"), 1).toInt();
-    const bool show_only_active = settings()->value(QStringLiteral("showOnlyActive"), false).toBool();
-    const int label_type = settings()->value(QStringLiteral("labelType"), DesktopSwitchButton::LABEL_TYPE_NUMBER).toInt();
-
-    const bool need_realign = mRows != rows || show_only_active != mShowOnlyActive;
-    const bool need_refresh = mLabelType != static_cast<DesktopSwitchButton::LabelType>(label_type) || show_only_active != mShowOnlyActive;
-
-    mRows = rows;
-    mShowOnlyActive = show_only_active;
-    mLabelType = static_cast<DesktopSwitchButton::LabelType>(label_type);
-    if (need_realign)
-    {
-        // WARNING: Changing the desktop layout may call "LXQtPanel::realign", which calls
-        // "DesktopSwitch::realign()". Therefore, the desktop layout should not be changed
-        // inside the latter method.
-        int columns = static_cast<int>(ceil(static_cast<float>(m_desktopCount) / mRows));
-        mBackend->setDesktopLayout(panel()->isHorizontal() ? Qt::Horizontal : Qt::Vertical,
-                                   mRows, columns, mWidget.isRightToLeft());
-
-        realign(); // in case it isn't called when the desktop layout changes
-    }
-    if (need_refresh)
-        refresh();
-}
-
-void DesktopSwitch::realign()
-{
+  if (mShowOnlyActive) {
     mLayout->setEnabled(false);
-    if (panel()->isHorizontal())
-    {
-        mLayout->setRowCount(mShowOnlyActive ? 1 : mRows);
-        mLayout->setColumnCount(0);
-    }
-    else
-    {
-        mLayout->setColumnCount(mShowOnlyActive ? 1 : mRows);
-        mLayout->setRowCount(0);
+    int i = 1;
+    const auto buttons = m_buttons->buttons();
+    for (const auto button : buttons) {
+      if (current == i) {
+        button->setChecked(true);
+        button->setVisible(true);
+      }
+      else {
+        button->setVisible(false);
+      }
+      ++i;
     }
     mLayout->setEnabled(true);
+  }
+  else {
+    QAbstractButton* button = m_buttons->button(current - 1);
+    if (button)
+      button->setChecked(true);
+  }
 }
 
-QDialog *DesktopSwitch::configureDialog()
-{
-    return new DesktopSwitchConfiguration(settings());
+void DesktopSwitch::onDesktopNamesChanged() {
+  refresh();
 }
 
-DesktopSwitchWidget::DesktopSwitchWidget():
-    QFrame(),
-    m_mouseWheelThresholdCounter(0)
-{
+void DesktopSwitch::settingsChanged() {
+  const int rows = settings()->value(QStringLiteral("rows"), 1).toInt();
+  const bool show_only_active = settings()->value(QStringLiteral("showOnlyActive"), false).toBool();
+  const int label_type = settings()->value(QStringLiteral("labelType"), DesktopSwitchButton::LABEL_TYPE_NUMBER).toInt();
+
+  const bool need_realign = mRows != rows || show_only_active != mShowOnlyActive;
+  const bool need_refresh =
+      mLabelType != static_cast<DesktopSwitchButton::LabelType>(label_type) || show_only_active != mShowOnlyActive;
+
+  mRows = rows;
+  mShowOnlyActive = show_only_active;
+  mLabelType = static_cast<DesktopSwitchButton::LabelType>(label_type);
+  if (need_realign) {
+    // WARNING: Changing the desktop layout may call "LXQtPanel::realign", which calls
+    // "DesktopSwitch::realign()". Therefore, the desktop layout should not be changed
+    // inside the latter method.
+    int columns = static_cast<int>(ceil(static_cast<float>(m_desktopCount) / mRows));
+    mBackend->setDesktopLayout(panel()->isHorizontal() ? Qt::Horizontal : Qt::Vertical, mRows, columns,
+                               mWidget.isRightToLeft());
+
+    realign();  // in case it isn't called when the desktop layout changes
+  }
+  if (need_refresh)
+    refresh();
 }
 
-void DesktopSwitchWidget::wheelEvent(QWheelEvent *e)
-{
-    // Without some sort of threshold which has to be passed, scrolling is too sensitive
-    QPoint angleDelta = e->angleDelta();
-    Qt::Orientation orient = (std::abs(angleDelta.x()) > std::abs(angleDelta.y()) ? Qt::Horizontal : Qt::Vertical);
-    int rotationSteps = (orient == Qt::Horizontal ? angleDelta.x() : angleDelta.y());
-
-    m_mouseWheelThresholdCounter -= rotationSteps;
-
-    // If the user hasn't scrolled far enough in one direction (positive or negative): do nothing
-    if(std::abs(m_mouseWheelThresholdCounter) < 100)
-        return;
-
-    LXQtPanelApplication *a = reinterpret_cast<LXQtPanelApplication*>(qApp);
-    auto wmBackend = a->getWMBackend();
-
-    int max = wmBackend->getWorkspacesCount(screen());
-    int delta = rotationSteps < 0 ? 1 : -1;
-    int current = wmBackend->getCurrentWorkspace(screen()) + delta;
-
-    if (current > max){
-        current = 1;
-    }
-    else if (current < 1)
-        current = max;
-
-    m_mouseWheelThresholdCounter = 0;
-    wmBackend->setCurrentWorkspace(current, screen());
+void DesktopSwitch::realign() {
+  mLayout->setEnabled(false);
+  if (panel()->isHorizontal()) {
+    mLayout->setRowCount(mShowOnlyActive ? 1 : mRows);
+    mLayout->setColumnCount(0);
+  }
+  else {
+    mLayout->setColumnCount(mShowOnlyActive ? 1 : mRows);
+    mLayout->setRowCount(0);
+  }
+  mLayout->setEnabled(true);
 }
 
-ILXQtPanelPlugin *DesktopSwitchPluginLibrary::instance(const ILXQtPanelPluginStartupInfo &startupInfo) const
-{
-    LXQtPanelApplication *a = reinterpret_cast<LXQtPanelApplication*>(qApp);
-    auto wmBackend = a ? a->getWMBackend() : nullptr;
-    if(!wmBackend || !wmBackend->supportsAction(0, LXQtTaskBarBackendAction::DesktopSwitch))
-        return new DesktopSwitchUnsupported{startupInfo};
-
-    return new DesktopSwitch{startupInfo};
+QDialog* DesktopSwitch::configureDialog() {
+  return new DesktopSwitchConfiguration(settings());
 }
 
-DesktopSwitchUnsupported::DesktopSwitchUnsupported(const ILXQtPanelPluginStartupInfo &startupInfo)
-    : ILXQtPanelPlugin(startupInfo)
-    , mLabel(new QLabel(tr("n/a")))
-{
-    mLabel->setToolTip(tr("DesktopSwitch is unsupported on current platform: %1").arg(QGuiApplication::platformName()));
+DesktopSwitchWidget::DesktopSwitchWidget() : QFrame(), m_mouseWheelThresholdCounter(0) {}
+
+void DesktopSwitchWidget::wheelEvent(QWheelEvent* e) {
+  // Without some sort of threshold which has to be passed, scrolling is too sensitive
+  QPoint angleDelta = e->angleDelta();
+  Qt::Orientation orient = (std::abs(angleDelta.x()) > std::abs(angleDelta.y()) ? Qt::Horizontal : Qt::Vertical);
+  int rotationSteps = (orient == Qt::Horizontal ? angleDelta.x() : angleDelta.y());
+
+  m_mouseWheelThresholdCounter -= rotationSteps;
+
+  // If the user hasn't scrolled far enough in one direction (positive or negative): do nothing
+  if (std::abs(m_mouseWheelThresholdCounter) < 100)
+    return;
+
+  LXQtPanelApplication* a = reinterpret_cast<LXQtPanelApplication*>(qApp);
+  auto wmBackend = a->getWMBackend();
+
+  int max = wmBackend->getWorkspacesCount(screen());
+  int delta = rotationSteps < 0 ? 1 : -1;
+  int current = wmBackend->getCurrentWorkspace(screen()) + delta;
+
+  if (current > max) {
+    current = 1;
+  }
+  else if (current < 1)
+    current = max;
+
+  m_mouseWheelThresholdCounter = 0;
+  wmBackend->setCurrentWorkspace(current, screen());
 }
 
-DesktopSwitchUnsupported::~DesktopSwitchUnsupported()
-{
-    delete mLabel;
-    mLabel = nullptr;
+ILXQtPanelPlugin* DesktopSwitchPluginLibrary::instance(const ILXQtPanelPluginStartupInfo& startupInfo) const {
+  LXQtPanelApplication* a = reinterpret_cast<LXQtPanelApplication*>(qApp);
+  auto wmBackend = a ? a->getWMBackend() : nullptr;
+  if (!wmBackend || !wmBackend->supportsAction(0, LXQtTaskBarBackendAction::DesktopSwitch))
+    return new DesktopSwitchUnsupported{startupInfo};
+
+  return new DesktopSwitch{startupInfo};
 }
 
-QWidget *DesktopSwitchUnsupported::widget()
-{
-    return mLabel;
+DesktopSwitchUnsupported::DesktopSwitchUnsupported(const ILXQtPanelPluginStartupInfo& startupInfo)
+    : ILXQtPanelPlugin(startupInfo), mLabel(new QLabel(tr("n/a"))) {
+  mLabel->setToolTip(tr("DesktopSwitch is unsupported on current platform: %1").arg(QGuiApplication::platformName()));
+}
+
+DesktopSwitchUnsupported::~DesktopSwitchUnsupported() {
+  delete mLabel;
+  mLabel = nullptr;
+}
+
+QWidget* DesktopSwitchUnsupported::widget() {
+  return mLabel;
 }

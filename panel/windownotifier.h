@@ -32,22 +32,21 @@
 
 class QWidget;
 
-class WindowNotifier : public QObject
-{
-    Q_OBJECT
-public:
-    using QObject::QObject;
+class WindowNotifier : public QObject {
+  Q_OBJECT
+ public:
+  using QObject::QObject;
 
-    void observeWindow(QWidget * w);
-    inline bool isAnyWindowShown() const { return !mShownWindows.isEmpty(); }
+  void observeWindow(QWidget* w);
+  inline bool isAnyWindowShown() const { return !mShownWindows.isEmpty(); }
 
-    virtual bool eventFilter(QObject * watched, QEvent * event) override;
-signals:
-    void lastHidden();
-    void firstShown();
+  virtual bool eventFilter(QObject* watched, QEvent* event) override;
+ signals:
+  void lastHidden();
+  void firstShown();
 
-private:
-    QList<QWidget *> mShownWindows; //!< known shown windows (sorted)
+ private:
+  QList<QWidget*> mShownWindows;  //!< known shown windows (sorted)
 };
 
 #endif

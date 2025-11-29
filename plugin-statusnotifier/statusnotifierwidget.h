@@ -36,40 +36,39 @@
 
 class StatusNotifierProxy;
 
-class StatusNotifierWidget : public QWidget
-{
-    Q_OBJECT
+class StatusNotifierWidget : public QWidget {
+  Q_OBJECT
 
-public:
-    StatusNotifierWidget(ILXQtPanelPlugin *plugin, QWidget *parent = nullptr);
-    ~StatusNotifierWidget() = default;
+ public:
+  StatusNotifierWidget(ILXQtPanelPlugin* plugin, QWidget* parent = nullptr);
+  ~StatusNotifierWidget() = default;
 
-    void settingsChanged();
-    QStringList itemTitles() const;
+  void settingsChanged();
+  QStringList itemTitles() const;
 
-signals:
+ signals:
 
-public slots:
-    void itemAdded(QString serviceAndPath);
-    void itemRemoved(const QString &serviceAndPath);
+ public slots:
+  void itemAdded(QString serviceAndPath);
+  void itemRemoved(const QString& serviceAndPath);
 
-    void realign();
+  void realign();
 
-protected:
-    void leaveEvent(QEvent *event) override;
-    void enterEvent(QEnterEvent *event) override;
+ protected:
+  void leaveEvent(QEvent* event) override;
+  void enterEvent(QEnterEvent* event) override;
 
-private:
-    ILXQtPanelPlugin *mPlugin;
+ private:
+  ILXQtPanelPlugin* mPlugin;
 
-    QTimer mHideTimer;
+  QTimer mHideTimer;
 
-    QHash<QString, StatusNotifierButton*> mServices;
+  QHash<QString, StatusNotifierButton*> mServices;
 
-    QStringList mItemTitles;
-    QStringList mAutoHideList;
-    QStringList mHideList;
-    QToolButton *mShowBtn;
-    int mAttentionPeriod;
-    bool mForceVisible;
+  QStringList mItemTitles;
+  QStringList mAutoHideList;
+  QStringList mHideList;
+  QToolButton* mShowBtn;
+  int mAttentionPeriod;
+  bool mForceVisible;
 };

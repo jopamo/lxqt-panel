@@ -18,7 +18,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
- 
+
 #include <iostream>
 
 #include <QtWidgets/QApplication>
@@ -30,38 +30,31 @@
 #include "qeyesvectorwidget.h"
 #include "qeyesimagewidget.h"
 
-class QEyesPlugin :  public QObject, public ILXQtPanelPlugin
-{
-    Q_OBJECT
+class QEyesPlugin : public QObject, public ILXQtPanelPlugin {
+  Q_OBJECT
 
-public:
-    QEyesPlugin(const ILXQtPanelPluginStartupInfo &startupInfo);
+ public:
+  QEyesPlugin(const ILXQtPanelPluginStartupInfo& startupInfo);
 
-    virtual QWidget *widget() override { return w0; }
-    virtual QString themeId()  const override{
-        return QStringLiteral("QEyesPlugin");
-    }
-    virtual void realign() override;
-    virtual Flags flags() const override { return HaveConfigDialog ; }
-    virtual QDialog * configureDialog() override;
-    virtual void settingsChanged() override;
-    static const QString internalEye;
+  virtual QWidget* widget() override { return w0; }
+  virtual QString themeId() const override { return QStringLiteral("QEyesPlugin"); }
+  virtual void realign() override;
+  virtual Flags flags() const override { return HaveConfigDialog; }
+  virtual QDialog* configureDialog() override;
+  virtual void settingsChanged() override;
+  static const QString internalEye;
 
-private:
-    QWidget *w0;
-    QVBoxLayout *l;
-    QAbstractEyesWidget *w;
-    bool vectorEyes = true;
-
+ private:
+  QWidget* w0;
+  QVBoxLayout* l;
+  QAbstractEyesWidget* w;
+  bool vectorEyes = true;
 };
 
-class QEyesPluginLibrary: public QObject, public ILXQtPanelPluginLibrary
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "lxqt.org/Panel/PluginInterface/3.0")
-    Q_INTERFACES(ILXQtPanelPluginLibrary)
-public:
-    ILXQtPanelPlugin *instance(const ILXQtPanelPluginStartupInfo &startupInfo) const;
+class QEyesPluginLibrary : public QObject, public ILXQtPanelPluginLibrary {
+  Q_OBJECT
+  Q_PLUGIN_METADATA(IID "lxqt.org/Panel/PluginInterface/3.0")
+  Q_INTERFACES(ILXQtPanelPluginLibrary)
+ public:
+  ILXQtPanelPlugin* instance(const ILXQtPanelPluginStartupInfo& startupInfo) const;
 };
-
-

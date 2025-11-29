@@ -30,21 +30,20 @@ class Settings;
 class ILXQtAbstractWMInterface;
 
 class LXQtPanelApplicationPrivate {
-    Q_DECLARE_PUBLIC(LXQtPanelApplication)
-public:
+  Q_DECLARE_PUBLIC(LXQtPanelApplication)
+ public:
+  LXQtPanelApplicationPrivate(LXQtPanelApplication* q);
+  ~LXQtPanelApplicationPrivate() {};
 
-    LXQtPanelApplicationPrivate(LXQtPanelApplication *q);
-    ~LXQtPanelApplicationPrivate() {};
+  LXQt::Settings* mSettings;
+  ILXQtAbstractWMInterface* mWMBackend;
 
-    LXQt::Settings *mSettings;
-    ILXQtAbstractWMInterface *mWMBackend;
+  ILXQtPanel::Position computeNewPanelPosition(const LXQtPanel* p, const int screenNum);
 
-    ILXQtPanel::Position computeNewPanelPosition(const LXQtPanel *p, const int screenNum);
+  void loadBackend();
 
-    void loadBackend();
-
-private:
-    LXQtPanelApplication *const q_ptr;
+ private:
+  LXQtPanelApplication* const q_ptr;
 };
 
-#endif // LXQTPANELAPPLICATION_P_H
+#endif  // LXQTPANELAPPLICATION_P_H

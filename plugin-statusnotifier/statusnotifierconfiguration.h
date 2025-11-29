@@ -30,31 +30,30 @@
 #include "../panel/pluginsettings.h"
 
 namespace Ui {
-    class StatusNotifierConfiguration;
+class StatusNotifierConfiguration;
 }
 
-class StatusNotifierConfiguration : public LXQtPanelPluginConfigDialog
-{
-    Q_OBJECT
+class StatusNotifierConfiguration : public LXQtPanelPluginConfigDialog {
+  Q_OBJECT
 
-public:
-    explicit StatusNotifierConfiguration(PluginSettings *settings, QWidget *parent = nullptr);
-    ~StatusNotifierConfiguration();
+ public:
+  explicit StatusNotifierConfiguration(PluginSettings* settings, QWidget* parent = nullptr);
+  ~StatusNotifierConfiguration();
 
-    void addItems(const QStringList &items);
+  void addItems(const QStringList& items);
 
-private:
-    Ui::StatusNotifierConfiguration *ui;
+ private:
+  Ui::StatusNotifierConfiguration* ui;
 
-    QStringList mAutoHideList;
-    QStringList mHideList;
+  QStringList mAutoHideList;
+  QStringList mHideList;
 
-    void loadSettings();
+  void loadSettings();
 
-    void dialogButtonsAction(QAbstractButton *btn);
+  void dialogButtonsAction(QAbstractButton* btn);
 
-private slots:
-    void saveSettings();
+ private slots:
+  void saveSettings();
 };
 
-#endif // STATUSNOTIFIERCONFIGURATION_H
+#endif  // STATUSNOTIFIERCONFIGURATION_H

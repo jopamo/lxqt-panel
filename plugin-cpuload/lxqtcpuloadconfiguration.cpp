@@ -33,84 +33,76 @@
 #define BAR_ORIENT_LEFTRIGHT "leftRight"
 #define BAR_ORIENT_RIGHTLEFT "rightLeft"
 
-LXQtCpuLoadConfiguration::LXQtCpuLoadConfiguration(PluginSettings *settings, QWidget *parent) :
-    LXQtPanelPluginConfigDialog(settings, parent),
-    ui(new Ui::LXQtCpuLoadConfiguration),
-    mLockSettingChanges(false)
-{
-    setAttribute(Qt::WA_DeleteOnClose);
-    setObjectName(QStringLiteral("CpuLoadConfigurationWindow"));
-    ui->setupUi(this);
+LXQtCpuLoadConfiguration::LXQtCpuLoadConfiguration(PluginSettings* settings, QWidget* parent)
+    : LXQtPanelPluginConfigDialog(settings, parent), ui(new Ui::LXQtCpuLoadConfiguration), mLockSettingChanges(false) {
+  setAttribute(Qt::WA_DeleteOnClose);
+  setObjectName(QStringLiteral("CpuLoadConfigurationWindow"));
+  ui->setupUi(this);
 
-    fillBarOrientations();
+  fillBarOrientations();
 
-    connect(ui->buttons, &QDialogButtonBox::clicked, this, &LXQtCpuLoadConfiguration::dialogButtonsAction);
+  connect(ui->buttons, &QDialogButtonBox::clicked, this, &LXQtCpuLoadConfiguration::dialogButtonsAction);
 
-    loadSettings();
+  loadSettings();
 
-    connect(ui->showTextCB,            &QCheckBox::toggled,             this, &LXQtCpuLoadConfiguration::showTextChanged);
-    connect(ui->barWidthSB,            &QSpinBox::valueChanged,         this, &LXQtCpuLoadConfiguration::barWidthChanged);
-    connect(ui->updateIntervalSpinBox, &QDoubleSpinBox::valueChanged,   this, &LXQtCpuLoadConfiguration::updateIntervalChanged);
-    connect(ui->barOrientationCOB,     &QComboBox::currentIndexChanged, this, &LXQtCpuLoadConfiguration::barOrientationChanged);
+  connect(ui->showTextCB, &QCheckBox::toggled, this, &LXQtCpuLoadConfiguration::showTextChanged);
+  connect(ui->barWidthSB, &QSpinBox::valueChanged, this, &LXQtCpuLoadConfiguration::barWidthChanged);
+  connect(ui->updateIntervalSpinBox, &QDoubleSpinBox::valueChanged, this,
+          &LXQtCpuLoadConfiguration::updateIntervalChanged);
+  connect(ui->barOrientationCOB, &QComboBox::currentIndexChanged, this,
+          &LXQtCpuLoadConfiguration::barOrientationChanged);
 }
 
-LXQtCpuLoadConfiguration::~LXQtCpuLoadConfiguration()
-{
-    delete ui;
+LXQtCpuLoadConfiguration::~LXQtCpuLoadConfiguration() {
+  delete ui;
 }
 
-void LXQtCpuLoadConfiguration::fillBarOrientations()
-{
-    ui->barOrientationCOB->addItem(tr("Bottom up"), QStringLiteral(BAR_ORIENT_BOTTOMUP));
-    ui->barOrientationCOB->addItem(tr("Top down"), QStringLiteral(BAR_ORIENT_TOPDOWN));
-    ui->barOrientationCOB->addItem(tr("Left to right"), QStringLiteral(BAR_ORIENT_LEFTRIGHT));
-    ui->barOrientationCOB->addItem(tr("Right to left"), QStringLiteral(BAR_ORIENT_RIGHTLEFT));
+void LXQtCpuLoadConfiguration::fillBarOrientations() {
+  ui->barOrientationCOB->addItem(tr("Bottom up"), QStringLiteral(BAR_ORIENT_BOTTOMUP));
+  ui->barOrientationCOB->addItem(tr("Top down"), QStringLiteral(BAR_ORIENT_TOPDOWN));
+  ui->barOrientationCOB->addItem(tr("Left to right"), QStringLiteral(BAR_ORIENT_LEFTRIGHT));
+  ui->barOrientationCOB->addItem(tr("Right to left"), QStringLiteral(BAR_ORIENT_RIGHTLEFT));
 }
 
-void LXQtCpuLoadConfiguration::loadSettings()
-{
-    mLockSettingChanges = true;
+void LXQtCpuLoadConfiguration::loadSettings() {
+  mLockSettingChanges = true;
 
-    ui->showTextCB->setChecked(settings().value(QStringLiteral("showText"), false).toBool());
-    ui->barWidthSB->setValue(settings().value(QStringLiteral("barWidth"), 20).toInt());
-    ui->updateIntervalSpinBox->setValue(settings().value(QStringLiteral("updateInterval"), 1000).toInt() / 1000.0);
+  ui->showTextCB->setChecked(settings().value(QStringLiteral("showText"), false).toBool());
+  ui->barWidthSB->setValue(settings().value(QStringLiteral("barWidth"), 20).toInt());
+  ui->updateIntervalSpinBox->setValue(settings().value(QStringLiteral("updateInterval"), 1000).toInt() / 1000.0);
 
-    int boIndex = ui->barOrientationCOB->findData(
-            settings().value(QStringLiteral("barOrientation"), QStringLiteral(BAR_ORIENT_BOTTOMUP)));
-    boIndex = (boIndex < 0) ? 1 : boIndex;
-    ui->barOrientationCOB->setCurrentIndex(boIndex);
+  int boIndex = ui->barOrientationCOB->findData(
+      settings().value(QStringLiteral("barOrientation"), QStringLiteral(BAR_ORIENT_BOTTOMUP)));
+  boIndex = (boIndex < 0) ? 1 : boIndex;
+  ui->barOrientationCOB->setCurrentIndex(boIndex);
 
-//    QString menuFile = settings().value("menu_file", "").toString();
-//    if (menuFile.isEmpty())
-//    {
-//        menuFile = XdgMenu::getMenuFileName();
-//    }
-//    ui->menuFilePathLE->setText(menuFile);
-//    ui->shortcutEd->setKeySequence(settings().value("shortcut", "Alt+F1").toString());
+  //    QString menuFile = settings().value("menu_file", "").toString();
+  //    if (menuFile.isEmpty())
+  //    {
+  //        menuFile = XdgMenu::getMenuFileName();
+  //    }
+  //    ui->menuFilePathLE->setText(menuFile);
+  //    ui->shortcutEd->setKeySequence(settings().value("shortcut", "Alt+F1").toString());
 
-    mLockSettingChanges = false;
+  mLockSettingChanges = false;
 }
 
-void LXQtCpuLoadConfiguration::showTextChanged(bool value)
-{
-    if (!mLockSettingChanges)
-        settings().setValue(QStringLiteral("showText"), value);
+void LXQtCpuLoadConfiguration::showTextChanged(bool value) {
+  if (!mLockSettingChanges)
+    settings().setValue(QStringLiteral("showText"), value);
 }
 
-void LXQtCpuLoadConfiguration::barWidthChanged(int value)
-{
-    if (!mLockSettingChanges)
-        settings().setValue(QStringLiteral("barWidth"), value);
+void LXQtCpuLoadConfiguration::barWidthChanged(int value) {
+  if (!mLockSettingChanges)
+    settings().setValue(QStringLiteral("barWidth"), value);
 }
 
-void LXQtCpuLoadConfiguration::updateIntervalChanged(double value)
-{
-    if (!mLockSettingChanges)
-        settings().setValue(QStringLiteral("updateInterval"), value*1000);
+void LXQtCpuLoadConfiguration::updateIntervalChanged(double value) {
+  if (!mLockSettingChanges)
+    settings().setValue(QStringLiteral("updateInterval"), value * 1000);
 }
 
-void LXQtCpuLoadConfiguration::barOrientationChanged(int index)
-{
-    if (!mLockSettingChanges)
-        settings().setValue(QStringLiteral("barOrientation"), ui->barOrientationCOB->itemData(index).toString());
+void LXQtCpuLoadConfiguration::barOrientationChanged(int index) {
+  if (!mLockSettingChanges)
+    settings().setValue(QStringLiteral("barOrientation"), ui->barOrientationCOB->itemData(index).toString());
 }

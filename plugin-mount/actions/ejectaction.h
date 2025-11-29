@@ -34,32 +34,27 @@
 
 class LXQtMountPlugin;
 
-class EjectAction: public QObject
-{
-    Q_OBJECT
+class EjectAction : public QObject {
+  Q_OBJECT
 
-public:
-    enum ActionId
-    {
-        ActionNothing,
-        ActionOptical
-    };
+ public:
+  enum ActionId { ActionNothing, ActionOptical };
 
-    virtual ~EjectAction();
-    virtual ActionId Type() const throw () = 0;
+  virtual ~EjectAction();
+  virtual ActionId Type() const throw() = 0;
 
-    static EjectAction *create(ActionId id, LXQtMountPlugin *plugin, QObject *parent = nullptr);
-    static ActionId stringToActionId(const QString &string, ActionId defaultValue);
-    static QString actionIdToString(ActionId id);
+  static EjectAction* create(ActionId id, LXQtMountPlugin* plugin, QObject* parent = nullptr);
+  static ActionId stringToActionId(const QString& string, ActionId defaultValue);
+  static QString actionIdToString(ActionId id);
 
-public slots:
-    void onEjectPressed(void);
+ public slots:
+  void onEjectPressed(void);
 
-protected:
-    explicit EjectAction(LXQtMountPlugin *plugin, QObject *parent = nullptr);
-    virtual void doEjectPressed() = 0;
+ protected:
+  explicit EjectAction(LXQtMountPlugin* plugin, QObject* parent = nullptr);
+  virtual void doEjectPressed() = 0;
 
-    LXQtMountPlugin *mPlugin;
+  LXQtMountPlugin* mPlugin;
 };
 
-#endif // EJECTACTION_H
+#endif  // EJECTACTION_H

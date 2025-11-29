@@ -36,33 +36,32 @@
 #include <QLocale>
 
 namespace Ui {
-    class LXQtSensorsConfiguration;
+class LXQtSensorsConfiguration;
 }
 
-class LXQtSensorsConfiguration : public LXQtPanelPluginConfigDialog
-{
-    Q_OBJECT
+class LXQtSensorsConfiguration : public LXQtPanelPluginConfigDialog {
+  Q_OBJECT
 
-public:
-    explicit LXQtSensorsConfiguration(PluginSettings *settings, QWidget *parent = nullptr);
-    ~LXQtSensorsConfiguration();
+ public:
+  explicit LXQtSensorsConfiguration(PluginSettings* settings, QWidget* parent = nullptr);
+  ~LXQtSensorsConfiguration();
 
-private:
-    Ui::LXQtSensorsConfiguration *ui;
-    bool mLockSettingChanges;
+ private:
+  Ui::LXQtSensorsConfiguration* ui;
+  bool mLockSettingChanges;
 
-    /*
-      Read settings from conf file and put data into controls.
-    */
-    void loadSettings();
+  /*
+    Read settings from conf file and put data into controls.
+  */
+  void loadSettings();
 
-private slots:
-    /*
-      Saves settings in conf file.
-    */
-    void saveSettings();
-    void changeProgressBarColor();
-    void detectedChipSelected(int index);
+ private slots:
+  /*
+    Saves settings in conf file.
+  */
+  void saveSettings();
+  void changeProgressBarColor();
+  void detectedChipSelected(int index);
 };
 
-#endif // LXQTSENSORSCONFIGURATION_H
+#endif  // LXQTSENSORSCONFIGURATION_H

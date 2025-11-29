@@ -29,40 +29,25 @@
 #include "lxqtsensors.h"
 #include "lxqtsensorsconfiguration.h"
 
+LXQtSensorsPlugin::LXQtSensorsPlugin(const ILXQtPanelPluginStartupInfo& startupInfo)
+    : QObject(), ILXQtPanelPlugin(startupInfo), mWidget(new LXQtSensors(this)) {}
 
-LXQtSensorsPlugin::LXQtSensorsPlugin(const ILXQtPanelPluginStartupInfo &startupInfo):
-    QObject(),
-    ILXQtPanelPlugin(startupInfo),
-    mWidget(new LXQtSensors(this))
-{
+LXQtSensorsPlugin::~LXQtSensorsPlugin() {
+  delete mWidget;
 }
 
-
-LXQtSensorsPlugin::~LXQtSensorsPlugin()
-{
-    delete mWidget;
+QWidget* LXQtSensorsPlugin::widget() {
+  return mWidget;
 }
 
-
-QWidget *LXQtSensorsPlugin::widget()
-{
-    return mWidget;
+QDialog* LXQtSensorsPlugin::configureDialog() {
+  return new LXQtSensorsConfiguration(settings());
 }
 
-
-QDialog *LXQtSensorsPlugin::configureDialog()
-{
-    return new LXQtSensorsConfiguration(settings());
+void LXQtSensorsPlugin::realign() {
+  mWidget->realign();
 }
 
-
-void LXQtSensorsPlugin::realign()
-{
-    mWidget->realign();
-}
-
-
-void LXQtSensorsPlugin::settingsChanged()
-{
-    mWidget->settingsChanged();
+void LXQtSensorsPlugin::settingsChanged() {
+  mWidget->settingsChanged();
 }

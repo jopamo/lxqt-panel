@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
@@ -45,91 +44,87 @@ class ILXQtPanelPluginLibrary;
 class LXQtPanel;
 class QMenu;
 
+class LXQT_PANEL_API Plugin : public QFrame {
+  Q_OBJECT
 
-class LXQT_PANEL_API Plugin : public QFrame
-{
-    Q_OBJECT
+  Q_PROPERTY(QColor moveMarkerColor READ moveMarkerColor WRITE setMoveMarkerColor)
+ public:
+  enum Alignment { AlignLeft, AlignRight };
 
-    Q_PROPERTY(QColor moveMarkerColor READ moveMarkerColor WRITE setMoveMarkerColor)
-public:
-    enum Alignment {
-        AlignLeft,
-        AlignRight
-    };
+  explicit Plugin(const LXQt::PluginInfo& desktopFile,
+                  LXQt::Settings* settings,
+                  const QString& settingsGroup,
+                  LXQtPanel* panel);
+  ~Plugin();
 
+  bool isLoaded() const { return mPlugin != 0; }
+  Alignment alignment() const { return mAlignment; }
+  void setAlignment(Alignment alignment);
 
-    explicit Plugin(const LXQt::PluginInfo &desktopFile, LXQt::Settings *settings, const QString &settingsGroup, LXQtPanel *panel);
-    ~Plugin();
+  QString settingsGroup() const { return mSettings->group(); }
 
-    bool isLoaded() const { return mPlugin != 0; }
-    Alignment alignment() const { return mAlignment; }
-    void setAlignment(Alignment alignment);
+  void saveSettings();
 
-    QString settingsGroup() const { return mSettings->group(); }
+  QMenu* popupMenu() const;
+  const ILXQtPanelPlugin* iPlugin() const { return mPlugin; }
 
-    void saveSettings();
+  const LXQt::PluginInfo desktopFile() const { return mDesktopFile; }
 
-    QMenu* popupMenu() const;
-    const ILXQtPanelPlugin * iPlugin() const { return mPlugin; }
+  bool isSeparate() const;
+  bool isExpandable() const;
 
-    const LXQt::PluginInfo desktopFile() const { return mDesktopFile; }
+  QWidget* widget() { return mPluginWidget; }
 
-    bool isSeparate() const;
-    bool isExpandable() const;
+  QString name() const { return mName; }
 
-    QWidget *widget() { return mPluginWidget; }
+  virtual bool eventFilter(QObject* watched, QEvent* event);
 
-    QString name() const { return mName; }
+  // For QSS properties ..................
+  static QColor moveMarkerColor() { return mMoveMarkerColor; }
+  static void setMoveMarkerColor(QColor color) { mMoveMarkerColor = color; }
 
-    virtual bool eventFilter(QObject * watched, QEvent * event);
+ public slots:
+  void realign();
+  void showConfigureDialog();
+  void requestRemove();
 
-    // For QSS properties ..................
-    static QColor moveMarkerColor() { return mMoveMarkerColor; }
-    static void setMoveMarkerColor(QColor color) { mMoveMarkerColor = color; }
+ signals:
+  void startMove();
+  void remove();
+  /*!
+   * \brief Signal emitted when this widget or some of its children
+   * get the DragLeave event delivered.
+   */
+  void dragLeft();
 
-public slots:
-    void realign();
-    void showConfigureDialog();
-    void requestRemove();
+ protected:
+  void contextMenuEvent(QContextMenuEvent* event);
+  void mousePressEvent(QMouseEvent* event);
+  void mouseDoubleClickEvent(QMouseEvent* event);
+  void showEvent(QShowEvent* event);
 
-signals:
-    void startMove();
-    void remove();
-    /*!
-     * \brief Signal emitted when this widget or some of its children
-     * get the DragLeave event delivered.
-     */
-    void dragLeft();
+ private:
+  bool loadLib(ILXQtPanelPluginLibrary const* pluginLib);
+  bool loadModule(const QString& libraryName);
+  ILXQtPanelPluginLibrary const* findStaticPlugin(const QString& libraryName);
+  void watchWidgets(QObject* const widget);
+  void unwatchWidgets(QObject* const widget);
 
-protected:
-    void contextMenuEvent(QContextMenuEvent *event);
-    void mousePressEvent(QMouseEvent *event);
-    void mouseDoubleClickEvent(QMouseEvent *event);
-    void showEvent(QShowEvent *event);
+  const LXQt::PluginInfo mDesktopFile;
+  QPluginLoader* mPluginLoader;
+  ILXQtPanelPlugin* mPlugin;
+  QWidget* mPluginWidget;
+  Alignment mAlignment;
+  PluginSettings* mSettings;
+  LXQtPanel* mPanel;
+  static QColor mMoveMarkerColor;
+  QString mName;
+  QPointer<QDialog> mConfigDialog;  //!< plugin's config dialog (if any)
 
-private:
-    bool loadLib(ILXQtPanelPluginLibrary const * pluginLib);
-    bool loadModule(const QString &libraryName);
-    ILXQtPanelPluginLibrary const * findStaticPlugin(const QString &libraryName);
-    void watchWidgets(QObject * const widget);
-    void unwatchWidgets(QObject * const widget);
-
-    const LXQt::PluginInfo mDesktopFile;
-    QPluginLoader *mPluginLoader;
-    ILXQtPanelPlugin *mPlugin;
-    QWidget *mPluginWidget;
-    Alignment mAlignment;
-    PluginSettings *mSettings;
-    LXQtPanel *mPanel;
-    static QColor mMoveMarkerColor;
-    QString mName;
-    QPointer<QDialog> mConfigDialog; //!< plugin's config dialog (if any)
-
-private slots:
-    void settingsChanged();
-
+ private slots:
+  void settingsChanged();
 };
 
-Q_DECLARE_METATYPE(Plugin const *)
+Q_DECLARE_METATYPE(Plugin const*)
 
-#endif // PLUGIN_H
+#endif  // PLUGIN_H

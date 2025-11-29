@@ -18,44 +18,41 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
- 
+
 #include <iostream>
 #include <map>
 #include <string>
-
 
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QComboBox>
 #include <QtCore/QMap>
 
-
 #include "../panel/pluginsettings.h"
 #include "../panel/ilxqtpanelplugin.h"
 
 class QEyesConfigDialog : public QDialog {
-private:
-    Q_OBJECT
-public:
-    QEyesConfigDialog(PluginSettings *_settings,
-        ILXQtPanelPlugin *plugin, QWidget *parent = nullptr);
-private:
-    QSpinBox *numEyesWidget;
-    QComboBox *typesWidget;
-    PluginSettings *_settings;
-    QMap<QString, QString>   types;
-    ILXQtPanelPlugin *plugin;
+ private:
+  Q_OBJECT
+ public:
+  QEyesConfigDialog(PluginSettings* _settings, ILXQtPanelPlugin* plugin, QWidget* parent = nullptr);
 
-    void buildList();
-    void resetValue();
-    void updateAndClose();
-    
-    int old_num_eyes;
-    QString old_type_eyes;
+ private:
+  QSpinBox* numEyesWidget;
+  QComboBox* typesWidget;
+  PluginSettings* _settings;
+  QMap<QString, QString> types;
+  ILXQtPanelPlugin* plugin;
 
-    void showEvent(QShowEvent *) override;
+  void buildList();
+  void resetValue();
+  void updateAndClose();
 
-public slots:
-    void updateValues(int);
+  int old_num_eyes;
+  QString old_type_eyes;
 
+  void showEvent(QShowEvent*) override;
+
+ public slots:
+  void updateValues(int);
 };

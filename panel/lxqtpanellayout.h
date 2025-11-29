@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQTPANELLAYOUT_H
 #define LXQTPANELLAYOUT_H
 
@@ -43,64 +42,62 @@ class QEvent;
 class Plugin;
 class LayoutItemGrid;
 
-class LXQT_PANEL_API LXQtPanelLayout : public QLayout
-{
-    Q_OBJECT
-public:
-    explicit LXQtPanelLayout(QWidget *parent);
-    ~LXQtPanelLayout();
+class LXQT_PANEL_API LXQtPanelLayout : public QLayout {
+  Q_OBJECT
+ public:
+  explicit LXQtPanelLayout(QWidget* parent);
+  ~LXQtPanelLayout();
 
-    void addItem(QLayoutItem *item);
-    QLayoutItem *itemAt(int index) const;
-    QLayoutItem *takeAt(int index);
-    int count() const;
-    void moveItem(int from, int to, bool withAnimation=false);
+  void addItem(QLayoutItem* item);
+  QLayoutItem* itemAt(int index) const;
+  QLayoutItem* takeAt(int index);
+  int count() const;
+  void moveItem(int from, int to, bool withAnimation = false);
 
-    QSize sizeHint() const;
-    //QSize minimumSize() const;
-    void setGeometry(const QRect &geometry);
+  QSize sizeHint() const;
+  // QSize minimumSize() const;
+  void setGeometry(const QRect& geometry);
 
-    bool isHorizontal() const;
+  bool isHorizontal() const;
 
-    void invalidate();
+  void invalidate();
 
-    int lineCount() const;
-    void setLineCount(int value);
+  int lineCount() const;
+  void setLineCount(int value);
 
-    int lineSize() const;
-    void setLineSize(int value);
+  int lineSize() const;
+  void setLineSize(int value);
 
-    ILXQtPanel::Position position() const { return mPosition; }
-    void setPosition(ILXQtPanel::Position value);
+  ILXQtPanel::Position position() const { return mPosition; }
+  void setPosition(ILXQtPanel::Position value);
 
-    /*! \brief Force the layout to re-read items/plugins "static" configuration
-     */
-    void rebuild();
+  /*! \brief Force the layout to re-read items/plugins "static" configuration
+   */
+  void rebuild();
 
-    static bool itemIsSeparate(QLayoutItem *item);
-signals:
-    void pluginMoved(Plugin * plugin);
+  static bool itemIsSeparate(QLayoutItem* item);
+ signals:
+  void pluginMoved(Plugin* plugin);
 
-public slots:
-    void startMovePlugin();
-    void finishMovePlugin();
-    void moveUpPlugin(Plugin * plugin);
-    void addPlugin(Plugin * plugin);
+ public slots:
+  void startMovePlugin();
+  void finishMovePlugin();
+  void moveUpPlugin(Plugin* plugin);
+  void addPlugin(Plugin* plugin);
 
-private:
-    mutable QSize mMinPluginSize;
-    LayoutItemGrid *mLeftGrid;
-    LayoutItemGrid *mRightGrid;
-    ILXQtPanel::Position mPosition;
-    bool mAnimate;
+ private:
+  mutable QSize mMinPluginSize;
+  LayoutItemGrid* mLeftGrid;
+  LayoutItemGrid* mRightGrid;
+  ILXQtPanel::Position mPosition;
+  bool mAnimate;
 
+  void setGeometryHoriz(const QRect& geometry);
+  void setGeometryVert(const QRect& geometry);
+  void globalIndexToLocal(int index, LayoutItemGrid** grid, int* gridIndex);
+  void globalIndexToLocal(int index, LayoutItemGrid** grid, int* gridIndex) const;
 
-    void setGeometryHoriz(const QRect &geometry);
-    void setGeometryVert(const QRect &geometry);
-    void globalIndexToLocal(int index, LayoutItemGrid **grid, int *gridIndex);
-    void globalIndexToLocal(int index, LayoutItemGrid **grid, int *gridIndex) const;
-
-    void setItemGeometry(QLayoutItem *item, const QRect &geometry, bool withAnimation);
+  void setItemGeometry(QLayoutItem* item, const QRect& geometry, bool withAnimation);
 };
 
-#endif // LXQTPANELLAYOUT_H
+#endif  // LXQTPANELLAYOUT_H

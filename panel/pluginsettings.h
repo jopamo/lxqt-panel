@@ -33,9 +33,8 @@
 #include <QVariant>
 #include "lxqtpanelglobals.h"
 
-namespace LXQt
-{
-    class Settings;
+namespace LXQt {
+class Settings;
 }
 class PluginSettingsFactory;
 class PluginSettingsPrivate;
@@ -50,48 +49,47 @@ class PluginSettingsPrivate;
  * We are relying here on so called "back linking" (calling a function defined in executable
  * back from an external library)...
  */
-class LXQT_PANEL_API PluginSettings : public QObject
-{
-    Q_OBJECT
+class LXQT_PANEL_API PluginSettings : public QObject {
+  Q_OBJECT
 
-    //for instantiation
-    friend class PluginSettingsFactory;
+  // for instantiation
+  friend class PluginSettingsFactory;
 
-public:
-    ~PluginSettings();
+ public:
+  ~PluginSettings();
 
-    QString group() const;
+  QString group() const;
 
-    QVariant value(const QString &key, const QVariant &defaultValue = QVariant()) const;
-    void setValue(const QString &key, const QVariant &value);
+  QVariant value(const QString& key, const QVariant& defaultValue = QVariant()) const;
+  void setValue(const QString& key, const QVariant& value);
 
-    void remove(const QString &key);
-    bool contains(const QString &key) const;
+  void remove(const QString& key);
+  bool contains(const QString& key) const;
 
-    QList<QMap<QString, QVariant> > readArray(const QString &prefix);
-    void setArray(const QString &prefix, const QList<QMap<QString, QVariant> > &hashList);
+  QList<QMap<QString, QVariant> > readArray(const QString& prefix);
+  void setArray(const QString& prefix, const QList<QMap<QString, QVariant> >& hashList);
 
-    void clear();
-    void sync();
+  void clear();
+  void sync();
 
-    QStringList allKeys() const;
-    QStringList childGroups() const;
+  QStringList allKeys() const;
+  QStringList childGroups() const;
 
-    void beginGroup(const QString &subGroup);
-    void endGroup();
+  void beginGroup(const QString& subGroup);
+  void endGroup();
 
-    void loadFromCache();
-    void storeToCache();
+  void loadFromCache();
+  void storeToCache();
 
-signals:
-    void settingsChanged();
+ signals:
+  void settingsChanged();
 
-private:
-    explicit PluginSettings(LXQt::Settings *settings, const QString &group, QObject *parent = nullptr);
+ private:
+  explicit PluginSettings(LXQt::Settings* settings, const QString& group, QObject* parent = nullptr);
 
-private:
-    std::unique_ptr<PluginSettingsPrivate> d_ptr;
-    Q_DECLARE_PRIVATE(PluginSettings)
+ private:
+  std::unique_ptr<PluginSettingsPrivate> d_ptr;
+  Q_DECLARE_PRIVATE(PluginSettings)
 };
 
 #endif

@@ -37,37 +37,36 @@ class KSelectionOwner;
 class SNIProxy;
 
 namespace Xcb {
-    class Atoms;
+class Atoms;
 }
 
-class FdoSelectionManager : public QObject, public QAbstractNativeEventFilter
-{
-    Q_OBJECT
+class FdoSelectionManager : public QObject, public QAbstractNativeEventFilter {
+  Q_OBJECT
 
-public:
-    FdoSelectionManager();
-    ~FdoSelectionManager() override;
+ public:
+  FdoSelectionManager();
+  ~FdoSelectionManager() override;
 
-protected:
-    bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result) override;
+ protected:
+  bool nativeEventFilter(const QByteArray& eventType, void* message, qintptr* result) override;
 
-private Q_SLOTS:
-    void onClaimedOwnership();
-    void onFailedToClaimOwnership();
-    void onLostOwnership();
+ private Q_SLOTS:
+  void onClaimedOwnership();
+  void onFailedToClaimOwnership();
+  void onLostOwnership();
 
-private:
-    void init();
-    bool addDamageWatch(xcb_window_t client);
-    void dock(xcb_window_t embed_win);
-    void undock(xcb_window_t client, bool vanished);
-    void setSystemTrayVisual();
+ private:
+  void init();
+  bool addDamageWatch(xcb_window_t client);
+  void dock(xcb_window_t embed_win);
+  void undock(xcb_window_t client, bool vanished);
+  void setSystemTrayVisual();
 
-    uint8_t m_damageEventBase;
+  uint8_t m_damageEventBase;
 
-    xcb_connection_t *m_connection;
-    QHash<xcb_window_t, u_int32_t> m_damageWatches;
-    QHash<xcb_window_t, SNIProxy *> m_proxies;
-    std::unique_ptr<Xcb::Atoms> m_atoms;
-    KSelectionOwner *m_selectionOwner;
+  xcb_connection_t* m_connection;
+  QHash<xcb_window_t, u_int32_t> m_damageWatches;
+  QHash<xcb_window_t, SNIProxy*> m_proxies;
+  std::unique_ptr<Xcb::Atoms> m_atoms;
+  KSelectionOwner* m_selectionOwner;
 };

@@ -24,35 +24,35 @@
 #include <QtSvg/QSvgRenderer>
 #include "qeyeswidget.h"
 
-
 class ImageStretcher {
-    bool svg;
-    QSvgRenderer svgrender;
-    QPixmap origImage, stretchedImage;
-public:
-    bool load(const QString &fn);
-    QPixmap &getImage(int w, int h);
-    int origWidth();
-    int origHeight();
-    int stretchedWidth();
-    int stretchedHeight();
+  bool svg;
+  QSvgRenderer svgrender;
+  QPixmap origImage, stretchedImage;
+
+ public:
+  bool load(const QString& fn);
+  QPixmap& getImage(int w, int h);
+  int origWidth();
+  int origHeight();
+  int stretchedWidth();
+  int stretchedHeight();
 };
 
 class QEyesImageWidget : public QAbstractEyesWidget {
-private:
-    void drawEye(QPainter &painter, int x, int y, int dx, int dy) override;
-    void drawPupil(QPainter &painter, int x, int y) override;
-    virtual void eyeBorder(float &bx, float &by) override;
-    void paintEvent(QPaintEvent *event) override;
+ private:
+  void drawEye(QPainter& painter, int x, int y, int dx, int dy) override;
+  void drawPupil(QPainter& painter, int x, int y) override;
+  virtual void eyeBorder(float& bx, float& by) override;
+  void paintEvent(QPaintEvent* event) override;
 
-    ImageStretcher pupil, background;
+  ImageStretcher pupil, background;
 
-    int oldWidth = -1, oldHeight = -1;
-    float borderY = 0, borderXStretched = 0;
-    float borderX = 0, borderYStretched = 0;
+  int oldWidth = -1, oldHeight = -1;
+  float borderY = 0, borderXStretched = 0;
+  float borderX = 0, borderYStretched = 0;
 
-public:
-    //QEyesImageWidget(const QString &path = QString(), QWidget *parent = nullptr);
-    QEyesImageWidget(QWidget *parent = nullptr) : QAbstractEyesWidget(parent) {}
-    bool load(const QString &eye, const QString &pupil, int wall, int num);
+ public:
+  // QEyesImageWidget(const QString &path = QString(), QWidget *parent = nullptr);
+  QEyesImageWidget(QWidget* parent = nullptr) : QAbstractEyesWidget(parent) {}
+  bool load(const QString& eye, const QString& pupil, int wall, int num);
 };

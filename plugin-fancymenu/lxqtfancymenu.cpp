@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #include "lxqtfancymenu.h"
 #include "lxqtfancymenuconfiguration.h"
 #include "lxqtfancymenuwindow.h"
@@ -53,297 +52,262 @@
 
 #define DEFAULT_SHORTCUT "Alt+F1"
 
-LXQtFancyMenu::LXQtFancyMenu(const ILXQtPanelPluginStartupInfo &startupInfo):
-    QObject(),
-    ILXQtPanelPlugin(startupInfo),
-    mWindow(nullptr),
-    mShortcut(nullptr),
-    mFilterClear(false)
-{
-    mWindow = new LXQtFancyMenuWindow(&mButton);
-    mWindow->setObjectName(QStringLiteral("TopLevelFancyMenu"));
-    mWindow->installEventFilter(this);
-    connect(mWindow, &LXQtFancyMenuWindow::aboutToHide, &mHideTimer, QOverload<>::of(&QTimer::start));
-    connect(mWindow, &LXQtFancyMenuWindow::aboutToShow, &mHideTimer, &QTimer::stop);
-    connect(mWindow, &LXQtFancyMenuWindow::favoritesChanged, this, &LXQtFancyMenu::saveFavorites);
+LXQtFancyMenu::LXQtFancyMenu(const ILXQtPanelPluginStartupInfo& startupInfo)
+    : QObject(), ILXQtPanelPlugin(startupInfo), mWindow(nullptr), mShortcut(nullptr), mFilterClear(false) {
+  mWindow = new LXQtFancyMenuWindow(&mButton);
+  mWindow->setObjectName(QStringLiteral("TopLevelFancyMenu"));
+  mWindow->installEventFilter(this);
+  connect(mWindow, &LXQtFancyMenuWindow::aboutToHide, &mHideTimer, QOverload<>::of(&QTimer::start));
+  connect(mWindow, &LXQtFancyMenuWindow::aboutToShow, &mHideTimer, &QTimer::stop);
+  connect(mWindow, &LXQtFancyMenuWindow::favoritesChanged, this, &LXQtFancyMenu::saveFavorites);
 
-    mDelayedPopup.setSingleShot(true);
-    mDelayedPopup.setInterval(200);
-    connect(&mDelayedPopup, &QTimer::timeout, this, &LXQtFancyMenu::showHideMenu);
-    mHideTimer.setSingleShot(true);
-    mHideTimer.setInterval(250);
+  mDelayedPopup.setSingleShot(true);
+  mDelayedPopup.setInterval(200);
+  connect(&mDelayedPopup, &QTimer::timeout, this, &LXQtFancyMenu::showHideMenu);
+  mHideTimer.setSingleShot(true);
+  mHideTimer.setInterval(250);
 
-    mButton.setAutoRaise(true);
-    mButton.setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-    //Notes:
-    //1. installing event filter to parent widget to avoid infinite loop
-    //   (while setting icon we also need to set the style)
-    //2. delaying of installEventFilter because in c-tor mButton has no parent widget
-    //   (parent is assigned in panel's logic after widget() call)
-    QTimer::singleShot(0, mButton.parentWidget(), [this] {
-        Q_ASSERT(mButton.parentWidget());
-        mButton.parentWidget()->installEventFilter(this);
-    });
+  mButton.setAutoRaise(true);
+  mButton.setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+  // Notes:
+  // 1. installing event filter to parent widget to avoid infinite loop
+  //    (while setting icon we also need to set the style)
+  // 2. delaying of installEventFilter because in c-tor mButton has no parent widget
+  //    (parent is assigned in panel's logic after widget() call)
+  QTimer::singleShot(0, mButton.parentWidget(), [this] {
+    Q_ASSERT(mButton.parentWidget());
+    mButton.parentWidget()->installEventFilter(this);
+  });
 
-    connect(&mButton, &QToolButton::clicked, this, &LXQtFancyMenu::showHideMenu);
+  connect(&mButton, &QToolButton::clicked, this, &LXQtFancyMenu::showHideMenu);
 
-    QTimer::singleShot(0, this, [this] {
-        settingsChanged();
-    });
+  QTimer::singleShot(0, this, [this] { settingsChanged(); });
 
-    // Global shortcuts removed - using button click only
-}
-
-
-/************************************************
-
- ************************************************/
-LXQtFancyMenu::~LXQtFancyMenu()
-{
-    mButton.parentWidget()->removeEventFilter(this);
-
-    delete mWindow;
-}
-
-
-/************************************************
-
- ************************************************/
-void LXQtFancyMenu::showHideMenu()
-{
-    if(mWindow && mWindow->isVisible())
-        mWindow->hide();
-    else
-        showMenu();
+  // Global shortcuts removed - using button click only
 }
 
 /************************************************
 
  ************************************************/
-void LXQtFancyMenu::showMenu()
-{
-    if (!mWindow)
-        return;
+LXQtFancyMenu::~LXQtFancyMenu() {
+  mButton.parentWidget()->removeEventFilter(this);
 
-    willShowWindow(mWindow);
-    // Just using Qt`s activateWindow() won't work on some WMs like Kwin.
-    // Solution is to execute menu 1ms later using timer
-    mWindow->move(calculatePopupWindowPos(mWindow->sizeHint()).topLeft());
-
-    emit mWindow->aboutToShow();
-    mWindow->show();
-    mWindow->setSearchEditFocus();
+  delete mWindow;
 }
 
 /************************************************
 
  ************************************************/
-void LXQtFancyMenu::settingsChanged()
-{
-    setButtonIcon();
-    if (settings()->value(QStringLiteral("showText"), false).toBool())
-    {
-        mButton.setText(settings()->value(QStringLiteral("text"), QStringLiteral("Start")).toString());
-        mButton.setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    }
-    else
-    {
-        mButton.setText(QLatin1String(""));
-        mButton.setToolButtonStyle(Qt::ToolButtonIconOnly);
-    }
-
-    mLogDir = settings()->value(QStringLiteral("log_dir"), QString()).toString();
-
-    QString menu_file = settings()->value(QStringLiteral("menu_file"), QString()).toString();
-    if (menu_file.isEmpty())
-        menu_file = XdgMenu::getMenuFileName(QLatin1String("panel-applications.menu"));
-    else if (!menu_file.contains(QLatin1String("/")))
-        menu_file = XdgMenu::getMenuFileName(menu_file);
-
-    if (mMenuFile != menu_file)
-    {
-        mMenuFile = menu_file;
-        mXdgMenu.setEnvironments(QStringList() << QStringLiteral("X-LXQT") << QStringLiteral("LXQt"));
-        mXdgMenu.setLogDir(mLogDir);
-
-        bool res = mXdgMenu.read(mMenuFile);
-        connect(&mXdgMenu, &XdgMenu::changed, this, &LXQtFancyMenu::buildMenu);
-        if (res)
-        {
-            QTimer::singleShot(1000, this, &LXQtFancyMenu::buildMenu);
-        }
-        else
-        {
-            QMessageBox::warning(nullptr, QStringLiteral("Parse error"), mXdgMenu.errorString());
-            return;
-        }
-    }
-
-    loadFavorites();
-    setMenuFontSize();
-
-    //clear the search to not leaving the menu in wrong state
-    mFilterClear = settings()->value(QStringLiteral("filterClear"), true).toBool();
-    mWindow->setFilterClear(mFilterClear);
-
-    bool buttonsAtTop = settings()->value(QStringLiteral("buttonsAtTop"), false).toBool();
-    mWindow->setButtonPosition(buttonsAtTop ? LXQtFancyMenuButtonPosition::Top : LXQtFancyMenuButtonPosition::Bottom);
-
-    bool categoriesAtRight = settings()->value(QStringLiteral("categoriesAtRight"), true).toBool();
-    mWindow->setCategoryPosition(categoriesAtRight ? LXQtFancyMenuCategoryPosition::Right : LXQtFancyMenuCategoryPosition::Left);
-
-    mWindow->setAutoSelection(settings()->value(QStringLiteral("autoSel"), false).toBool());
-    int delay = std::clamp(settings()->value(QStringLiteral("autoSelDelay"), 250).toInt(), 50, 1000);
-    mWindow->setAutoSelectionDelay(delay);
-
-    realign();
+void LXQtFancyMenu::showHideMenu() {
+  if (mWindow && mWindow->isVisible())
+    mWindow->hide();
+  else
+    showMenu();
 }
 
 /************************************************
 
  ************************************************/
-void LXQtFancyMenu::buildMenu()
-{
-    mWindow->rebuildMenu(mXdgMenu);
+void LXQtFancyMenu::showMenu() {
+  if (!mWindow)
+    return;
 
-    mWindow->doSearch();
-    setMenuFontSize();
-}
+  willShowWindow(mWindow);
+  // Just using Qt`s activateWindow() won't work on some WMs like Kwin.
+  // Solution is to execute menu 1ms later using timer
+  mWindow->move(calculatePopupWindowPos(mWindow->sizeHint()).topLeft());
 
-void LXQtFancyMenu::loadFavorites()
-{
-    bool listChanged = false;
-
-    const QList<QMap<QString, QVariant> > list = settings()->readArray(QStringLiteral("favorites"));
-    QStringList fileList;
-    for(const QMap<QString, QVariant>& item : list)
-    {
-        QString file = item.value(QStringLiteral("desktopFile")).toString();
-        if(file.isEmpty())
-        {
-            listChanged = true;
-            continue;
-        }
-
-        QString canonicalPath = QDir(file).canonicalPath();
-        if(canonicalPath != file)
-            listChanged = true;
-
-        if(canonicalPath.isEmpty())
-            continue;
-
-        if(fileList.contains(canonicalPath))
-        {
-            // Don't add duplicates
-            listChanged = true;
-            continue;
-        }
-
-        fileList.append(canonicalPath);
-    }
-
-    mWindow->setFavorites(fileList);
-
-    if(listChanged)
-        saveFavorites();
-}
-
-void LXQtFancyMenu::saveFavorites()
-{
-    const QStringList fileList = mWindow->favorites();
-
-    QList<QMap<QString, QVariant> > list;
-    list.reserve(fileList.size());
-
-    for(const QString& file : fileList)
-    {
-        QMap<QString, QVariant> item;
-        item.insert(QStringLiteral("desktopFile"), file);
-        list.append(item);
-    }
-
-    // HACK: force Qt to clear old array and rewrite it
-    // Otherwise it would leave garbage values inside it.
-    settings()->remove(QStringLiteral("favorites"));
-    settings()->setArray(QStringLiteral("favorites"), list);
+  emit mWindow->aboutToShow();
+  mWindow->show();
+  mWindow->setSearchEditFocus();
 }
 
 /************************************************
 
  ************************************************/
-void LXQtFancyMenu::setMenuFontSize()
-{
-    if (!mWindow)
-        return;
+void LXQtFancyMenu::settingsChanged() {
+  setButtonIcon();
+  if (settings()->value(QStringLiteral("showText"), false).toBool()) {
+    mButton.setText(settings()->value(QStringLiteral("text"), QStringLiteral("Start")).toString());
+    mButton.setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+  }
+  else {
+    mButton.setText(QLatin1String(""));
+    mButton.setToolButtonStyle(Qt::ToolButtonIconOnly);
+  }
 
-    QFont menuFont = mButton.font();
-    bool customFont = settings()->value(QStringLiteral("customFont"), false).toBool();
-    int customFontSize = settings()->value(QStringLiteral("customFontSize")).toInt();
+  mLogDir = settings()->value(QStringLiteral("log_dir"), QString()).toString();
 
-    if(customFont)
-    {
-        menuFont = mWindow->font();
-        menuFont.setPointSize(customFontSize);
+  QString menu_file = settings()->value(QStringLiteral("menu_file"), QString()).toString();
+  if (menu_file.isEmpty())
+    menu_file = XdgMenu::getMenuFileName(QLatin1String("panel-applications.menu"));
+  else if (!menu_file.contains(QLatin1String("/")))
+    menu_file = XdgMenu::getMenuFileName(menu_file);
+
+  if (mMenuFile != menu_file) {
+    mMenuFile = menu_file;
+    mXdgMenu.setEnvironments(QStringList() << QStringLiteral("X-LXQT") << QStringLiteral("LXQt"));
+    mXdgMenu.setLogDir(mLogDir);
+
+    bool res = mXdgMenu.read(mMenuFile);
+    connect(&mXdgMenu, &XdgMenu::changed, this, &LXQtFancyMenu::buildMenu);
+    if (res) {
+      QTimer::singleShot(1000, this, &LXQtFancyMenu::buildMenu);
     }
+    else {
+      QMessageBox::warning(nullptr, QStringLiteral("Parse error"), mXdgMenu.errorString());
+      return;
+    }
+  }
 
-    mWindow->setCustomFont(menuFont);
+  loadFavorites();
+  setMenuFontSize();
+
+  // clear the search to not leaving the menu in wrong state
+  mFilterClear = settings()->value(QStringLiteral("filterClear"), true).toBool();
+  mWindow->setFilterClear(mFilterClear);
+
+  bool buttonsAtTop = settings()->value(QStringLiteral("buttonsAtTop"), false).toBool();
+  mWindow->setButtonPosition(buttonsAtTop ? LXQtFancyMenuButtonPosition::Top : LXQtFancyMenuButtonPosition::Bottom);
+
+  bool categoriesAtRight = settings()->value(QStringLiteral("categoriesAtRight"), true).toBool();
+  mWindow->setCategoryPosition(categoriesAtRight ? LXQtFancyMenuCategoryPosition::Right
+                                                 : LXQtFancyMenuCategoryPosition::Left);
+
+  mWindow->setAutoSelection(settings()->value(QStringLiteral("autoSel"), false).toBool());
+  int delay = std::clamp(settings()->value(QStringLiteral("autoSelDelay"), 250).toInt(), 50, 1000);
+  mWindow->setAutoSelectionDelay(delay);
+
+  realign();
 }
 
 /************************************************
 
  ************************************************/
-void LXQtFancyMenu::setButtonIcon()
-{
-    if (settings()->value(QStringLiteral("ownIcon"), false).toBool())
-    {
-        mButton.setStyleSheet(QStringLiteral("#FancyMenu { qproperty-icon: url(%1); }")
-                .arg(settings()->value(QLatin1String("icon"), QLatin1String(LXQT_GRAPHICS_DIR "/helix.svg")).toString()));
-    } else
-    {
-        mButton.setStyleSheet(QString());
+void LXQtFancyMenu::buildMenu() {
+  mWindow->rebuildMenu(mXdgMenu);
+
+  mWindow->doSearch();
+  setMenuFontSize();
+}
+
+void LXQtFancyMenu::loadFavorites() {
+  bool listChanged = false;
+
+  const QList<QMap<QString, QVariant> > list = settings()->readArray(QStringLiteral("favorites"));
+  QStringList fileList;
+  for (const QMap<QString, QVariant>& item : list) {
+    QString file = item.value(QStringLiteral("desktopFile")).toString();
+    if (file.isEmpty()) {
+      listChanged = true;
+      continue;
     }
+
+    QString canonicalPath = QDir(file).canonicalPath();
+    if (canonicalPath != file)
+      listChanged = true;
+
+    if (canonicalPath.isEmpty())
+      continue;
+
+    if (fileList.contains(canonicalPath)) {
+      // Don't add duplicates
+      listChanged = true;
+      continue;
+    }
+
+    fileList.append(canonicalPath);
+  }
+
+  mWindow->setFavorites(fileList);
+
+  if (listChanged)
+    saveFavorites();
+}
+
+void LXQtFancyMenu::saveFavorites() {
+  const QStringList fileList = mWindow->favorites();
+
+  QList<QMap<QString, QVariant> > list;
+  list.reserve(fileList.size());
+
+  for (const QString& file : fileList) {
+    QMap<QString, QVariant> item;
+    item.insert(QStringLiteral("desktopFile"), file);
+    list.append(item);
+  }
+
+  // HACK: force Qt to clear old array and rewrite it
+  // Otherwise it would leave garbage values inside it.
+  settings()->remove(QStringLiteral("favorites"));
+  settings()->setArray(QStringLiteral("favorites"), list);
 }
 
 /************************************************
 
  ************************************************/
-QDialog *LXQtFancyMenu::configureDialog()
-{
-    return new LXQtFancyMenuConfiguration(settings(), nullptr, QStringLiteral(DEFAULT_SHORTCUT));
+void LXQtFancyMenu::setMenuFontSize() {
+  if (!mWindow)
+    return;
+
+  QFont menuFont = mButton.font();
+  bool customFont = settings()->value(QStringLiteral("customFont"), false).toBool();
+  int customFontSize = settings()->value(QStringLiteral("customFontSize")).toInt();
+
+  if (customFont) {
+    menuFont = mWindow->font();
+    menuFont.setPointSize(customFontSize);
+  }
+
+  mWindow->setCustomFont(menuFont);
 }
 
 /************************************************
 
  ************************************************/
-bool LXQtFancyMenu::eventFilter(QObject *obj, QEvent *event)
-{
-    if(obj == mButton.parentWidget())
-    {
-        // the application is given a new QStyle
-        if(event->type() == QEvent::StyleChange)
-        {
-            setMenuFontSize();
-            setButtonIcon();
-            mWindow->updateButtonIconSize();
-        }
+void LXQtFancyMenu::setButtonIcon() {
+  if (settings()->value(QStringLiteral("ownIcon"), false).toBool()) {
+    mButton.setStyleSheet(
+        QStringLiteral("#FancyMenu { qproperty-icon: url(%1); }")
+            .arg(settings()->value(QLatin1String("icon"), QLatin1String(LXQT_GRAPHICS_DIR "/helix.svg")).toString()));
+  }
+  else {
+    mButton.setStyleSheet(QString());
+  }
+}
+
+/************************************************
+
+ ************************************************/
+QDialog* LXQtFancyMenu::configureDialog() {
+  return new LXQtFancyMenuConfiguration(settings(), nullptr, QStringLiteral(DEFAULT_SHORTCUT));
+}
+
+/************************************************
+
+ ************************************************/
+bool LXQtFancyMenu::eventFilter(QObject* obj, QEvent* event) {
+  if (obj == mButton.parentWidget()) {
+    // the application is given a new QStyle
+    if (event->type() == QEvent::StyleChange) {
+      setMenuFontSize();
+      setButtonIcon();
+      mWindow->updateButtonIconSize();
     }
-    else if(obj == mWindow)
-    {
-        if(event->type() == QEvent::KeyRelease)
-        {
-            // Global shortcuts removed - no shortcut handling
-            //TODO: go to item which starts with pressed letter
-        }
-        else if (event->type() == QEvent::Resize)
-        {
-            QResizeEvent *e = static_cast<QResizeEvent *>(event);
-            if (e->oldSize().isValid() && e->oldSize() != e->size())
-            {
-                mWindow->move(calculatePopupWindowPos(e->size()).topLeft());
-            }
-        }
+  }
+  else if (obj == mWindow) {
+    if (event->type() == QEvent::KeyRelease) {
+      // Global shortcuts removed - no shortcut handling
+      // TODO: go to item which starts with pressed letter
     }
-    return false;
+    else if (event->type() == QEvent::Resize) {
+      QResizeEvent* e = static_cast<QResizeEvent*>(event);
+      if (e->oldSize().isValid() && e->oldSize() != e->size()) {
+        mWindow->move(calculatePopupWindowPos(e->size()).topLeft());
+      }
+    }
+  }
+  return false;
 }
 
 #undef DEFAULT_SHORTCUT

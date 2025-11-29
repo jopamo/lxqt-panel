@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQTFANCYMENUWINDOW_H
 #define LXQTFANCYMENUWINDOW_H
 
@@ -49,114 +48,106 @@ class LXQtFancyMenuAppMap;
 class LXQtFancyMenuAppModel;
 class LXQtFancyMenuCategoriesModel;
 
-class LXQtFancyMenuWindow : public QWidget
-{
-    Q_OBJECT
-public:
-    explicit LXQtFancyMenuWindow(QWidget *parent = nullptr);
-    ~LXQtFancyMenuWindow();
+class LXQtFancyMenuWindow : public QWidget {
+  Q_OBJECT
+ public:
+  explicit LXQtFancyMenuWindow(QWidget* parent = nullptr);
+  ~LXQtFancyMenuWindow();
 
-    virtual QSize sizeHint() const override;
-    virtual QSize minimumSizeHint() const override;
+  virtual QSize sizeHint() const override;
+  virtual QSize minimumSizeHint() const override;
 
-    bool rebuildMenu(const XdgMenu &menu);
+  bool rebuildMenu(const XdgMenu& menu);
 
-    void setCurrentCategory(int cat);
+  void setCurrentCategory(int cat);
 
-    bool eventFilter(QObject *watched, QEvent *e) override;
+  bool eventFilter(QObject* watched, QEvent* e) override;
 
-    QStringList favorites() const;
-    void setFavorites(const QStringList &newFavorites);
+  QStringList favorites() const;
+  void setFavorites(const QStringList& newFavorites);
 
-    void setFilterClear(bool newFilterClear);
+  void setFilterClear(bool newFilterClear);
 
-    void setButtonPosition(LXQtFancyMenuButtonPosition pos);
-    void setCategoryPosition(LXQtFancyMenuCategoryPosition pos);
+  void setButtonPosition(LXQtFancyMenuButtonPosition pos);
+  void setCategoryPosition(LXQtFancyMenuCategoryPosition pos);
 
-    void updateButtonIconSize();
+  void updateButtonIconSize();
 
-    void setSearchEditFocus();
+  void setSearchEditFocus();
 
-    void setCustomFont(const QFont& f);
+  void setCustomFont(const QFont& f);
 
-    void setAutoSelection(bool autoSel) {
-        mAutoSel = autoSel;
-        if (!mAutoSel)
-            mAutoSelTimer.stop();
-    }
-    void setAutoSelectionDelay(int delay) {
-        mAutoSelTimer.setInterval(delay);
-    }
+  void setAutoSelection(bool autoSel) {
+    mAutoSel = autoSel;
+    if (!mAutoSel)
+      mAutoSelTimer.stop();
+  }
+  void setAutoSelectionDelay(int delay) { mAutoSelTimer.setInterval(delay); }
 
-signals:
-    void aboutToShow();
-    void aboutToHide();
-    void favoritesChanged();
+ signals:
+  void aboutToShow();
+  void aboutToHide();
+  void favoritesChanged();
 
-public slots:
-    void doSearch();
-    void setSearchQuery(const QString& text);
+ public slots:
+  void doSearch();
+  void setSearchQuery(const QString& text);
 
-protected:
-    void hideEvent(QHideEvent *e) override;
-    void showEvent(QShowEvent *e) override;
-    void keyPressEvent(QKeyEvent *e) override;
-    void paintEvent(QPaintEvent *e) override;
+ protected:
+  void hideEvent(QHideEvent* e) override;
+  void showEvent(QShowEvent* e) override;
+  void keyPressEvent(QKeyEvent* e) override;
+  void paintEvent(QPaintEvent* e) override;
 
-private slots:
-    void activateCategory(const QModelIndex& idx);
-    void activateAppAtIndex(const QModelIndex& idx);
-    void activateCurrentApp();
+ private slots:
+  void activateCategory(const QModelIndex& idx);
+  void activateAppAtIndex(const QModelIndex& idx);
+  void activateCurrentApp();
 
-    void runPowerDialog();
-    void runSystemConfigDialog();
-    void runAboutgDialog();
+  void runPowerDialog();
+  void runSystemConfigDialog();
+  void runAboutgDialog();
 
-    void onAppViewCustomMenu(const QPoint &p);
+  void onAppViewCustomMenu(const QPoint& p);
 
-    void autoSelect();
+  void autoSelect();
 
-private:
-    void runCommandHelper(const QString& cmd);
+ private:
+  void runCommandHelper(const QString& cmd);
 
-    void addToFavorites(const QString& desktopFile);
-    void removeFromFavorites(const QString& desktopFile);
+  void addToFavorites(const QString& desktopFile);
+  void removeFromFavorites(const QString& desktopFile);
 
-private:
-    // Use 3:2 stretch factors so app view is slightly wider than category view
-    static const int APP_VIEW_STRETCH = 3;
-    static const int CAT_VIEW_STRETCH = 2;
+ private:
+  // Use 3:2 stretch factors so app view is slightly wider than category view
+  static const int APP_VIEW_STRETCH = 3;
+  static const int CAT_VIEW_STRETCH = 2;
 
-    QVBoxLayout *mMainLayout;
-    QHBoxLayout *mButtonsLayout;
-    QHBoxLayout *mViewLayout;
+  QVBoxLayout* mMainLayout;
+  QHBoxLayout* mButtonsLayout;
+  QHBoxLayout* mViewLayout;
 
-    QToolButton *mSettingsButton;
-    QToolButton *mPowerButton;
-    QToolButton *mAboutButton;
-    QLineEdit *mSearchEdit;
-    QListView *mAppView;
-    QListView *mCategoryView;
+  QToolButton* mSettingsButton;
+  QToolButton* mPowerButton;
+  QToolButton* mAboutButton;
+  QLineEdit* mSearchEdit;
+  QListView* mAppView;
+  QListView* mCategoryView;
 
-    QLabel *mFavoritesLabel;
+  QLabel* mFavoritesLabel;
 
-    LXQtFancyMenuAppMap *mAppMap;
-    LXQtFancyMenuAppModel *mAppModel;
-    LXQtFancyMenuCategoriesModel *mCategoryModel;
+  LXQtFancyMenuAppMap* mAppMap;
+  LXQtFancyMenuAppModel* mAppModel;
+  LXQtFancyMenuCategoriesModel* mCategoryModel;
 
-    QTimer mSearchTimer;
-    QTimer mAutoSelTimer;
-    bool mAutoSel = false;
-    bool mFilterClear = false;
+  QTimer mSearchTimer;
+  QTimer mAutoSelTimer;
+  bool mAutoSel = false;
+  bool mFilterClear = false;
 
-    enum class FocusedItem
-    {
-        SearchEdit = 0,
-        AppView,
-        CategoryView
-    };
+  enum class FocusedItem { SearchEdit = 0, AppView, CategoryView };
 
-    FocusedItem mFocusedItem;
+  FocusedItem mFocusedItem;
 };
 
-#endif // LXQTFANCYMENUWINDOW_H
+#endif  // LXQTFANCYMENUWINDOW_H

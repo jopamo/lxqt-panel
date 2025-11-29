@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQTNETWORKMONITORCONFIGURATION_H
 #define LXQTNETWORKMONITORCONFIGURATION_H
 
@@ -34,29 +33,27 @@
 
 class QAbstractButton;
 
-namespace Ui
-{
+namespace Ui {
 class LXQtNetworkMonitorConfiguration;
 }
 
-class LXQtNetworkMonitorConfiguration : public LXQtPanelPluginConfigDialog
-{
-    Q_OBJECT
+class LXQtNetworkMonitorConfiguration : public LXQtPanelPluginConfigDialog {
+  Q_OBJECT
 
-public:
-    explicit LXQtNetworkMonitorConfiguration(PluginSettings *settings, QWidget *parent = nullptr);
-    ~LXQtNetworkMonitorConfiguration();
+ public:
+  explicit LXQtNetworkMonitorConfiguration(PluginSettings* settings, QWidget* parent = nullptr);
+  ~LXQtNetworkMonitorConfiguration();
 
-private:
-    Ui::LXQtNetworkMonitorConfiguration *ui;
-    bool mLockSettingChanges;
+ private:
+  Ui::LXQtNetworkMonitorConfiguration* ui;
+  bool mLockSettingChanges;
 
-private slots:
-    /*
-      Saves settings in conf file.
-    */
-    void saveSettings();
-    void loadSettings();
+ private slots:
+  /*
+    Saves settings in conf file.
+  */
+  void saveSettings();
+  void loadSettings();
 };
 
-#endif // LXQTNETWORKMONITORCONFIGURATION_H
+#endif  // LXQTNETWORKMONITORCONFIGURATION_H

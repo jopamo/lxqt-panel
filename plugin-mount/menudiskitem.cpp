@@ -39,144 +39,127 @@
 #include <LXQt/Notification>
 #include <QDebug>
 
-MenuDiskItem::MenuDiskItem(Solid::Device device, Popup *popup):
-    QFrame(popup),
-    mPopup(popup),
-    mDevice(device),
-    mDiskButton(nullptr),
-    mEjectButton(nullptr),
-    mDiskButtonClicked(false),
-    mEjectButtonClicked(false)
-{
-    Solid::StorageAccess * const iface = device.as<Solid::StorageAccess>();
-    Q_ASSERT(nullptr != iface);
+MenuDiskItem::MenuDiskItem(Solid::Device device, Popup* popup)
+    : QFrame(popup),
+      mPopup(popup),
+      mDevice(device),
+      mDiskButton(nullptr),
+      mEjectButton(nullptr),
+      mDiskButtonClicked(false),
+      mEjectButtonClicked(false) {
+  Solid::StorageAccess* const iface = device.as<Solid::StorageAccess>();
+  Q_ASSERT(nullptr != iface);
 
-    mDiskButton = new QToolButton(this);
-    mDiskButton->setObjectName(QStringLiteral("DiskButton"));
-    mDiskButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    mDiskButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-    connect(mDiskButton, &QToolButton::clicked, this, &MenuDiskItem::diskButtonClicked);
+  mDiskButton = new QToolButton(this);
+  mDiskButton->setObjectName(QStringLiteral("DiskButton"));
+  mDiskButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+  mDiskButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+  connect(mDiskButton, &QToolButton::clicked, this, &MenuDiskItem::diskButtonClicked);
 
-    mEjectButton = new QToolButton(this);
-    mEjectButton->setObjectName(QStringLiteral("EjectButton"));
-    mEjectButton->setIcon(XdgIcon::fromTheme(QStringLiteral("media-eject")));
-    connect(mEjectButton, &QToolButton::clicked, this, &MenuDiskItem::ejectButtonClicked);
+  mEjectButton = new QToolButton(this);
+  mEjectButton->setObjectName(QStringLiteral("EjectButton"));
+  mEjectButton->setIcon(XdgIcon::fromTheme(QStringLiteral("media-eject")));
+  connect(mEjectButton, &QToolButton::clicked, this, &MenuDiskItem::ejectButtonClicked);
 
-    QHBoxLayout *layout = new QHBoxLayout(this);
-    layout->addWidget(mDiskButton);
-    layout->addWidget(mEjectButton);
-    layout->setContentsMargins(QMargins());
-    layout->setSpacing(0);
-    setLayout(layout);
+  QHBoxLayout* layout = new QHBoxLayout(this);
+  layout->addWidget(mDiskButton);
+  layout->addWidget(mEjectButton);
+  layout->setContentsMargins(QMargins());
+  layout->setSpacing(0);
+  setLayout(layout);
 
-    connect(iface, &Solid::StorageAccess::setupDone,            this, &MenuDiskItem::onMounted);
-    connect(iface, &Solid::StorageAccess::teardownDone,         this, &MenuDiskItem::onUnmounted);
-    connect(iface, &Solid::StorageAccess::accessibilityChanged, this, [this] (bool /*accessible*/, QString const &) {
-        updateMountStatus();
-    });
+  connect(iface, &Solid::StorageAccess::setupDone, this, &MenuDiskItem::onMounted);
+  connect(iface, &Solid::StorageAccess::teardownDone, this, &MenuDiskItem::onUnmounted);
+  connect(iface, &Solid::StorageAccess::accessibilityChanged, this,
+          [this](bool /*accessible*/, QString const&) { updateMountStatus(); });
 
-    updateMountStatus();
+  updateMountStatus();
 }
 
 MenuDiskItem::~MenuDiskItem() = default;
 
-void MenuDiskItem::setMountStatus()
-{
-    if (mDevice.isValid())
-    {
-        mEjectButton->setEnabled(mDevice.as<Solid::StorageAccess>()->isAccessible() || !opticalParent().udi().isEmpty());
+void MenuDiskItem::setMountStatus() {
+  if (mDevice.isValid()) {
+    mEjectButton->setEnabled(mDevice.as<Solid::StorageAccess>()->isAccessible() || !opticalParent().udi().isEmpty());
+  }
+}
+
+void MenuDiskItem::updateMountStatus() {
+  // Note: don't use the QStringLiteral here as it is causing a SEGFAULT in static finalization time
+  //(the string is released upon our *.so removal, but the reference is still in held in libqtxdg...)
+  static const QIcon icon = XdgIcon::fromTheme(mDevice.icon(), QLatin1String("drive-removable-media"));
+
+  if (mDevice.isValid()) {
+    mDiskButton->setIcon(icon);
+    mDiskButton->setText(mDevice.description());
+
+    setMountStatus();
+  }
+  else
+    emit invalid(mDevice.udi());
+}
+
+Solid::Device MenuDiskItem::opticalParent() const {
+  Solid::Device it;
+  if (mDevice.isValid()) {
+    it = mDevice;
+    // search for parent drive
+    for (; !it.udi().isEmpty(); it = it.parent())
+      if (it.is<Solid::OpticalDrive>())
+        break;
+  }
+  return it;
+}
+
+void MenuDiskItem::diskButtonClicked() {
+  mDiskButtonClicked = true;
+  Solid::StorageAccess* di = mDevice.as<Solid::StorageAccess>();
+  if (!di->isAccessible())
+    di->setup();
+  else
+    onMounted(Solid::NoError, QString(), mDevice.udi());
+
+  mPopup->hide();
+}
+
+void MenuDiskItem::ejectButtonClicked() {
+  mEjectButtonClicked = true;
+  Solid::StorageAccess* di = mDevice.as<Solid::StorageAccess>();
+  if (di->isAccessible())
+    di->teardown();
+  else
+    onUnmounted(Solid::NoError, QString(), mDevice.udi());
+
+  mPopup->hide();
+}
+
+void MenuDiskItem::onMounted(Solid::ErrorType error, QVariant resultData, const QString& /*udi*/) {
+  if (mDiskButtonClicked) {
+    mDiskButtonClicked = false;
+
+    if (Solid::NoError == error)
+      QDesktopServices::openUrl(QUrl(mDevice.as<Solid::StorageAccess>()->filePath()));
+    else {
+      QString errorMsg = tr("Mounting of <b><nobr>\"%1\"</nobr></b> failed: %2");
+      errorMsg = errorMsg.arg(mDevice.description(), resultData.toString());
+      LXQt::Notification::notify(tr("Removable media/devices manager"), errorMsg, mDevice.icon());
     }
+  }
 }
 
-void MenuDiskItem::updateMountStatus()
-{
-    //Note: don't use the QStringLiteral here as it is causing a SEGFAULT in static finalization time
-    //(the string is released upon our *.so removal, but the reference is still in held in libqtxdg...)
-    static const QIcon icon = XdgIcon::fromTheme(mDevice.icon(), QLatin1String("drive-removable-media"));
+void MenuDiskItem::onUnmounted(Solid::ErrorType error, QVariant resultData, const QString& /*udi*/) {
+  if (mEjectButtonClicked) {
+    mEjectButtonClicked = false;
 
-    if (mDevice.isValid())
-    {
-        mDiskButton->setIcon(icon);
-        mDiskButton->setText(mDevice.description());
-
-        setMountStatus();
+    if (Solid::NoError == error) {
+      Solid::Device opt_parent = opticalParent();
+      if (!opt_parent.udi().isEmpty())
+        opt_parent.as<Solid::OpticalDrive>()->eject();
     }
-    else
-        emit invalid(mDevice.udi());
-}
-
-Solid::Device MenuDiskItem::opticalParent() const
-{
-    Solid::Device it;
-    if (mDevice.isValid())
-    {
-        it = mDevice;
-        // search for parent drive
-        for (; !it.udi().isEmpty(); it = it.parent())
-            if (it.is<Solid::OpticalDrive>())
-                break;
+    else {
+      QString errorMsg = tr("Unmounting of <strong><nobr>\"%1\"</nobr></strong> failed: %2");
+      errorMsg = errorMsg.arg(mDevice.description(), resultData.toString());
+      LXQt::Notification::notify(tr("Removable media/devices manager"), errorMsg, mDevice.icon());
     }
-    return it;
-}
-
-void MenuDiskItem::diskButtonClicked()
-{
-    mDiskButtonClicked = true;
-    Solid::StorageAccess* di = mDevice.as<Solid::StorageAccess>();
-    if (!di->isAccessible())
-        di->setup();
-    else
-        onMounted(Solid::NoError, QString(), mDevice.udi());
-
-    mPopup->hide();
-}
-
-void MenuDiskItem::ejectButtonClicked()
-{
-    mEjectButtonClicked = true;
-    Solid::StorageAccess* di = mDevice.as<Solid::StorageAccess>();
-    if (di->isAccessible())
-        di->teardown();
-    else
-        onUnmounted(Solid::NoError, QString(), mDevice.udi());
-
-    mPopup->hide();
-}
-
-void MenuDiskItem::onMounted(Solid::ErrorType error, QVariant resultData, const QString & /*udi*/)
-{
-    if (mDiskButtonClicked)
-    {
-        mDiskButtonClicked = false;
-
-        if (Solid::NoError == error)
-            QDesktopServices::openUrl(QUrl(mDevice.as<Solid::StorageAccess>()->filePath()));
-        else
-        {
-            QString errorMsg = tr("Mounting of <b><nobr>\"%1\"</nobr></b> failed: %2");
-            errorMsg = errorMsg.arg(mDevice.description(), resultData.toString());
-            LXQt::Notification::notify(tr("Removable media/devices manager"), errorMsg, mDevice.icon());
-        }
-    }
-}
-
-void MenuDiskItem::onUnmounted(Solid::ErrorType error, QVariant resultData, const QString & /*udi*/)
-{
-    if (mEjectButtonClicked)
-    {
-        mEjectButtonClicked = false;
-
-        if (Solid::NoError == error)
-        {
-            Solid::Device opt_parent = opticalParent();
-            if (!opt_parent.udi().isEmpty())
-                opt_parent.as<Solid::OpticalDrive>()->eject();
-        }
-        else
-        {
-            QString errorMsg = tr("Unmounting of <strong><nobr>\"%1\"</nobr></strong> failed: %2");
-            errorMsg = errorMsg.arg(mDevice.description(), resultData.toString());
-            LXQt::Notification::notify(tr("Removable media/devices manager"), errorMsg, mDevice.icon());
-        }
-    }
+  }
 }

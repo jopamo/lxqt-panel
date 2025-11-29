@@ -24,70 +24,64 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef SPACER_H
 #define SPACER_H
 
 #include "../panel/ilxqtpanelplugin.h"
 #include <QFrame>
 
+class SpacerWidget : public QFrame {
+  Q_OBJECT
 
-class SpacerWidget : public QFrame
-{
-    Q_OBJECT
+  Q_PROPERTY(QString type READ getType)
+  Q_PROPERTY(QString orientation READ getOrientation)
 
-    Q_PROPERTY(QString type READ getType)
-    Q_PROPERTY(QString orientation READ getOrientation)
+ public:
+  const QString& getType() const throw() { return mType; }
+  void setType(QString const& type);
+  const QString& getOrientation() const throw() { return mOrientation; }
+  void setOrientation(QString const& orientation);
 
-public:
-    const QString& getType() const throw () { return mType; }
-    void setType(QString const & type);
-    const QString& getOrientation() const throw () { return mOrientation; }
-    void setOrientation(QString const & orientation);
-
-private:
-    QString mType;
-    QString mOrientation;
+ private:
+  QString mType;
+  QString mOrientation;
 };
 
-class Spacer : public QObject, public ILXQtPanelPlugin
-{
-    Q_OBJECT
+class Spacer : public QObject, public ILXQtPanelPlugin {
+  Q_OBJECT
 
-public:
-    Spacer(const ILXQtPanelPluginStartupInfo &startupInfo);
+ public:
+  Spacer(const ILXQtPanelPluginStartupInfo& startupInfo);
 
-    virtual QWidget *widget() override { return &mSpacer; }
-    virtual QString themeId() const override { return QStringLiteral("Spacer"); }
+  virtual QWidget* widget() override { return &mSpacer; }
+  virtual QString themeId() const override { return QStringLiteral("Spacer"); }
 
-    bool isSeparate() const override { return true; }
-    bool isExpandable() const override { return mExpandable; }
+  bool isSeparate() const override { return true; }
+  bool isExpandable() const override { return mExpandable; }
 
-    virtual ILXQtPanelPlugin::Flags flags() const override { return HaveConfigDialog; }
-    QDialog *configureDialog() override;
+  virtual ILXQtPanelPlugin::Flags flags() const override { return HaveConfigDialog; }
+  QDialog* configureDialog() override;
 
-    virtual void realign() override;
+  virtual void realign() override;
 
-private slots:
-    virtual void settingsChanged() override;
+ private slots:
+  virtual void settingsChanged() override;
 
-private:
-    void setSizes();
+ private:
+  void setSizes();
 
-private:
-    SpacerWidget mSpacer;
-    int mSize;
-    bool mExpandable;
+ private:
+  SpacerWidget mSpacer;
+  int mSize;
+  bool mExpandable;
 };
 
-class SpacerPluginLibrary: public QObject, public ILXQtPanelPluginLibrary
-{
-    Q_OBJECT
-    // Q_PLUGIN_METADATA(IID "lxqt.org/Panel/PluginInterface/3.0")
-    Q_INTERFACES(ILXQtPanelPluginLibrary)
-public:
-    ILXQtPanelPlugin *instance(const ILXQtPanelPluginStartupInfo &startupInfo) const { return new Spacer(startupInfo);}
+class SpacerPluginLibrary : public QObject, public ILXQtPanelPluginLibrary {
+  Q_OBJECT
+  // Q_PLUGIN_METADATA(IID "lxqt.org/Panel/PluginInterface/3.0")
+  Q_INTERFACES(ILXQtPanelPluginLibrary)
+ public:
+  ILXQtPanelPlugin* instance(const ILXQtPanelPluginStartupInfo& startupInfo) const { return new Spacer(startupInfo); }
 };
 
 #endif
-

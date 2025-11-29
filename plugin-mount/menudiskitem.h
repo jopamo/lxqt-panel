@@ -35,42 +35,37 @@
 
 class Popup;
 
-class MenuDiskItem : public QFrame
-{
-    Q_OBJECT
+class MenuDiskItem : public QFrame {
+  Q_OBJECT
 
-public:
-    explicit MenuDiskItem(Solid::Device device, Popup *popup);
-    ~MenuDiskItem();
+ public:
+  explicit MenuDiskItem(Solid::Device device, Popup* popup);
+  ~MenuDiskItem();
 
-    QString deviceUdi() const { return mDevice.udi(); }
-    void setMountStatus();
+  QString deviceUdi() const { return mDevice.udi(); }
+  void setMountStatus();
 
-private:
-    void updateMountStatus();
-    Solid::Device opticalParent() const;
+ private:
+  void updateMountStatus();
+  Solid::Device opticalParent() const;
 
-signals:
-    void invalid(QString const & udi);
+ signals:
+  void invalid(QString const& udi);
 
-private slots:
-    void diskButtonClicked();
-    void ejectButtonClicked();
+ private slots:
+  void diskButtonClicked();
+  void ejectButtonClicked();
 
-    void onMounted(Solid::ErrorType error,
-                   QVariant resultData,
-                   const QString &udi);
-    void onUnmounted(Solid::ErrorType error,
-                     QVariant resultData,
-                     const QString &udi);
+  void onMounted(Solid::ErrorType error, QVariant resultData, const QString& udi);
+  void onUnmounted(Solid::ErrorType error, QVariant resultData, const QString& udi);
 
-private:
-    Popup *mPopup;
-    Solid::Device mDevice;
-    QToolButton *mDiskButton;
-    QToolButton *mEjectButton;
-    bool mDiskButtonClicked;
-    bool mEjectButtonClicked;
+ private:
+  Popup* mPopup;
+  Solid::Device mDevice;
+  QToolButton* mDiskButton;
+  QToolButton* mEjectButton;
+  bool mDiskButtonClicked;
+  bool mEjectButtonClicked;
 };
 
-#endif // MENUDISKITEM_H
+#endif  // MENUDISKITEM_H

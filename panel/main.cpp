@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #include "lxqtpanelapplication.h"
 
 /*! The lxqt-panel is the panel of LXQt.
@@ -34,9 +33,8 @@
                    (default main)
  */
 
-int main(int argc, char *argv[])
-{
-    LXQtPanelApplication app(argc, argv);
+int main(int argc, char* argv[]) {
+  LXQtPanelApplication app(argc, argv);
 
-    return app.exec();
+  return app.exec();
 }

@@ -33,20 +33,21 @@ namespace Ui {
 class KbdStateConfig;
 }
 
-class KbdStateConfig : public QDialog
-{
-    Q_OBJECT
+class KbdStateConfig : public QDialog {
+  Q_OBJECT
 
-public:
-    explicit KbdStateConfig(QWidget *parent = nullptr);
-    ~KbdStateConfig();
-private:
-    void save();
-    void load();
+ public:
+  explicit KbdStateConfig(QWidget* parent = nullptr);
+  ~KbdStateConfig();
 
-    void configureLayouts();
-private:
-    Ui::KbdStateConfig *m_ui;
+ private:
+  void save();
+  void load();
+
+  void configureLayouts();
+
+ private:
+  Ui::KbdStateConfig* m_ui;
 };
 
 #endif

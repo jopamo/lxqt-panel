@@ -32,15 +32,14 @@
 
 #include <QWidget>
 
-class EjectActionOptical : public EjectAction
-{
-    Q_OBJECT
-public:
-    explicit EjectActionOptical(LXQtMountPlugin *plugin, QObject *parent = nullptr);
-    virtual ActionId Type() const throw () { return ActionOptical; }
+class EjectActionOptical : public EjectAction {
+  Q_OBJECT
+ public:
+  explicit EjectActionOptical(LXQtMountPlugin* plugin, QObject* parent = nullptr);
+  virtual ActionId Type() const throw() { return ActionOptical; }
 
-protected:
-    void doEjectPressed(void);
+ protected:
+  void doEjectPressed(void);
 };
 
-#endif // EJECTACTION_OPTICAL_H
+#endif  // EJECTACTION_OPTICAL_H

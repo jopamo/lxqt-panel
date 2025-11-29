@@ -36,35 +36,34 @@
 
 class AudioDevice;
 
-class OssEngine : public AudioEngine
-{
-    Q_OBJECT
+class OssEngine : public AudioEngine {
+  Q_OBJECT
 
-public:
-    OssEngine(QObject *parent = nullptr);
-    ~OssEngine();
+ public:
+  OssEngine(QObject* parent = nullptr);
+  ~OssEngine();
 
-    virtual const QString backendName() const { return QLatin1String("Oss"); }
-    virtual int volumeMax(AudioDevice */*device*/) const { return 100; }
+  virtual const QString backendName() const { return QLatin1String("Oss"); }
+  virtual int volumeMax(AudioDevice* /*device*/) const { return 100; }
 
-    virtual void commitDeviceVolume(AudioDevice *device);
-    virtual void setMute(AudioDevice *device, bool state);
-    virtual void setIgnoreMaxVolume(bool ignore);
+  virtual void commitDeviceVolume(AudioDevice* device);
+  virtual void setMute(AudioDevice* device, bool state);
+  virtual void setIgnoreMaxVolume(bool ignore);
 
-signals:
-    void sinkInfoChanged(AudioDevice *device);
-    void readyChanged(bool ready);
+ signals:
+  void sinkInfoChanged(AudioDevice* device);
+  void readyChanged(bool ready);
 
-private:
-    void initMixer();
-    void updateVolume();
-    void setVolume(int volume);
+ private:
+  void initMixer();
+  void updateVolume();
+  void setVolume(int volume);
 
-private:
-    int m_mixer; // oss mixer fd
-    AudioDevice* m_device;
-    int m_leftVolume;
-    int m_rightVolume;
+ private:
+  int m_mixer;  // oss mixer fd
+  AudioDevice* m_device;
+  int m_leftVolume;
+  int m_rightVolume;
 };
 
-#endif // OSSENGINE_H
+#endif  // OSSENGINE_H

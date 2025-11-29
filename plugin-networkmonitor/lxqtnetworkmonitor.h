@@ -34,41 +34,34 @@ class ILXQtPanelPlugin;
 /*!
   TODO: How to define cable is not connected?
   */
-class LXQtNetworkMonitor: public QFrame
-{
-    Q_OBJECT
-public:
-    LXQtNetworkMonitor(ILXQtPanelPlugin *plugin, QWidget* parent = nullptr);
-    ~LXQtNetworkMonitor();
-    virtual void settingsChanged();
+class LXQtNetworkMonitor : public QFrame {
+  Q_OBJECT
+ public:
+  LXQtNetworkMonitor(ILXQtPanelPlugin* plugin, QWidget* parent = nullptr);
+  ~LXQtNetworkMonitor();
+  virtual void settingsChanged();
 
-protected:
-    void virtual timerEvent(QTimerEvent *event);
-    void virtual paintEvent(QPaintEvent * event);
-    void virtual resizeEvent(QResizeEvent *);
-    bool virtual event(QEvent *event);
+ protected:
+  void virtual timerEvent(QTimerEvent* event);
+  void virtual paintEvent(QPaintEvent* event);
+  void virtual resizeEvent(QResizeEvent*);
+  bool virtual event(QEvent* event);
 
+ private:
+  static QString convertUnits(double num);
+  QString iconName(const QString& state) const {
+    return QStringLiteral(":/images/knemo-%1-%2.png").arg(m_iconList[m_iconIndex], state);
+  }
 
-private:
-    static QString convertUnits(double num);
-    QString iconName(const QString& state) const
-    {
-        return QStringLiteral(":/images/knemo-%1-%2.png")
-               .arg(m_iconList[m_iconIndex], state);
-    }
+  QWidget m_stuff;
 
-    QWidget m_stuff;
+  QStringList m_iconList;
 
-    QStringList m_iconList;
+  int m_iconIndex;
 
-    int m_iconIndex;
-
-    QString m_interface;
-    QPixmap m_pic;
-    ILXQtPanelPlugin *mPlugin;
+  QString m_interface;
+  QPixmap m_pic;
+  ILXQtPanelPlugin* mPlugin;
 };
 
-
-#endif // LXQTNETWORKMONITOR_H
-
-
+#endif  // LXQTNETWORKMONITOR_H

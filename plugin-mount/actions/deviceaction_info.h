@@ -35,19 +35,18 @@
 
 class Popup;
 
-class DeviceActionInfo : public DeviceAction
-{
-    Q_OBJECT
-public:
-    explicit DeviceActionInfo(LXQtMountPlugin *plugin, QObject *parent = nullptr);
-    virtual ActionId Type() const throw () { return ActionInfo; }
+class DeviceActionInfo : public DeviceAction {
+  Q_OBJECT
+ public:
+  explicit DeviceActionInfo(LXQtMountPlugin* plugin, QObject* parent = nullptr);
+  virtual ActionId Type() const throw() { return ActionInfo; }
 
-protected:
-    void doDeviceAdded(Solid::Device device);
-    void doDeviceRemoved(Solid::Device device);
+ protected:
+  void doDeviceAdded(Solid::Device device);
+  void doDeviceRemoved(Solid::Device device);
 
-private:
-    void showMessage(const QString &text);
+ private:
+  void showMessage(const QString& text);
 };
 
-#endif // DEVICEACTION_INFO_H
+#endif  // DEVICEACTION_INFO_H

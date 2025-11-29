@@ -23,26 +23,25 @@
 
 #include "qeyeswidget.h"
 
-class QEyesVectorWidget : public QAbstractEyesWidget
-{
-    Q_OBJECT
+class QEyesVectorWidget : public QAbstractEyesWidget {
+  Q_OBJECT
 
-    float lineWidth = 0.08f;
-    int lineMinWidth = 1;
-    float pupilSize = 3.0f; /* relative to line width */
-    QString borderColor = QString::fromUtf8("black");
-    QString pupilColor = QString::fromUtf8("black");
-    QString centerColor = QString::fromUtf8("white");
-    QString peripheralColor = QString::fromUtf8("light-gray");
+  float lineWidth = 0.08f;
+  int lineMinWidth = 1;
+  float pupilSize = 3.0f; /* relative to line width */
+  QString borderColor = QString::fromUtf8("black");
+  QString pupilColor = QString::fromUtf8("black");
+  QString centerColor = QString::fromUtf8("white");
+  QString peripheralColor = QString::fromUtf8("light-gray");
 
-    virtual void drawEye(QPainter &painter, int x, int y, int dx, int dy) override;
-    virtual void drawPupil(QPainter &painter, int x, int y) override;
-    virtual void eyeBorder(float &bx, float &by) override;
+  virtual void drawEye(QPainter& painter, int x, int y, int dx, int dy) override;
+  virtual void drawPupil(QPainter& painter, int x, int y) override;
+  virtual void eyeBorder(float& bx, float& by) override;
 
-public:
-    QEyesVectorWidget(QWidget *parent = nullptr);
-    void setBorderColor(const QString &color) { borderColor = color; }
-    void setCenterColor(const QString &color) { centerColor = color; }
-    void setPupilColor(const QString &color) { pupilColor = color; }
-    void setPeripheralColor(const QString &color) { peripheralColor = color; }
+ public:
+  QEyesVectorWidget(QWidget* parent = nullptr);
+  void setBorderColor(const QString& color) { borderColor = color; }
+  void setCenterColor(const QString& color) { centerColor = color; }
+  void setPupilColor(const QString& color) { pupilColor = color; }
+  void setPeripheralColor(const QString& color) { peripheralColor = color; }
 };

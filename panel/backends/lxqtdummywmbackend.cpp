@@ -29,174 +29,137 @@
 
 #include <QIcon>
 
-LXQtDummyWMBackend::LXQtDummyWMBackend(QObject *parent)
-    : ILXQtAbstractWMInterface(parent)
-{
-
-}
+LXQtDummyWMBackend::LXQtDummyWMBackend(QObject* parent) : ILXQtAbstractWMInterface(parent) {}
 
 /************************************************
  *   Windows function
  ************************************************/
-bool LXQtDummyWMBackend::supportsAction(WId, LXQtTaskBarBackendAction) const
-{
-    return false;
+bool LXQtDummyWMBackend::supportsAction(WId, LXQtTaskBarBackendAction) const {
+  return false;
 }
 
-bool LXQtDummyWMBackend::reloadWindows()
-{
-    return false;
+bool LXQtDummyWMBackend::reloadWindows() {
+  return false;
 }
 
-QVector<WId> LXQtDummyWMBackend::getCurrentWindows() const
-{
-    return {};
+QVector<WId> LXQtDummyWMBackend::getCurrentWindows() const {
+  return {};
 }
 
-QString LXQtDummyWMBackend::getWindowTitle(WId) const
-{
-    return QString();
+QString LXQtDummyWMBackend::getWindowTitle(WId) const {
+  return QString();
 }
 
-bool LXQtDummyWMBackend::applicationDemandsAttention(WId) const
-{
-    return false;
+bool LXQtDummyWMBackend::applicationDemandsAttention(WId) const {
+  return false;
 }
 
-QIcon LXQtDummyWMBackend::getApplicationIcon(WId, int) const
-{
-    return QIcon();
+QIcon LXQtDummyWMBackend::getApplicationIcon(WId, int) const {
+  return QIcon();
 }
 
-QString LXQtDummyWMBackend::getWindowClass(WId) const
-{
-    return QString();
+QString LXQtDummyWMBackend::getWindowClass(WId) const {
+  return QString();
 }
 
-LXQtTaskBarWindowLayer LXQtDummyWMBackend::getWindowLayer(WId) const
-{
-    return LXQtTaskBarWindowLayer::Normal;
+LXQtTaskBarWindowLayer LXQtDummyWMBackend::getWindowLayer(WId) const {
+  return LXQtTaskBarWindowLayer::Normal;
 }
 
-bool LXQtDummyWMBackend::setWindowLayer(WId, LXQtTaskBarWindowLayer)
-{
-    return false;
+bool LXQtDummyWMBackend::setWindowLayer(WId, LXQtTaskBarWindowLayer) {
+  return false;
 }
 
-LXQtTaskBarWindowState LXQtDummyWMBackend::getWindowState(WId) const
-{
-    return LXQtTaskBarWindowState::Normal;
+LXQtTaskBarWindowState LXQtDummyWMBackend::getWindowState(WId) const {
+  return LXQtTaskBarWindowState::Normal;
 }
 
-bool LXQtDummyWMBackend::setWindowState(WId, LXQtTaskBarWindowState, bool)
-{
-    return false;
+bool LXQtDummyWMBackend::setWindowState(WId, LXQtTaskBarWindowState, bool) {
+  return false;
 }
 
-bool LXQtDummyWMBackend::isWindowActive(WId) const
-{
-    return false;
+bool LXQtDummyWMBackend::isWindowActive(WId) const {
+  return false;
 }
 
-bool LXQtDummyWMBackend::raiseWindow(WId, bool)
-{
-    return false;
+bool LXQtDummyWMBackend::raiseWindow(WId, bool) {
+  return false;
 }
 
-bool LXQtDummyWMBackend::closeWindow(WId)
-{
-    return false;
+bool LXQtDummyWMBackend::closeWindow(WId) {
+  return false;
 }
 
-WId LXQtDummyWMBackend::getActiveWindow() const
-{
-    return 0;
+WId LXQtDummyWMBackend::getActiveWindow() const {
+  return 0;
 }
-
 
 /************************************************
  *   Workspaces
  ************************************************/
-int LXQtDummyWMBackend::getWorkspacesCount(QScreen*) const
-{
-    return 1; // Fake 1 workspace
+int LXQtDummyWMBackend::getWorkspacesCount(QScreen*) const {
+  return 1;  // Fake 1 workspace
 }
 
-QString LXQtDummyWMBackend::getWorkspaceName(int, QString) const
-{
-    return QString();
+QString LXQtDummyWMBackend::getWorkspaceName(int, QString) const {
+  return QString();
 }
 
-int LXQtDummyWMBackend::getCurrentWorkspace(QScreen*) const
-{
-    return 0;
+int LXQtDummyWMBackend::getCurrentWorkspace(QScreen*) const {
+  return 0;
 }
 
-bool LXQtDummyWMBackend::setCurrentWorkspace(int, QScreen*)
-{
-    return false;
+bool LXQtDummyWMBackend::setCurrentWorkspace(int, QScreen*) {
+  return false;
 }
 
-int LXQtDummyWMBackend::getWindowWorkspace(WId) const
-{
-    return 0;
+int LXQtDummyWMBackend::getWindowWorkspace(WId) const {
+  return 0;
 }
 
-bool LXQtDummyWMBackend::setWindowOnWorkspace(WId, int)
-{
-    return false;
+bool LXQtDummyWMBackend::setWindowOnWorkspace(WId, int) {
+  return false;
 }
 
-void LXQtDummyWMBackend::moveApplicationToPrevNextMonitor(WId, bool, bool)
-{
-    //No-op
+void LXQtDummyWMBackend::moveApplicationToPrevNextMonitor(WId, bool, bool) {
+  // No-op
 }
 
-int LXQtDummyWMBackend::onAllWorkspacesEnum() const
-{
-    return 0;
+int LXQtDummyWMBackend::onAllWorkspacesEnum() const {
+  return 0;
 }
 
-bool LXQtDummyWMBackend::isWindowOnScreen(QScreen *, WId) const
-{
-    return false;
+bool LXQtDummyWMBackend::isWindowOnScreen(QScreen*, WId) const {
+  return false;
 }
 
-bool LXQtDummyWMBackend::setDesktopLayout(Qt::Orientation, int, int, bool)
-{
-    return false;
+bool LXQtDummyWMBackend::setDesktopLayout(Qt::Orientation, int, int, bool) {
+  return false;
 }
 
 /************************************************
  *   X11 Specific
  ************************************************/
-void LXQtDummyWMBackend::moveApplication(WId)
-{
-    //No-op
+void LXQtDummyWMBackend::moveApplication(WId) {
+  // No-op
 }
 
-void LXQtDummyWMBackend::resizeApplication(WId)
-{
-    //No-op
+void LXQtDummyWMBackend::resizeApplication(WId) {
+  // No-op
 }
 
-void LXQtDummyWMBackend::refreshIconGeometry(WId, QRect const &)
-{
-    //No-op
+void LXQtDummyWMBackend::refreshIconGeometry(WId, QRect const&) {
+  // No-op
 }
 
-bool LXQtDummyWMBackend::isAreaOverlapped(const QRect &) const
-{
-    return false;
+bool LXQtDummyWMBackend::isAreaOverlapped(const QRect&) const {
+  return false;
 }
 
-bool LXQtDummyWMBackend::isShowingDesktop() const
-{
-    return false;
+bool LXQtDummyWMBackend::isShowingDesktop() const {
+  return false;
 }
 
-bool LXQtDummyWMBackend::showDesktop(bool)
-{
-    return false;
+bool LXQtDummyWMBackend::showDesktop(bool) {
+  return false;
 }
-

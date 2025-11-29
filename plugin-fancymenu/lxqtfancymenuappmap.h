@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQTFANCYMENUAPPMAP_H
 #define LXQTFANCYMENUAPPMAP_H
 
@@ -41,91 +40,80 @@
 class XdgMenu;
 class QDomElement;
 
-struct LXQtFancyMenuAppItem
-{
-    QString desktopFile;
-    QString title;
-    QString comment;
-    QStringList keywords;
-    QStringList exec;
+struct LXQtFancyMenuAppItem {
+  QString desktopFile;
+  QString title;
+  QString comment;
+  QStringList keywords;
+  QStringList exec;
+  QIcon icon;
+  XdgDesktopFile desktopFileCache;
+};
+
+class LXQtFancyMenuAppMap {
+ public:
+  enum SpecialCategory { FavoritesCategory = 0, AllAppsCategory = 1 };
+
+  typedef LXQtFancyMenuAppItem AppItem;
+
+  struct Category {
+    QString menuName;
+    QString menuTitle;
     QIcon icon;
-    XdgDesktopFile desktopFileCache;
-};
 
-class LXQtFancyMenuAppMap
-{
-public:
-    enum SpecialCategory
-    {
-        FavoritesCategory = 0,
-        AllAppsCategory = 1
+    struct Item {
+      AppItem* appItem = nullptr;
+      LXQtFancyMenuItemType type = LXQtFancyMenuItemType::AppItem;
     };
 
-    typedef LXQtFancyMenuAppItem AppItem;
+    QList<Item> apps;
+    LXQtFancyMenuItemType type;
+  };
 
-    struct Category
-    {
-        QString menuName;
-        QString menuTitle;
-        QIcon icon;
+  LXQtFancyMenuAppMap();
+  ~LXQtFancyMenuAppMap();
 
-        struct Item
-        {
-            AppItem *appItem = nullptr;
-            LXQtFancyMenuItemType type = LXQtFancyMenuItemType::AppItem;
-        };
+  void clear();
+  void clearFavorites();
+  bool rebuildModel(const XdgMenu& menu);
 
-        QList<Item> apps;
-        LXQtFancyMenuItemType type;
-    };
+  void setFavorites(const QStringList& favorites);
+  QStringList getFavorites() const;
 
-    LXQtFancyMenuAppMap();
-    ~LXQtFancyMenuAppMap();
+  int getFavoriteIndex(const QString& desktopFile) const;
 
-    void clear();
-    void clearFavorites();
-    bool rebuildModel(const XdgMenu &menu);
+  inline int getFavoriteCount() const { return mCategories[0].apps.count(); }
 
-    void setFavorites(const QStringList& favorites);
-    QStringList getFavorites() const;
+  inline bool isFavorite(const QString& desktopFile) const { return getFavoriteIndex(desktopFile) != -1; }
 
-    int getFavoriteIndex(const QString& desktopFile) const;
+  void addToFavorites(const QString& desktopFile);
+  void removeFromFavorites(const QString& desktopFile);
+  void moveFavoriteItem(int oldPos, int newPos);
 
-    inline int getFavoriteCount() const { return mCategories[0].apps.count(); }
+  inline int getCategoriesCount() const { return mCategories.size(); }
+  inline const Category& getCategoryAt(int index) { return mCategories.at(index); }
 
-    inline bool isFavorite(const QString& desktopFile) const
-    {
-        return getFavoriteIndex(desktopFile) != -1;
-    }
+  inline int getTotalAppCount() const { return mAppSortedByName.size(); }
 
-    void addToFavorites(const QString& desktopFile);
-    void removeFromFavorites(const QString& desktopFile);
-    void moveFavoriteItem(int oldPos, int newPos);
+  AppItem* getAppAt(int index);
 
-    inline int getCategoriesCount() const { return mCategories.size(); }
-    inline const Category& getCategoryAt(int index) { return mCategories.at(index); }
+  QList<const AppItem*> getMatchingApps(const QString& query) const;
 
-    inline int getTotalAppCount() const { return mAppSortedByName.size(); }
+ private:
+  void parseMenu(const QDomElement& menu, const QString& topLevelCategory);
+  void parseAppLink(const QDomElement& app, const QString& topLevelCategory);
+  void parseSeparator(const QDomElement& sep, const QString& topLevelCategory);
 
-    AppItem *getAppAt(int index);
+  AppItem* loadAppItem(const QString& desktopFile);
 
-    QList<const AppItem *> getMatchingApps(const QString& query) const;
+ private:
+  QMap<QString, AppItem*> mAppSortedByDesktopFile;
+  QList<AppItem*> mAppSortedByName;
+  QList<Category> mCategories;
 
-private:
-    void parseMenu(const QDomElement& menu, const QString &topLevelCategory);
-    void parseAppLink(const QDomElement& app, const QString &topLevelCategory);
-    void parseSeparator(const QDomElement &sep, const QString &topLevelCategory);
-
-    AppItem *loadAppItem(const QString& desktopFile);
-
-private:
-    QMap<QString, AppItem *> mAppSortedByDesktopFile;
-    QList<AppItem *> mAppSortedByName;
-    QList<Category> mCategories;
-
-    // Cache sort by name map access
-    QList<AppItem *>::const_iterator mCachedIterator;
-    int mCachedIndex;
+  // Cache sort by name map access
+  QList<AppItem*>::const_iterator mCachedIterator;
+  int mCachedIndex;
 };
 
-#endif // LXQTFANCYMENUAPPMAP_H
+#endif  // LXQTFANCYMENUAPPMAP_H

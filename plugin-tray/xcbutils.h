@@ -48,99 +48,83 @@
 #define XEMBED_FOCUS_NEXT 6
 #define XEMBED_FOCUS_PREV 7
 
-namespace Xcb
-{
+namespace Xcb {
 typedef xcb_window_t WindowId;
 
-struct ScopedCPointerDeleter
-{
-    static inline void cleanup(void *pointer) noexcept { free(pointer); }
-    void operator()(void *pointer) const noexcept { cleanup(pointer); }
+struct ScopedCPointerDeleter {
+  static inline void cleanup(void* pointer) noexcept { free(pointer); }
+  void operator()(void* pointer) const noexcept { cleanup(pointer); }
 };
 
-template<typename T>
+template <typename T>
 using ScopedCPointer = std::unique_ptr<T, ScopedCPointerDeleter>;
 
-class Atom
-{
-public:
-    explicit Atom(const QByteArray &name, xcb_connection_t *c, bool onlyIfExists = false)
-        : m_connection(c)
-        , m_retrieved(false)
-        , m_cookie(xcb_intern_atom_unchecked(m_connection, onlyIfExists, name.length(), name.constData()))
-        , m_atom(XCB_ATOM_NONE)
-        , m_name(name)
-    {
-    }
-    Atom() = delete;
-    Atom(const Atom &) = delete;
+class Atom {
+ public:
+  explicit Atom(const QByteArray& name, xcb_connection_t* c, bool onlyIfExists = false)
+      : m_connection(c),
+        m_retrieved(false),
+        m_cookie(xcb_intern_atom_unchecked(m_connection, onlyIfExists, name.length(), name.constData())),
+        m_atom(XCB_ATOM_NONE),
+        m_name(name) {}
+  Atom() = delete;
+  Atom(const Atom&) = delete;
 
-    ~Atom()
-    {
-        if (!m_retrieved && m_cookie.sequence) {
-            xcb_discard_reply(m_connection, m_cookie.sequence);
-        }
+  ~Atom() {
+    if (!m_retrieved && m_cookie.sequence) {
+      xcb_discard_reply(m_connection, m_cookie.sequence);
     }
+  }
 
-    operator xcb_atom_t() const
-    {
-        (const_cast<Atom *>(this))->getReply();
-        return m_atom;
-    }
-    bool isValid()
-    {
-        getReply();
-        return m_atom != XCB_ATOM_NONE;
-    }
-    bool isValid() const
-    {
-        (const_cast<Atom *>(this))->getReply();
-        return m_atom != XCB_ATOM_NONE;
-    }
+  operator xcb_atom_t() const {
+    (const_cast<Atom*>(this))->getReply();
+    return m_atom;
+  }
+  bool isValid() {
+    getReply();
+    return m_atom != XCB_ATOM_NONE;
+  }
+  bool isValid() const {
+    (const_cast<Atom*>(this))->getReply();
+    return m_atom != XCB_ATOM_NONE;
+  }
 
-    inline const QByteArray &name() const
-    {
-        return m_name;
-    }
+  inline const QByteArray& name() const { return m_name; }
 
-private:
-    void getReply()
-    {
-        if (m_retrieved || !m_cookie.sequence) {
-            return;
-        }
-        ScopedCPointer<xcb_intern_atom_reply_t> reply(xcb_intern_atom_reply(m_connection, m_cookie, nullptr));
-        if (reply) {
-            m_atom = reply->atom;
-        }
-        m_retrieved = true;
+ private:
+  void getReply() {
+    if (m_retrieved || !m_cookie.sequence) {
+      return;
     }
-    xcb_connection_t *m_connection;
-    bool m_retrieved;
-    xcb_intern_atom_cookie_t m_cookie;
-    xcb_atom_t m_atom;
-    QByteArray m_name;
+    ScopedCPointer<xcb_intern_atom_reply_t> reply(xcb_intern_atom_reply(m_connection, m_cookie, nullptr));
+    if (reply) {
+      m_atom = reply->atom;
+    }
+    m_retrieved = true;
+  }
+  xcb_connection_t* m_connection;
+  bool m_retrieved;
+  xcb_intern_atom_cookie_t m_cookie;
+  xcb_atom_t m_atom;
+  QByteArray m_name;
 };
 
-class Atoms
-{
-public:
-    Atoms(xcb_connection_t *c, int defaultScreen)
-        : xembedAtom("_XEMBED", c)
-        , selectionAtom(xcb_atom_name_by_screen("_NET_SYSTEM_TRAY", defaultScreen), c)
-        , opcodeAtom("_NET_SYSTEM_TRAY_OPCODE", c)
-        , messageData("_NET_SYSTEM_TRAY_MESSAGE_DATA", c)
-        , visualAtom("_NET_SYSTEM_TRAY_VISUAL", c)
-    {
-    }
+class Atoms {
+ public:
+  Atoms(xcb_connection_t* c, int defaultScreen)
+      : xembedAtom("_XEMBED", c),
+        selectionAtom(xcb_atom_name_by_screen("_NET_SYSTEM_TRAY", defaultScreen), c),
+        opcodeAtom("_NET_SYSTEM_TRAY_OPCODE", c),
+        messageData("_NET_SYSTEM_TRAY_MESSAGE_DATA", c),
+        visualAtom("_NET_SYSTEM_TRAY_VISUAL", c) {}
 
-    Atom xembedAtom;
-    Atom selectionAtom;
-    Atom opcodeAtom;
-    Atom messageData;
-    Atom visualAtom;
+  Atom xembedAtom;
+  Atom selectionAtom;
+  Atom opcodeAtom;
+  Atom messageData;
+  Atom visualAtom;
 };
 
-extern Atoms *atoms;
+extern Atoms* atoms;
 
-} // namespace Xcb
+}  // namespace Xcb

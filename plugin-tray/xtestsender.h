@@ -28,5 +28,5 @@
 
 typedef struct _XDisplay Display;
 
-void sendXTestPressed(Display *display, int button);
-void sendXTestReleased(Display *display, int button);
+void sendXTestPressed(Display* display, int button);
+void sendXTestReleased(Display* display, int button);

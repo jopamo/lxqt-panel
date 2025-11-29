@@ -31,106 +31,97 @@
 
 #include "qeyesimagewidget.h"
 
+bool ImageStretcher::load(const QString& fn) {
+  if (fn.endsWith(QString::fromUtf8(".svg"), Qt::CaseInsensitive)) {
+    svg = true;
+    if (!svgrender.load(fn))
+      return false;
+  }
+  else {
+    if (!origImage.load(fn))
+      return false;
+    svg = false;
+  }
 
-bool ImageStretcher::load(const QString& fn)
-{
-    if (fn.endsWith(QString::fromUtf8(".svg"), Qt::CaseInsensitive))
-    {
-        svg = true;
-        if (!svgrender.load(fn))
-            return false;
-    }
-    else
-    {
-        if (!origImage.load(fn))
-            return false;
-        svg = false;
-    }
-
-    stretchedImage = QPixmap();
-    return true;
+  stretchedImage = QPixmap();
+  return true;
 }
-    
-QPixmap & ImageStretcher::ImageStretcher::getImage(int w, int h) {
-    if (w == stretchedImage.width() && h == stretchedImage.height())
-        return stretchedImage;
-    if (svg) {
-        stretchedImage = QPixmap(w, h);
-        stretchedImage.fill(QColor(0, 0, 0, 0));
-        QPainter painter(&stretchedImage);
-        svgrender.render(&painter, stretchedImage.rect());
-    } else {
-        stretchedImage = origImage.scaled(w, h,
-            Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-    }
 
+QPixmap& ImageStretcher::ImageStretcher::getImage(int w, int h) {
+  if (w == stretchedImage.width() && h == stretchedImage.height())
     return stretchedImage;
+  if (svg) {
+    stretchedImage = QPixmap(w, h);
+    stretchedImage.fill(QColor(0, 0, 0, 0));
+    QPainter painter(&stretchedImage);
+    svgrender.render(&painter, stretchedImage.rect());
+  }
+  else {
+    stretchedImage = origImage.scaled(w, h, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+  }
+
+  return stretchedImage;
 }
 
 int ImageStretcher::origWidth() {
-    if (svg)
-        return svgrender.viewBox().width();
-    else
-        return origImage.width();
+  if (svg)
+    return svgrender.viewBox().width();
+  else
+    return origImage.width();
 }
 
 int ImageStretcher::origHeight() {
-    if (svg)
-        return svgrender.viewBox().height();
-    else
-        return origImage.height();
+  if (svg)
+    return svgrender.viewBox().height();
+  else
+    return origImage.height();
 }
 
 int ImageStretcher::stretchedWidth() {
-    return stretchedImage.width();
+  return stretchedImage.width();
 }
 int ImageStretcher::stretchedHeight() {
-    return stretchedImage.height();
+  return stretchedImage.height();
 }
 
-void QEyesImageWidget::drawEye(QPainter &painter, int x, int y, int dx, int dy) {
-    painter.drawPixmap(x, y, background.getImage(dx, dy));
+void QEyesImageWidget::drawEye(QPainter& painter, int x, int y, int dx, int dy) {
+  painter.drawPixmap(x, y, background.getImage(dx, dy));
 }
-void QEyesImageWidget::drawPupil(QPainter &painter, int x, int y) {
+void QEyesImageWidget::drawPupil(QPainter& painter, int x, int y) {
+  auto& img = pupil.getImage(pupil.origWidth() * background.stretchedWidth() / background.origWidth(),
+                             pupil.origHeight() * background.stretchedHeight() / background.origHeight());
 
-    auto & img = pupil.getImage( 
-            pupil.origWidth() * background.stretchedWidth() / background.origWidth(),
-            pupil.origHeight() * background.stretchedHeight() / background.origHeight());
-
-    painter.drawPixmap(x - img.width() / 2, y - img.height() / 2, img);
+  painter.drawPixmap(x - img.width() / 2, y - img.height() / 2, img);
 }
 
-void QEyesImageWidget::eyeBorder(float &bx, float &by) {
-    bx = borderXStretched;
-    by = borderYStretched;
+void QEyesImageWidget::eyeBorder(float& bx, float& by) {
+  bx = borderXStretched;
+  by = borderYStretched;
 }
 
-bool QEyesImageWidget::load(const QString &eye, const QString &pupil_,
-                                int wall, int num) {
+bool QEyesImageWidget::load(const QString& eye, const QString& pupil_, int wall, int num) {
+  if (num < 1 || num > 10)
+    return false;
 
-    if (num < 1 || num > 10)
-        return false;
-
-    borderY = borderX = wall;
-    if (!pupil.load(pupil_))
-        return false;
-    if (!background.load(eye))
-        return false;
-    numEyes = num;
-    return true;
+  borderY = borderX = wall;
+  if (!pupil.load(pupil_))
+    return false;
+  if (!background.load(eye))
+    return false;
+  numEyes = num;
+  return true;
 }
 
-void QEyesImageWidget::paintEvent(QPaintEvent *event) {
-    if (width() != oldWidth || height() != oldHeight) {
-        const auto dx = width() / numEyes;
-        background.getImage(dx, height());
-        
-        borderYStretched = borderY * background.stretchedHeight() / background.origHeight();
-        borderXStretched = borderX * background.stretchedWidth() / background.origWidth();
-            
-        oldWidth = width();
-        oldHeight = height();
-    }
-    QAbstractEyesWidget::paintEvent(event);
-}
+void QEyesImageWidget::paintEvent(QPaintEvent* event) {
+  if (width() != oldWidth || height() != oldHeight) {
+    const auto dx = width() / numEyes;
+    background.getImage(dx, height());
 
+    borderYStretched = borderY * background.stretchedHeight() / background.origHeight();
+    borderXStretched = borderX * background.stretchedWidth() / background.origWidth();
+
+    oldWidth = width();
+    oldHeight = height();
+  }
+  QAbstractEyesWidget::paintEvent(event);
+}

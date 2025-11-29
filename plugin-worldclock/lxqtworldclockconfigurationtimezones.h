@@ -26,42 +26,39 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQT_PANEL_WORLDCLOCK_CONFIGURATION_TIMEZONES_H
 #define LXQT_PANEL_WORLDCLOCK_CONFIGURATION_TIMEZONES_H
 
 #include <QDialog>
 #include <QAbstractButton>
 
-
 namespace Ui {
-    class LXQtWorldClockConfigurationTimeZones;
+class LXQtWorldClockConfigurationTimeZones;
 }
 
 class QTreeWidgetItem;
 
-class LXQtWorldClockConfigurationTimeZones : public QDialog
-{
-    Q_OBJECT
+class LXQtWorldClockConfigurationTimeZones : public QDialog {
+  Q_OBJECT
 
-public:
-    explicit LXQtWorldClockConfigurationTimeZones(QWidget *parent = nullptr);
-    ~LXQtWorldClockConfigurationTimeZones();
+ public:
+  explicit LXQtWorldClockConfigurationTimeZones(QWidget* parent = nullptr);
+  ~LXQtWorldClockConfigurationTimeZones();
 
-    int updateAndExec();
+  int updateAndExec();
 
-    QString timeZone();
+  QString timeZone();
 
-public slots:
-    void itemSelectionChanged();
-    void itemDoubleClicked(QTreeWidgetItem*, int);
+ public slots:
+  void itemSelectionChanged();
+  void itemDoubleClicked(QTreeWidgetItem*, int);
 
-private:
-    Ui::LXQtWorldClockConfigurationTimeZones *ui;
+ private:
+  Ui::LXQtWorldClockConfigurationTimeZones* ui;
 
-    QString mTimeZone;
+  QString mTimeZone;
 
-    QTreeWidgetItem* makeSureParentsExist(const QStringList &parts, QMap<QString, QTreeWidgetItem*> &parentItems);
+  QTreeWidgetItem* makeSureParentsExist(const QStringList& parts, QMap<QString, QTreeWidgetItem*>& parentItems);
 };
 
-#endif // LXQT_PANEL_WORLDCLOCK_CONFIGURATION_TIMEZONES_H
+#endif  // LXQT_PANEL_WORLDCLOCK_CONFIGURATION_TIMEZONES_H

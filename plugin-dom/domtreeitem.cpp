@@ -31,127 +31,92 @@
 #include <QFile>
 #include <QToolButton>
 
-
-DomTreeItem::DomTreeItem(QTreeWidget *view, QWidget *widget):
-    QTreeWidgetItem(view),
-    mWidget(widget)
-{
-    init();
-    mWidget->installEventFilter(this);
-    connect(mWidget, &QWidget::destroyed, this, &DomTreeItem::widgetDestroyed);
+DomTreeItem::DomTreeItem(QTreeWidget* view, QWidget* widget) : QTreeWidgetItem(view), mWidget(widget) {
+  init();
+  mWidget->installEventFilter(this);
+  connect(mWidget, &QWidget::destroyed, this, &DomTreeItem::widgetDestroyed);
 }
 
-
-DomTreeItem::DomTreeItem(QTreeWidgetItem *parent, QWidget *widget):
-    QTreeWidgetItem(parent),
-    mWidget(widget)
-{
-    init();
-    mWidget->installEventFilter(this);
-    connect(mWidget, &QWidget::destroyed, this, &DomTreeItem::widgetDestroyed);
+DomTreeItem::DomTreeItem(QTreeWidgetItem* parent, QWidget* widget) : QTreeWidgetItem(parent), mWidget(widget) {
+  init();
+  mWidget->installEventFilter(this);
+  connect(mWidget, &QWidget::destroyed, this, &DomTreeItem::widgetDestroyed);
 }
 
-
-void DomTreeItem::init()
-{
-    QStringList hierarchy = widgetClassHierarchy();
-    for (int i=0; i<hierarchy.count(); ++i)
-    {
-        QString iconName = QString(QLatin1Char(':') + hierarchy.at(i)).toLower();
-        if (QFile::exists(iconName))
-        {
-            setIcon(0, QIcon(iconName));
-            break;
-        }
+void DomTreeItem::init() {
+  QStringList hierarchy = widgetClassHierarchy();
+  for (int i = 0; i < hierarchy.count(); ++i) {
+    QString iconName = QString(QLatin1Char(':') + hierarchy.at(i)).toLower();
+    if (QFile::exists(iconName)) {
+      setIcon(0, QIcon(iconName));
+      break;
     }
+  }
 
-    QString text = widgetText();
-    if (!text.isEmpty())
-        text = QStringLiteral(" \"") + text + QStringLiteral("\"");
+  QString text = widgetText();
+  if (!text.isEmpty())
+    text = QStringLiteral(" \"") + text + QStringLiteral("\"");
 
-    QString name = mWidget->objectName();
-    setText(0, QStringLiteral("%1 (%2)%3").arg(
-                name ,
-                widgetClassName(),
-                text));
-    setText(1, hierarchy.join(QStringLiteral(" :: ")));
-    fill();
+  QString name = mWidget->objectName();
+  setText(0, QStringLiteral("%1 (%2)%3").arg(name, widgetClassName(), text));
+  setText(1, hierarchy.join(QStringLiteral(" :: ")));
+  fill();
 }
 
+void DomTreeItem::fill() {
+  const QList<QWidget*> widgets = mWidget->findChildren<QWidget*>();
+  for (QWidget* w : widgets) {
+    if (w->parentWidget() != mWidget)
+      continue;
 
-void DomTreeItem::fill()
-{
-    const QList<QWidget*> widgets = mWidget->findChildren<QWidget*>();
-    for (QWidget *w : widgets)
-    {
-        if (w->parentWidget() != mWidget)
-            continue;
+    new DomTreeItem(this, w);
+  }
+}
 
-        new DomTreeItem(this, w);
+bool DomTreeItem::eventFilter(QObject* watched, QEvent* event) {
+  if (watched == mWidget && event->type() == QEvent::ChildPolished) {
+    QChildEvent* ce = static_cast<QChildEvent*>(event);
+    QWidget* w = qobject_cast<QWidget*>(ce->child());
+    if (w) {
+      for (int i = 0; i < childCount(); ++i) {
+        DomTreeItem* ci = static_cast<DomTreeItem*>(child(i));
+        if (ci->widget() == w)
+          ci->deleteLater();
+      }
+
+      new DomTreeItem(this, w);
     }
+  }
+
+  return QObject::eventFilter(watched, event);
 }
 
-
-bool DomTreeItem::eventFilter(QObject *watched, QEvent *event)
-{
-    if (watched == mWidget &&
-        event->type() == QEvent::ChildPolished)
-    {
-        QChildEvent *ce = static_cast<QChildEvent*>(event);
-        QWidget *w = qobject_cast<QWidget*>(ce->child());
-        if (w)
-        {
-            for (int i=0; i<childCount(); ++i)
-            {
-                DomTreeItem *ci = static_cast<DomTreeItem*>(child(i));
-                if (ci->widget() == w)
-                    ci->deleteLater();
-            }
-
-            new DomTreeItem(this, w);
-        }
-    }
-
-    return QObject::eventFilter(watched, event);
+QString DomTreeItem::widgetObjectName() const {
+  return mWidget->objectName();
 }
 
+QString DomTreeItem::widgetText() const {
+  QToolButton* toolButton = qobject_cast<QToolButton*>(mWidget);
+  if (toolButton)
+    return toolButton->text();
 
-QString DomTreeItem::widgetObjectName() const
-{
-    return mWidget->objectName();
+  return QLatin1String("");
 }
 
-
-QString DomTreeItem::widgetText() const
-{
-    QToolButton *toolButton = qobject_cast<QToolButton*>(mWidget);
-    if (toolButton)
-        return toolButton->text();
-
-    return QLatin1String("");
+QString DomTreeItem::widgetClassName() const {
+  return QString::fromUtf8(mWidget->metaObject()->className());
 }
 
-
-QString DomTreeItem::widgetClassName() const
-{
-    return QString::fromUtf8(mWidget->metaObject()->className());
+QStringList DomTreeItem::widgetClassHierarchy() const {
+  QStringList hierarchy;
+  const QMetaObject* m = mWidget->metaObject();
+  while (m) {
+    hierarchy << QString::fromUtf8(m->className());
+    m = m->superClass();
+  }
+  return hierarchy;
 }
 
-
-QStringList DomTreeItem::widgetClassHierarchy() const
-{
-    QStringList hierarchy;
-    const QMetaObject *m = mWidget->metaObject();
-    while (m)
-    {
-        hierarchy << QString::fromUtf8(m->className());
-        m = m->superClass();
-    }
-    return hierarchy;
-}
-
-
-void DomTreeItem::widgetDestroyed()
-{
-    deleteLater();
+void DomTreeItem::widgetDestroyed() {
+  deleteLater();
 }

@@ -36,4 +36,4 @@
 #define LXQT_PANEL_API Q_DECL_IMPORT
 #endif
 
-#endif // __LXQT_PANEL_GLOBALS_H__
+#endif  // __LXQT_PANEL_GLOBALS_H__

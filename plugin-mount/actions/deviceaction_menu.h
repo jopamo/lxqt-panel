@@ -35,20 +35,19 @@
 
 class Popup;
 
-class DeviceActionMenu : public DeviceAction
-{
-    Q_OBJECT
-public:
-    explicit DeviceActionMenu(LXQtMountPlugin *plugin, QObject *parent = nullptr);
-    virtual ActionId Type() const throw () { return ActionMenu; }
+class DeviceActionMenu : public DeviceAction {
+  Q_OBJECT
+ public:
+  explicit DeviceActionMenu(LXQtMountPlugin* plugin, QObject* parent = nullptr);
+  virtual ActionId Type() const throw() { return ActionMenu; }
 
-protected:
-    void doDeviceAdded(Solid::Device device);
-    void doDeviceRemoved(Solid::Device device);
+ protected:
+  void doDeviceAdded(Solid::Device device);
+  void doDeviceRemoved(Solid::Device device);
 
-private:
-    Popup *mPopup;
-    QTimer mHideTimer;
+ private:
+  Popup* mPopup;
+  QTimer mHideTimer;
 };
 
-#endif // DEVICEACTIONMENU_H
+#endif  // DEVICEACTIONMENU_H

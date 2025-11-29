@@ -26,40 +26,38 @@
 #include <QtCore/QTimer>
 #include <QtGui/QPixmap>
 
-class QAbstractEyesWidget : public QWidget
-{
-    Q_OBJECT
+class QAbstractEyesWidget : public QWidget {
+  Q_OBJECT
 
-    QTimer timer;
-    QPoint previousPos;
-    int timerTimeout = 100; /* unit ms */
-    QString bgColor = QString::fromUtf8("white");
-    bool transparent = false;
+  QTimer timer;
+  QPoint previousPos;
+  int timerTimeout = 100; /* unit ms */
+  QString bgColor = QString::fromUtf8("white");
+  bool transparent = false;
 
-private slots:
-    void timeout();
+ private slots:
+  void timeout();
 
-protected:
-    int numEyes = 3;
+ protected:
+  int numEyes = 3;
 
-private:
-    void leaveEvent(QEvent *) override;
-    void enterEvent(QEnterEvent *) override;
-    void mouseMoveEvent(QMouseEvent  *) override;
+ private:
+  void leaveEvent(QEvent*) override;
+  void enterEvent(QEnterEvent*) override;
+  void mouseMoveEvent(QMouseEvent*) override;
 
-protected:
-    virtual void drawEye(QPainter &painter, int x, int y, int dx, int dy) = 0;
-    virtual void drawPupil(QPainter &painter, int x, int y) = 0;
-    virtual void eyeBorder(float &bx, float &by) = 0;
+ protected:
+  virtual void drawEye(QPainter& painter, int x, int y, int dx, int dy) = 0;
+  virtual void drawPupil(QPainter& painter, int x, int y) = 0;
+  virtual void eyeBorder(float& bx, float& by) = 0;
 
-    void paintEvent(QPaintEvent *event) override;
+  void paintEvent(QPaintEvent* event) override;
 
-public:
-    QAbstractEyesWidget(QWidget *parent = nullptr);
-    ~QAbstractEyesWidget();
-    void setNumEyes(int n) { numEyes = n; }
-    int getNumEyes() { return numEyes; }
-    void setBGColor(const QString &color) { bgColor = color; }
-    void setTransparent(bool t = true) { transparent = t; }
-
+ public:
+  QAbstractEyesWidget(QWidget* parent = nullptr);
+  ~QAbstractEyesWidget();
+  void setNumEyes(int n) { numEyes = n; }
+  int getNumEyes() { return numEyes; }
+  void setBGColor(const QString& color) { bgColor = color; }
+  void setTransparent(bool t = true) { transparent = t; }
 };

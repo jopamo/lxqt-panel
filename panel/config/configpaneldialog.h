@@ -35,22 +35,21 @@
 
 #include <LXQt/ConfigDialog>
 
-class ConfigPanelDialog : public LXQt::ConfigDialog
-{
-    Q_OBJECT
+class ConfigPanelDialog : public LXQt::ConfigDialog {
+  Q_OBJECT
 
-public:
-    ConfigPanelDialog(LXQtPanel *panel, QWidget *parent = nullptr);
+ public:
+  ConfigPanelDialog(LXQtPanel* panel, QWidget* parent = nullptr);
 
-    void showConfigPlacementPage();
-    void showConfigStylingPage();
-    void showConfigPluginsPage();
-    void updateIconThemeSettings();
+  void showConfigPlacementPage();
+  void showConfigStylingPage();
+  void showConfigPluginsPage();
+  void updateIconThemeSettings();
 
-private:
-    ConfigPlacement *mPlacementPage;
-    ConfigStyling *mStylingPage;
-    ConfigPluginsWidget *mPluginsPage;
+ private:
+  ConfigPlacement* mPlacementPage;
+  ConfigStyling* mStylingPage;
+  ConfigPluginsWidget* mPluginsPage;
 };
 
-#endif // CONFIGPANELDIALOG_H
+#endif  // CONFIGPANELDIALOG_H

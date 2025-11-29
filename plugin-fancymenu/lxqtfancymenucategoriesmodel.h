@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQTFANCYMENUCATEGORIESMODEL_H
 #define LXQTFANCYMENUCATEGORIESMODEL_H
 
@@ -33,28 +32,27 @@
 
 class LXQtFancyMenuAppMap;
 
-class LXQtFancyMenuCategoriesModel : public QAbstractListModel
-{
-    Q_OBJECT
+class LXQtFancyMenuCategoriesModel : public QAbstractListModel {
+  Q_OBJECT
 
-public:
-    explicit LXQtFancyMenuCategoriesModel(QObject *parent = nullptr);
+ public:
+  explicit LXQtFancyMenuCategoriesModel(QObject* parent = nullptr);
 
-    // Basic functionality:
-    int rowCount(const QModelIndex &p = QModelIndex()) const override;
+  // Basic functionality:
+  int rowCount(const QModelIndex& p = QModelIndex()) const override;
 
-    QVariant data(const QModelIndex &idx, int role = Qt::DisplayRole) const override;
+  QVariant data(const QModelIndex& idx, int role = Qt::DisplayRole) const override;
 
-    // Separator support:
-    Qt::ItemFlags flags(const QModelIndex &idx) const override;
+  // Separator support:
+  Qt::ItemFlags flags(const QModelIndex& idx) const override;
 
-    void reloadAppMap(bool end);
+  void reloadAppMap(bool end);
 
-    LXQtFancyMenuAppMap *appMap() const;
-    void setAppMap(LXQtFancyMenuAppMap *newAppMap);
+  LXQtFancyMenuAppMap* appMap() const;
+  void setAppMap(LXQtFancyMenuAppMap* newAppMap);
 
-private:
-    LXQtFancyMenuAppMap *mAppMap;
+ private:
+  LXQtFancyMenuAppMap* mAppMap;
 };
 
-#endif // LXQTFANCYMENUCATEGORIESMODEL_H
+#endif  // LXQTFANCYMENUCATEGORIESMODEL_H

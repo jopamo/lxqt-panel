@@ -41,46 +41,92 @@ extern "C" {
 
 #ifdef __sg_public
 // since libstatgrab 0.90 this macro is defined, so we use it for version check
-#define STATGRAB_NEWER_THAN_0_90 	1
+#define STATGRAB_NEWER_THAN_0_90 1
 #endif
 
-LXQtNetworkMonitor::LXQtNetworkMonitor(ILXQtPanelPlugin *plugin, QWidget* parent):
-    QFrame(parent),
-    mPlugin(plugin)
-{
-    QHBoxLayout *layout = new QHBoxLayout(this);
-    layout->addWidget(&m_stuff);
-    setLayout(layout);
-    /* Initialise statgrab */
+LXQtNetworkMonitor::LXQtNetworkMonitor(ILXQtPanelPlugin* plugin, QWidget* parent) : QFrame(parent), mPlugin(plugin) {
+  QHBoxLayout* layout = new QHBoxLayout(this);
+  layout->addWidget(&m_stuff);
+  setLayout(layout);
+  /* Initialise statgrab */
 #ifdef STATGRAB_NEWER_THAN_0_90
-    sg_init(0);
+  sg_init(0);
 #else
-    sg_init();
+  sg_init();
 #endif
 
-    m_iconList << QStringLiteral("modem") << QStringLiteral("monitor")
-               << QStringLiteral("network") << QStringLiteral("wireless");
+  m_iconList << QStringLiteral("modem") << QStringLiteral("monitor") << QStringLiteral("network")
+             << QStringLiteral("wireless");
 
-    startTimer(800);
+  startTimer(800);
 
-    settingsChanged();
+  settingsChanged();
 }
 
 LXQtNetworkMonitor::~LXQtNetworkMonitor() = default;
 
-void LXQtNetworkMonitor::resizeEvent(QResizeEvent *)
-{
-    m_stuff.setMinimumWidth(m_pic.width() + 2);
-    m_stuff.setMinimumHeight(m_pic.height() + 2);
+void LXQtNetworkMonitor::resizeEvent(QResizeEvent*) {
+  m_stuff.setMinimumWidth(m_pic.width() + 2);
+  m_stuff.setMinimumHeight(m_pic.height() + 2);
 
-    update();
+  update();
 }
 
+void LXQtNetworkMonitor::timerEvent(QTimerEvent* /*event*/) {
+  bool matched = false;
 
-void LXQtNetworkMonitor::timerEvent(QTimerEvent * /*event*/)
-{
-    bool matched = false;
+#ifdef STATGRAB_NEWER_THAN_0_90
+  size_t num_network_stats;
+  size_t x;
+#else
+  int num_network_stats;
+  int x;
+#endif
+  sg_network_io_stats* network_stats = sg_get_network_io_stats_diff(&num_network_stats);
 
+  for (x = 0; x < num_network_stats; x++) {
+    if (m_interface == QString::fromLocal8Bit(network_stats->interface_name)) {
+      if (network_stats->rx != 0 && network_stats->tx != 0) {
+        m_pic.load(iconName(QStringLiteral("transmit-receive")));
+      }
+      else if (network_stats->rx != 0 && network_stats->tx == 0) {
+        m_pic.load(iconName(QStringLiteral("receive")));
+      }
+      else if (network_stats->rx == 0 && network_stats->tx != 0) {
+        m_pic.load(iconName(QStringLiteral("transmit")));
+      }
+      else {
+        m_pic.load(iconName(QStringLiteral("idle")));
+      }
+
+      matched = true;
+
+      break;
+    }
+
+    network_stats++;
+  }
+
+  if (!matched) {
+    m_pic.load(iconName(QStringLiteral("error")));
+  }
+
+  update();
+}
+
+void LXQtNetworkMonitor::paintEvent(QPaintEvent*) {
+  QPainter p(this);
+
+  QRectF r = rect();
+
+  int leftOffset = (r.width() - m_pic.width() + 2) / 2;
+  int topOffset = (r.height() - m_pic.height() + 2) / 2;
+
+  p.drawPixmap(leftOffset, topOffset, m_pic);
+}
+
+bool LXQtNetworkMonitor::event(QEvent* event) {
+  if (event->type() == QEvent::ToolTip) {
 #ifdef STATGRAB_NEWER_THAN_0_90
     size_t num_network_stats;
     size_t x;
@@ -88,89 +134,24 @@ void LXQtNetworkMonitor::timerEvent(QTimerEvent * /*event*/)
     int num_network_stats;
     int x;
 #endif
-    sg_network_io_stats *network_stats = sg_get_network_io_stats_diff(&num_network_stats);
+    sg_network_io_stats* network_stats = sg_get_network_io_stats(&num_network_stats);
 
-    for (x = 0; x < num_network_stats; x++)
-    {
-        if (m_interface == QString::fromLocal8Bit(network_stats->interface_name))
-        {
-            if (network_stats->rx != 0 && network_stats->tx != 0)
-            {
-                m_pic.load(iconName(QStringLiteral("transmit-receive")));
-            }
-            else if (network_stats->rx != 0 && network_stats->tx == 0)
-            {
-                m_pic.load(iconName(QStringLiteral("receive")));
-            }
-            else if (network_stats->rx == 0 && network_stats->tx != 0)
-            {
-                m_pic.load(iconName(QStringLiteral("transmit")));
-            }
-            else
-            {
-                m_pic.load(iconName(QStringLiteral("idle")));
-            }
-
-            matched = true;
-
-            break;
-        }
-
-        network_stats++;
+    for (x = 0; x < num_network_stats; x++) {
+      if (m_interface == QString::fromLocal8Bit(network_stats->interface_name)) {
+        setToolTip(tr("Network interface <b>%1</b>").arg(m_interface) + QStringLiteral("<br>") +
+                   tr("Transmitted %1").arg(convertUnits(network_stats->tx)) + QStringLiteral("<br>") +
+                   tr("Received %1").arg(convertUnits(network_stats->rx)));
+      }
+      network_stats++;
     }
-
-    if (!matched)
-    {
-        m_pic.load(iconName(QStringLiteral("error")));
-    }
-
-    update();
+  }
+  return QFrame::event(event);
 }
 
-void LXQtNetworkMonitor::paintEvent(QPaintEvent *)
-{
-    QPainter p(this);
-
-    QRectF r = rect();
-
-    int leftOffset = (r.width() - m_pic.width() + 2) / 2;
-    int topOffset = (r.height() - m_pic.height() + 2) / 2;
-
-    p.drawPixmap(leftOffset, topOffset, m_pic);
-}
-
-bool LXQtNetworkMonitor::event(QEvent *event)
-{
-    if (event->type() == QEvent::ToolTip)
-    {
-#ifdef STATGRAB_NEWER_THAN_0_90
-        size_t num_network_stats;
-        size_t x;
-#else
-        int num_network_stats;
-        int x;
-#endif
-        sg_network_io_stats *network_stats = sg_get_network_io_stats(&num_network_stats);
-
-        for (x = 0; x < num_network_stats; x++)
-        {
-            if (m_interface == QString::fromLocal8Bit(network_stats->interface_name))
-            {
-                setToolTip(tr("Network interface <b>%1</b>").arg(m_interface) + QStringLiteral("<br>")
-                           + tr("Transmitted %1").arg(convertUnits(network_stats->tx)) + QStringLiteral("<br>")
-                           + tr("Received %1").arg(convertUnits(network_stats->rx))
-                          );
-            }
-            network_stats++;
-        }
-    }
-    return QFrame::event(event);
-}
-
-//void LXQtNetworkMonitor::showConfigureDialog()
+// void LXQtNetworkMonitor::showConfigureDialog()
 //{
-//    LXQtNetworkMonitorConfiguration *confWindow =
-//        this->findChild<LXQtNetworkMonitorConfiguration*>("LXQtNetworkMonitorConfigurationWindow");
+//     LXQtNetworkMonitorConfiguration *confWindow =
+//         this->findChild<LXQtNetworkMonitorConfiguration*>("LXQtNetworkMonitorConfigurationWindow");
 
 //    if (!confWindow)
 //    {
@@ -182,33 +163,29 @@ bool LXQtNetworkMonitor::event(QEvent *event)
 //    confWindow->activateWindow();
 //}
 
-void LXQtNetworkMonitor::settingsChanged()
-{
-    m_iconIndex = mPlugin->settings()->value(QStringLiteral("icon"), 1).toInt();
-    m_interface = mPlugin->settings()->value(QStringLiteral("interface")).toString();
-    if (m_interface.isEmpty())
-    {
+void LXQtNetworkMonitor::settingsChanged() {
+  m_iconIndex = mPlugin->settings()->value(QStringLiteral("icon"), 1).toInt();
+  m_interface = mPlugin->settings()->value(QStringLiteral("interface")).toString();
+  if (m_interface.isEmpty()) {
 #ifdef STATGRAB_NEWER_THAN_0_90
-        size_t count;
+    size_t count;
 #else
-        int count;
+    int count;
 #endif
-        sg_network_iface_stats* stats = sg_get_network_iface_stats(&count);
-        if (count > 0)
-            m_interface = QString(QLatin1String(stats[0].interface_name));
-    }
+    sg_network_iface_stats* stats = sg_get_network_iface_stats(&count);
+    if (count > 0)
+      m_interface = QString(QLatin1String(stats[0].interface_name));
+  }
 
-    m_pic.load(iconName(QStringLiteral("error")));
+  m_pic.load(iconName(QStringLiteral("error")));
 }
 
-QString LXQtNetworkMonitor::convertUnits(double num)
-{
-    QString unit = tr("B");
-    QStringList units = QStringList(tr("KiB")) << tr("MiB") << tr("GiB") << tr("TiB") << tr("PiB");
-    for (QStringListIterator iter(units); num >= 1024 && iter.hasNext();)
-    {
-        num /= 1024;
-        unit = iter.next();
-    }
-    return QString::number(num, 'f', 2) + QLatin1Char(' ') + unit;
+QString LXQtNetworkMonitor::convertUnits(double num) {
+  QString unit = tr("B");
+  QStringList units = QStringList(tr("KiB")) << tr("MiB") << tr("GiB") << tr("TiB") << tr("PiB");
+  for (QStringListIterator iter(units); num >= 1024 && iter.hasNext();) {
+    num /= 1024;
+    unit = iter.next();
+  }
+  return QString::number(num, 'f', 2) + QLatin1Char(' ') + unit;
 }

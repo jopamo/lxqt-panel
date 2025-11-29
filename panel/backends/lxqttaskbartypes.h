@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQTTASKBARTYPES_H
 #define LXQTTASKBARTYPES_H
 
@@ -33,50 +32,34 @@
 
 typedef quintptr WId;
 
-enum class LXQtTaskBarBackendAction
-{
-    Move = 0,
-    Resize,
-    Maximize,
-    MaximizeVertically,
-    MaximizeHorizontally,
-    Minimize,
-    RollUp,
-    FullScreen,
-    DesktopSwitch,
-    MoveToDesktop,
-    MoveToLayer,
-    MoveToOutput
+enum class LXQtTaskBarBackendAction {
+  Move = 0,
+  Resize,
+  Maximize,
+  MaximizeVertically,
+  MaximizeHorizontally,
+  Minimize,
+  RollUp,
+  FullScreen,
+  DesktopSwitch,
+  MoveToDesktop,
+  MoveToLayer,
+  MoveToOutput
 };
 
-enum class LXQtTaskBarWindowProperty
-{
-    Title = 0,
-    Icon,
-    State,
-    Geometry,
-    Urgency,
-    WindowClass,
-    Workspace
+enum class LXQtTaskBarWindowProperty { Title = 0, Icon, State, Geometry, Urgency, WindowClass, Workspace };
+
+enum class LXQtTaskBarWindowState {
+  Hidden = 0,
+  FullScreen,
+  Minimized,
+  Maximized,
+  MaximizedVertically,
+  MaximizedHorizontally,
+  Normal,
+  RolledUp  // Shaded
 };
 
-enum class LXQtTaskBarWindowState
-{
-    Hidden = 0,
-    FullScreen,
-    Minimized,
-    Maximized,
-    MaximizedVertically,
-    MaximizedHorizontally,
-    Normal,
-    RolledUp //Shaded
-};
+enum class LXQtTaskBarWindowLayer { KeepBelow = 0, Normal, KeepAbove };
 
-enum class LXQtTaskBarWindowLayer
-{
-    KeepBelow = 0,
-    Normal,
-    KeepAbove
-};
-
-#endif // LXQTTASKBARTYPES_H
+#endif  // LXQTTASKBARTYPES_H

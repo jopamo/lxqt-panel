@@ -36,43 +36,41 @@
 
 class AlsaDevice;
 
-class MixerHandler : public QObject
-{
-    Q_OBJECT
-public:
-    MixerHandler(snd_mixer_t * mixer, QObject * parent = nullptr);
-    MixerHandler(const MixerHandler & ) = delete;
-    ~MixerHandler();
+class MixerHandler : public QObject {
+  Q_OBJECT
+ public:
+  MixerHandler(snd_mixer_t* mixer, QObject* parent = nullptr);
+  MixerHandler(const MixerHandler&) = delete;
+  ~MixerHandler();
 
-signals:
-    void handlingError(int err);
+ signals:
+  void handlingError(int err);
 
-private:
-    snd_mixer_t * m_mixer;
+ private:
+  snd_mixer_t* m_mixer;
 };
 
-class AlsaEngine : public AudioEngine
-{
-    Q_OBJECT
+class AlsaEngine : public AudioEngine {
+  Q_OBJECT
 
-public:
-    AlsaEngine(QObject *parent = nullptr);
-    static AlsaEngine *instance();
+ public:
+  AlsaEngine(QObject* parent = nullptr);
+  static AlsaEngine* instance();
 
-    virtual const QString backendName() const { return QLatin1String("Alsa"); }
+  virtual const QString backendName() const { return QLatin1String("Alsa"); }
 
-    int volumeMax(AudioDevice *device) const;
-    AlsaDevice *getDeviceByAlsaElem(snd_mixer_elem_t *elem) const;
+  int volumeMax(AudioDevice* device) const;
+  AlsaDevice* getDeviceByAlsaElem(snd_mixer_elem_t* elem) const;
 
-public slots:
-    void commitDeviceVolume(AudioDevice *device);
-    void setMute(AudioDevice *device, bool state);
-    void updateDevice(AlsaDevice *device);
+ public slots:
+  void commitDeviceVolume(AudioDevice* device);
+  void setMute(AudioDevice* device, bool state);
+  void updateDevice(AlsaDevice* device);
 
-private:
-    void discoverDevices();
-    std::list<MixerHandler> m_mixers;
-    static AlsaEngine *m_instance;
+ private:
+  void discoverDevices();
+  std::list<MixerHandler> m_mixers;
+  static AlsaEngine* m_instance;
 };
 
-#endif // ALSAENGINE_H
+#endif  // ALSAENGINE_H

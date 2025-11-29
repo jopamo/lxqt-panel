@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQTCPULOADCONFIGURATION_H
 #define LXQTCPULOADCONFIGURATION_H
 
@@ -36,36 +35,34 @@ class QSettings;
 class QAbstractButton;
 
 namespace Ui {
-    class LXQtCpuLoadConfiguration;
+class LXQtCpuLoadConfiguration;
 }
 
-class LXQtCpuLoadConfiguration : public LXQtPanelPluginConfigDialog
-{
-    Q_OBJECT
+class LXQtCpuLoadConfiguration : public LXQtPanelPluginConfigDialog {
+  Q_OBJECT
 
-public:
-    explicit LXQtCpuLoadConfiguration(PluginSettings *settings, QWidget *parent = nullptr);
-    ~LXQtCpuLoadConfiguration();
+ public:
+  explicit LXQtCpuLoadConfiguration(PluginSettings* settings, QWidget* parent = nullptr);
+  ~LXQtCpuLoadConfiguration();
 
-private:
-    Ui::LXQtCpuLoadConfiguration *ui;
-    bool mLockSettingChanges;
+ private:
+  Ui::LXQtCpuLoadConfiguration* ui;
+  bool mLockSettingChanges;
 
-    /*
-      Fills Bar orientation combobox
-    */
-    void fillBarOrientations();
+  /*
+    Fills Bar orientation combobox
+  */
+  void fillBarOrientations();
 
-private slots:
-    /*
-      Saves settings in conf file.
-    */
-    void loadSettings();
-    void showTextChanged(bool value);
-    void barWidthChanged(int value);
-    void updateIntervalChanged(double value);
-    void barOrientationChanged(int index);
-
+ private slots:
+  /*
+    Saves settings in conf file.
+  */
+  void loadSettings();
+  void showTextChanged(bool value);
+  void barWidthChanged(int value);
+  void updateIntervalChanged(double value);
+  void barOrientationChanged(int index);
 };
 
-#endif // LXQTCPULOADCONFIGURATION_H
+#endif  // LXQTCPULOADCONFIGURATION_H

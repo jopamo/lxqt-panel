@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef DIRECTORYMENUCONFIGURATION_H
 #define DIRECTORYMENUCONFIGURATION_H
 
@@ -39,40 +38,39 @@
 #include <QDir>
 
 namespace Ui {
-    class DirectoryMenuConfiguration;
+class DirectoryMenuConfiguration;
 }
 
-class DirectoryMenuConfiguration : public LXQtPanelPluginConfigDialog
-{
-    Q_OBJECT
+class DirectoryMenuConfiguration : public LXQtPanelPluginConfigDialog {
+  Q_OBJECT
 
-public:
-    explicit DirectoryMenuConfiguration(PluginSettings *settings, QWidget *parent = nullptr);
-    ~DirectoryMenuConfiguration();
+ public:
+  explicit DirectoryMenuConfiguration(PluginSettings* settings, QWidget* parent = nullptr);
+  ~DirectoryMenuConfiguration();
 
-private:
-    Ui::DirectoryMenuConfiguration *ui;
-    QDir mBaseDirectory;
-    QString mIcon;
-    QIcon mDefaultIcon;
-    QString mDefaultTerminal;
+ private:
+  Ui::DirectoryMenuConfiguration* ui;
+  QDir mBaseDirectory;
+  QString mIcon;
+  QIcon mDefaultIcon;
+  QString mDefaultTerminal;
 
-    /*
-      Read settings from conf file and put data into controls.
-    */
-    void loadSettings();
+  /*
+    Read settings from conf file and put data into controls.
+  */
+  void loadSettings();
 
-private slots:
-    /*
-      Saves settings in conf file.
-    */
-    void saveSettings();
-    void showDirectoryDialog();
-    void showIconDialog();
-    void showLabelDialog();
-    void showTermDialog();
+ private slots:
+  /*
+    Saves settings in conf file.
+  */
+  void saveSettings();
+  void showDirectoryDialog();
+  void showIconDialog();
+  void showLabelDialog();
+  void showTermDialog();
 
-private:
+ private:
 };
 
-#endif // DIRECTORYMENUCONFIGURATION_H
+#endif  // DIRECTORYMENUCONFIGURATION_H

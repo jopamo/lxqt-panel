@@ -36,46 +36,45 @@
 class LXQtPanel;
 
 namespace Ui {
-    class ConfigStyling;
+class ConfigStyling;
 }
 
-class ConfigStyling : public QWidget
-{
-    Q_OBJECT
+class ConfigStyling : public QWidget {
+  Q_OBJECT
 
-public:
-    explicit ConfigStyling(LXQtPanel *panel, QWidget *parent = nullptr);
-    ~ConfigStyling();
+ public:
+  explicit ConfigStyling(LXQtPanel* panel, QWidget* parent = nullptr);
+  ~ConfigStyling();
 
-    void updateIconThemeSettings();
+  void updateIconThemeSettings();
 
-signals:
-    void changed();
+ signals:
+  void changed();
 
-public slots:
-    void reset();
+ public slots:
+  void reset();
 
-private slots:
-    void editChanged();
-    void pickFontColor();
-    void pickBackgroundColor();
-    void pickBackgroundImage();
+ private slots:
+  void editChanged();
+  void pickFontColor();
+  void pickBackgroundColor();
+  void pickBackgroundImage();
 
-private:
-    Ui::ConfigStyling *ui;
-    LXQtPanel *mPanel;
+ private:
+  Ui::ConfigStyling* ui;
+  LXQtPanel* mPanel;
 
-    void fillComboBox_icon();
+  void fillComboBox_icon();
 
-    // new values
-    QColor mFontColor;
-    QColor mBackgroundColor;
+  // new values
+  QColor mFontColor;
+  QColor mBackgroundColor;
 
-    // old values for reset
-    QColor mOldFontColor;
-    QColor mOldBackgroundColor;
-    QString mOldBackgroundImage;
-    int mOldOpacity;
+  // old values for reset
+  QColor mOldFontColor;
+  QColor mOldBackgroundColor;
+  QString mOldBackgroundImage;
+  int mOldOpacity;
 };
 
 #endif

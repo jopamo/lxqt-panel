@@ -25,94 +25,92 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQT_DUMMY_WM_BACKEND_H
 #define LXQT_DUMMY_WM_BACKEND_H
 
 #include "ilxqtabstractwmiface.h"
 
-class LXQtDummyWMBackend : public ILXQtAbstractWMInterface
-{
-    Q_OBJECT
+class LXQtDummyWMBackend : public ILXQtAbstractWMInterface {
+  Q_OBJECT
 
-public:
-    explicit LXQtDummyWMBackend(QObject *parent = nullptr);
+ public:
+  explicit LXQtDummyWMBackend(QObject* parent = nullptr);
 
-    // Backend
-    bool supportsAction(WId windowId, LXQtTaskBarBackendAction action) const override;
+  // Backend
+  bool supportsAction(WId windowId, LXQtTaskBarBackendAction action) const override;
 
-    // Windows
-    bool reloadWindows() override;
+  // Windows
+  bool reloadWindows() override;
 
-    QVector<WId> getCurrentWindows() const override;
+  QVector<WId> getCurrentWindows() const override;
 
-    QString getWindowTitle(WId windowId) const override;
+  QString getWindowTitle(WId windowId) const override;
 
-    bool applicationDemandsAttention(WId windowId) const override;
+  bool applicationDemandsAttention(WId windowId) const override;
 
-    QIcon getApplicationIcon(WId windowId, int fallbackDevicePixels) const override;
+  QIcon getApplicationIcon(WId windowId, int fallbackDevicePixels) const override;
 
-    QString getWindowClass(WId windowId) const override;
+  QString getWindowClass(WId windowId) const override;
 
-    LXQtTaskBarWindowLayer getWindowLayer(WId windowId) const override;
-    bool setWindowLayer(WId windowId, LXQtTaskBarWindowLayer layer) override;
+  LXQtTaskBarWindowLayer getWindowLayer(WId windowId) const override;
+  bool setWindowLayer(WId windowId, LXQtTaskBarWindowLayer layer) override;
 
-    LXQtTaskBarWindowState getWindowState(WId windowId) const override;
-    bool setWindowState(WId windowId, LXQtTaskBarWindowState state, bool set = true) override;
+  LXQtTaskBarWindowState getWindowState(WId windowId) const override;
+  bool setWindowState(WId windowId, LXQtTaskBarWindowState state, bool set = true) override;
 
-    bool isWindowActive(WId windowId) const override;
-    bool raiseWindow(WId windowId, bool onCurrentWorkSpace) override;
+  bool isWindowActive(WId windowId) const override;
+  bool raiseWindow(WId windowId, bool onCurrentWorkSpace) override;
 
-    bool closeWindow(WId windowId) override;
+  bool closeWindow(WId windowId) override;
 
-    WId getActiveWindow() const override;
+  WId getActiveWindow() const override;
 
-    // Workspaces
-    int getWorkspacesCount(QScreen *screen = nullptr) const override;
-    QString getWorkspaceName(int idx, QString outputName = QString()) const override;
+  // Workspaces
+  int getWorkspacesCount(QScreen* screen = nullptr) const override;
+  QString getWorkspaceName(int idx, QString outputName = QString()) const override;
 
-    int getCurrentWorkspace(QScreen *screen = nullptr) const override;
-    bool setCurrentWorkspace(int idx, QScreen *screen = nullptr) override;
+  int getCurrentWorkspace(QScreen* screen = nullptr) const override;
+  bool setCurrentWorkspace(int idx, QScreen* screen = nullptr) override;
 
-    int getWindowWorkspace(WId windowId) const override;
-    bool setWindowOnWorkspace(WId windowId, int idx) override;
+  int getWindowWorkspace(WId windowId) const override;
+  bool setWindowOnWorkspace(WId windowId, int idx) override;
 
-    void moveApplicationToPrevNextMonitor(WId windowId, bool next, bool raiseOnCurrentDesktop) override;
+  void moveApplicationToPrevNextMonitor(WId windowId, bool next, bool raiseOnCurrentDesktop) override;
 
-    int onAllWorkspacesEnum() const override;
+  int onAllWorkspacesEnum() const override;
 
-    bool isWindowOnScreen(QScreen *screen, WId windowId) const override;
+  bool isWindowOnScreen(QScreen* screen, WId windowId) const override;
 
-    virtual bool setDesktopLayout(Qt::Orientation orientation, int rows, int columns, bool rightToLeft) override;
+  virtual bool setDesktopLayout(Qt::Orientation orientation, int rows, int columns, bool rightToLeft) override;
 
-    // X11 Specific
-    void moveApplication(WId windowId) override;
-    void resizeApplication(WId windowId) override;
+  // X11 Specific
+  void moveApplication(WId windowId) override;
+  void resizeApplication(WId windowId) override;
 
-    void refreshIconGeometry(WId windowId, const QRect &geom) override;
+  void refreshIconGeometry(WId windowId, const QRect& geom) override;
 
-    // Panel internal
-    bool isAreaOverlapped(const QRect& area) const override;
+  // Panel internal
+  bool isAreaOverlapped(const QRect& area) const override;
 
-    // Show Destop
-    bool isShowingDesktop() const override;
-    bool showDesktop(bool value) override;
+  // Show Destop
+  bool isShowingDesktop() const override;
+  bool showDesktop(bool value) override;
 
-signals:
-    void reloaded();
+ signals:
+  void reloaded();
 
-    // Windows
-    void windowAdded(WId windowId);
-    void windowRemoved(WId windowId);
-    void windowPropertyChanged(WId windowId, int prop);
+  // Windows
+  void windowAdded(WId windowId);
+  void windowRemoved(WId windowId);
+  void windowPropertyChanged(WId windowId, int prop);
 
-    // Workspaces
-    void workspacesCountChanged();
-    void workspaceNameChanged(int idx);
-    void currentWorkspaceChanged(int idx);
+  // Workspaces
+  void workspacesCountChanged();
+  void workspaceNameChanged(int idx);
+  void currentWorkspaceChanged(int idx);
 
-    // TODO: needed?
-    void activeWindowChanged(WId windowId);
+  // TODO: needed?
+  void activeWindowChanged(WId windowId);
 };
 
-#endif // LXQT_DUMMY_WM_BACKEND_H
+#endif  // LXQT_DUMMY_WM_BACKEND_H

@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQT_PANEL_WORLDCLOCK_CONFIGURATION_H
 #define LXQT_PANEL_WORLDCLOCK_CONFIGURATION_H
 
@@ -36,62 +35,61 @@
 #include <QMap>
 
 namespace Ui {
-    class LXQtWorldClockConfiguration;
+class LXQtWorldClockConfiguration;
 }
 
 class LXQtWorldClockConfigurationTimeZones;
 class LXQtWorldClockConfigurationManualFormat;
 class QTableWidgetItem;
 
-class LXQtWorldClockConfiguration : public LXQtPanelPluginConfigDialog
-{
-    Q_OBJECT
+class LXQtWorldClockConfiguration : public LXQtPanelPluginConfigDialog {
+  Q_OBJECT
 
-public:
-    explicit LXQtWorldClockConfiguration(PluginSettings *settings, QWidget *parent = nullptr);
-    ~LXQtWorldClockConfiguration();
+ public:
+  explicit LXQtWorldClockConfiguration(PluginSettings* settings, QWidget* parent = nullptr);
+  ~LXQtWorldClockConfiguration();
 
-public slots:
-    void saveSettings();
+ public slots:
+  void saveSettings();
 
-private:
-    Ui::LXQtWorldClockConfiguration *ui;
+ private:
+  Ui::LXQtWorldClockConfiguration* ui;
 
-    /*
-      Read settings from conf file and put data into controls.
-    */
-    void loadSettings();
+  /*
+    Read settings from conf file and put data into controls.
+  */
+  void loadSettings();
 
-private slots:
-    void timeFormatChanged(int);
-    void dateGroupToggled(bool);
-    void dateFormatChanged(int);
-    void advancedFormatToggled(bool);
-    void customiseManualFormatClicked();
-    void manualFormatChanged();
+ private slots:
+  void timeFormatChanged(int);
+  void dateGroupToggled(bool);
+  void dateFormatChanged(int);
+  void advancedFormatToggled(bool);
+  void customiseManualFormatClicked();
+  void manualFormatChanged();
 
-    void updateTimeZoneButtons();
-    void addTimeZone();
-    void removeTimeZone();
-    void setTimeZoneAsDefault();
-    void editTimeZoneCustomName();
-    void moveTimeZoneUp();
-    void moveTimeZoneDown();
+  void updateTimeZoneButtons();
+  void addTimeZone();
+  void removeTimeZone();
+  void setTimeZoneAsDefault();
+  void editTimeZoneCustomName();
+  void moveTimeZoneUp();
+  void moveTimeZoneDown();
 
-private:
-    QString mDefaultTimeZone;
+ private:
+  QString mDefaultTimeZone;
 
-    bool mLockCascadeSettingChanges;
+  bool mLockCascadeSettingChanges;
 
-    LXQtWorldClockConfigurationTimeZones *mConfigurationTimeZones;
-    LXQtWorldClockConfigurationManualFormat *mConfigurationManualFormat;
+  LXQtWorldClockConfigurationTimeZones* mConfigurationTimeZones;
+  LXQtWorldClockConfigurationManualFormat* mConfigurationManualFormat;
 
-    QString mManualFormat;
+  QString mManualFormat;
 
-    void setDefault(int);
-    void setBold(QTableWidgetItem*, bool);
-    void setBold(int row, bool value);
-    int findTimeZone(const QString& timeZone);
+  void setDefault(int);
+  void setBold(QTableWidgetItem*, bool);
+  void setBold(int row, bool value);
+  int findTimeZone(const QString& timeZone);
 };
 
-#endif // LXQT_PANEL_WORLDCLOCK_CONFIGURATION_H
+#endif  // LXQT_PANEL_WORLDCLOCK_CONFIGURATION_H

@@ -26,37 +26,34 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQT_PANEL_WORLDCLOCK_CONFIGURATION_MANUAL_FORMAT_H
 #define LXQT_PANEL_WORLDCLOCK_CONFIGURATION_MANUAL_FORMAT_H
 
 #include <QDialog>
 #include <QAbstractButton>
 
-
 namespace Ui {
-    class LXQtWorldClockConfigurationManualFormat;
+class LXQtWorldClockConfigurationManualFormat;
 }
 
 class QTreeWidgetItem;
 
-class LXQtWorldClockConfigurationManualFormat : public QDialog
-{
-    Q_OBJECT
+class LXQtWorldClockConfigurationManualFormat : public QDialog {
+  Q_OBJECT
 
-public:
-    explicit LXQtWorldClockConfigurationManualFormat(QWidget *parent = nullptr);
-    ~LXQtWorldClockConfigurationManualFormat();
+ public:
+  explicit LXQtWorldClockConfigurationManualFormat(QWidget* parent = nullptr);
+  ~LXQtWorldClockConfigurationManualFormat();
 
-    void setManualFormat(const QString&);
+  void setManualFormat(const QString&);
 
-    QString manualFormat() const;
+  QString manualFormat() const;
 
-signals:
-    void manualFormatChanged();
+ signals:
+  void manualFormatChanged();
 
-private:
-    Ui::LXQtWorldClockConfigurationManualFormat *ui;
+ private:
+  Ui::LXQtWorldClockConfigurationManualFormat* ui;
 };
 
-#endif // LXQT_PANEL_WORLDCLOCK_CONFIGURATION_MANUAL_FORMAT_H
+#endif  // LXQT_PANEL_WORLDCLOCK_CONFIGURATION_MANUAL_FORMAT_H

@@ -30,12 +30,11 @@
 
 #include <QString>
 
-namespace PluginSysStat
-{
+namespace PluginSysStat {
 
 QString netSpeedToString(int value);
 int netSpeedFromString(QStringView value);
 
-}
+}  // namespace PluginSysStat
 
-#endif // LXQTSYSSTATUTILS_HPP
+#endif  // LXQTSYSSTATUTILS_HPP

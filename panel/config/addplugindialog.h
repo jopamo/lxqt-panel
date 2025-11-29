@@ -25,7 +25,6 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-
 #ifndef LXQT_ADDPLUGINDIALOG_H
 #define LXQT_ADDPLUGINDIALOG_H
 
@@ -36,28 +35,27 @@
 #define SEARCH_DELAY 125
 
 namespace Ui {
-    class AddPluginDialog;
+class AddPluginDialog;
 }
 
-class AddPluginDialog : public QDialog
-{
-    Q_OBJECT
+class AddPluginDialog : public QDialog {
+  Q_OBJECT
 
-public:
-    AddPluginDialog(QWidget *parent = nullptr);
-    ~AddPluginDialog();
+ public:
+  AddPluginDialog(QWidget* parent = nullptr);
+  ~AddPluginDialog();
 
-signals:
-    void pluginSelected(const LXQt::PluginInfo &plugin);
+ signals:
+  void pluginSelected(const LXQt::PluginInfo& plugin);
 
-private:
-    Ui::AddPluginDialog *ui;
-    LXQt::PluginInfoList mPlugins;
-    QTimer mSearchTimer;
+ private:
+  Ui::AddPluginDialog* ui;
+  LXQt::PluginInfoList mPlugins;
+  QTimer mSearchTimer;
 
-private slots:
-    void filter();
-    void emitPluginSelected();
+ private slots:
+  void filter();
+  void emitPluginSelected();
 };
 
-#endif // LXQT_ADDPLUGINDIALOG_H
+#endif  // LXQT_ADDPLUGINDIALOG_H
