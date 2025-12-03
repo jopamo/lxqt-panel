@@ -38,7 +38,6 @@ MACRO (BUILD_ONEG4_PLUGIN NAME)
     endif()
     target_link_libraries(${NAME}
         Qt6::Widgets
-        oneg4
         ${LIBRARIES}
         KF6::WindowSystem
     )

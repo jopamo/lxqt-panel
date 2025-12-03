@@ -58,7 +58,6 @@ set(UI
 )
 
 set(LIBRARIES
-    oneg4
 )
 
 file(GLOB CONFIG_FILES resources/*.conf)
@@ -98,7 +97,7 @@ target_link_libraries(${PROJECT}
 set_property(TARGET ${PROJECT} PROPERTY ENABLE_EXPORTS TRUE)
 
 install(TARGETS ${PROJECT} RUNTIME DESTINATION bin)
-install(FILES ${CONFIG_FILES} DESTINATION "${ONEG4_ETC_XDG_DIR}/oneg4")
+install(FILES ${CONFIG_FILES} DESTINATION "${CMAKE_INSTALL_FULL_SYSCONFDIR}/xdg/oneg4")
 install(FILES ${PUB_HEADERS} DESTINATION include/oneg4)
 install(FILES
     man/1g4-panel.1
