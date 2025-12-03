@@ -44,6 +44,7 @@ list(APPEND SOURCES "${DBUS_SOURCES}")
 
 set(LIBRARIES
     Qt6::Concurrent
+    Qt6::DBus
 )
 
 BUILD_ONEG4_PLUGIN(${PLUGIN})
