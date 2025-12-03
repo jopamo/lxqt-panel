@@ -16,7 +16,7 @@ class OneG4WorldClockConfiguration;
 }
 
 class OneG4WorldClockConfigurationTimeZones;
-class OneG4WorldClockConfigurationManualFormat;
+class WorldClockManualFormatConfig;
 class QTableWidgetItem;
 
 class OneG4WorldClockConfiguration : public OneG4PanelPluginConfigDialog {
@@ -59,7 +59,7 @@ class OneG4WorldClockConfiguration : public OneG4PanelPluginConfigDialog {
   bool mLockCascadeSettingChanges;
 
   OneG4WorldClockConfigurationTimeZones* mConfigurationTimeZones;
-  OneG4WorldClockConfigurationManualFormat* mConfigurationManualFormat;
+  WorldClockManualFormatConfig* mConfigurationManualFormat;
 
   QString mManualFormat;
 

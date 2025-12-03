@@ -7,7 +7,7 @@
 #include "ui_oneg4worldclockconfiguration.h"
 
 #include "oneg4worldclockconfigurationtimezones.h"
-#include "oneg4worldclockconfigurationmanualformat.h"
+#include "worldclockmanualformatconfig.h"
 
 #include <QWidget>
 #include <QInputDialog>
@@ -387,8 +387,8 @@ void OneG4WorldClockConfiguration::advancedFormatToggled(bool on) {
 
 void OneG4WorldClockConfiguration::customiseManualFormatClicked() {
   if (!mConfigurationManualFormat) {
-    mConfigurationManualFormat = new OneG4WorldClockConfigurationManualFormat(this);
-    connect(mConfigurationManualFormat, &OneG4WorldClockConfigurationManualFormat::manualFormatChanged, this,
+    mConfigurationManualFormat = new WorldClockManualFormatConfig(this);
+    connect(mConfigurationManualFormat, &WorldClockManualFormatConfig::manualFormatChanged, this,
             &OneG4WorldClockConfiguration::manualFormatChanged);
   }
 

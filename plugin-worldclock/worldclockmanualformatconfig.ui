@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>OneG4WorldClockConfigurationManualFormat</class>
- <widget class="QDialog" name="OneG4WorldClockConfigurationManualFormat">
+ <class>WorldClockManualFormatConfig</class>
+ <widget class="QDialog" name="WorldClockManualFormatConfig">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -140,7 +140,7 @@
   <connection>
    <sender>buttons</sender>
    <signal>accepted()</signal>
-   <receiver>OneG4WorldClockConfigurationManualFormat</receiver>
+   <receiver>WorldClockManualFormatConfig</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -156,7 +156,7 @@
   <connection>
    <sender>buttons</sender>
    <signal>rejected()</signal>
-   <receiver>OneG4WorldClockConfigurationManualFormat</receiver>
+   <receiver>WorldClockManualFormatConfig</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
