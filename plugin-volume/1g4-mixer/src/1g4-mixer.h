@@ -2,8 +2,8 @@
  * Implementation of 1g4-mixer.h
  */
 
-#ifndef 1g4-mixer_h
-#define 1g4-mixer_h
+#ifndef ONEG4_MIXER_H
+#define ONEG4_MIXER_H
 
 #include <signal.h>
 #include <string.h>
