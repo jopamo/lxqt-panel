@@ -4,20 +4,20 @@ set(HEADERS
     oneg4worldclock.h
     oneg4worldclockconfiguration.h
     oneg4worldclockconfigurationtimezones.h
-    oneg4worldclockconfigurationmanualformat.h
+    worldclockmanualformatconfig.h
 )
 
 set(SOURCES
     oneg4worldclock.cpp
     oneg4worldclockconfiguration.cpp
     oneg4worldclockconfigurationtimezones.cpp
-    oneg4worldclockconfigurationmanualformat.cpp
+    worldclockmanualformatconfig.cpp
 )
 
 set(UIS
     oneg4worldclockconfiguration.ui
     oneg4worldclockconfigurationtimezones.ui
-    oneg4worldclockconfigurationmanualformat.ui
+    worldclockmanualformatconfig.ui
 )
 
 BUILD_ONEG4_PLUGIN(${PLUGIN})
