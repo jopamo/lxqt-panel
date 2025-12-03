@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=OneG4Panel/Plugin
+Icon=bookmark-new
+
+#TRANSLATIONS_DIR=../translations

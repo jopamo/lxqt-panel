@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+TryExec=1g4-panel
+Exec=1g4-panel
+OnlyShowIn=OneG4;
+X-OneG4-Module=true
+
+#TRANSLATIONS_DIR=translations

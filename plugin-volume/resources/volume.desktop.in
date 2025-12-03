@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=OneG4Panel/Plugin
+Icon=multimedia-volume-control
+
+#TRANSLATIONS_DIR=../translations

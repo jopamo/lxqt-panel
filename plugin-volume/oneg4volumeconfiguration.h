@@ -1,0 +1,78 @@
+/* plugin-volume/oneg4volumeconfiguration.h
+ * Volume control plugin implementation
+ */
+
+#ifndef ONEG4VOLUMECONFIGURATION_H
+#define ONEG4VOLUMECONFIGURATION_H
+
+#include "../panel/oneg4panelpluginconfigdialog.h"
+#include "../panel/pluginsettings.h"
+
+#include <QList>
+#include <memory>
+
+#define SETTINGS_MUTE_ON_MIDDLECLICK "showOnMiddleClick"
+#define SETTINGS_DEVICE "device"
+#define SETTINGS_STEP "volumeAdjustStep"
+#define SETTINGS_IGNORE_MAX_VOLUME "ignoreMaxVolume"
+#define SETTINGS_AUDIO_ENGINE "audioEngine"
+#define SETTINGS_ALWAYS_SHOW_NOTIFICATIONS "alwaysShowNotifications"
+#define SETTINGS_SHOW_KEYBOARD_NOTIFICATIONS "showKeyboardNotifications"
+
+#define SETTINGS_DEFAULT_MUTE_ON_MIDDLECLICK true
+#define SETTINGS_DEFAULT_DEVICE 0
+#define SETTINGS_DEFAULT_STEP 3
+#if defined(USE_PIPEWIRE)
+#define SETTINGS_DEFAULT_AUDIO_ENGINE "PipeWire"
+#elif defined(USE_PULSEAUDIO)
+#define SETTINGS_DEFAULT_AUDIO_ENGINE "PulseAudio"
+#else
+#define SETTINGS_DEFAULT_AUDIO_ENGINE "PipeWire"
+#endif
+#define SETTINGS_DEFAULT_IGNORE_MAX_VOLUME true
+#define SETTINGS_DEFAULT_ALWAYS_SHOW_NOTIFICATIONS false
+#define SETTINGS_DEFAULT_SHOW_KEYBOARD_NOTIFICATIONS true
+
+class AudioDevice;
+class QTreeWidgetItem;
+class WirePlumberPolicy;
+
+namespace Ui {
+class OneG4VolumeConfiguration;
+}
+
+class OneG4VolumeConfiguration : public OneG4PanelPluginConfigDialog {
+  Q_OBJECT
+
+ public:
+  explicit OneG4VolumeConfiguration(PluginSettings* settings, bool ossAvailable, QWidget* parent = nullptr);
+  ~OneG4VolumeConfiguration();
+
+ public slots:
+  void setSinkList(const QList<AudioDevice*> sinks);
+  void sinkSelectionChanged(int index);
+  void muteOnMiddleClickChanged(bool state);
+  void stepSpinBoxChanged(int step);
+  void ignoreMaxVolumeCheckBoxChanged(bool state);
+  void alwaysShowNotificationsCheckBoxChanged(bool state);
+  void showKeyboardNotificationsCheckBoxChanged(bool state);
+  void audioBackendChanged(int index);
+  void policyItemChanged(QTreeWidgetItem* item, int column);
+  void applyPolicy();
+
+ protected slots:
+  virtual void loadSettings();
+
+ private:
+  Ui::OneG4VolumeConfiguration* ui;
+  bool mLockSettingChanges;
+  bool mUpdatingPolicyTree;
+  bool mPolicyDirty;
+  std::unique_ptr<WirePlumberPolicy> m_policy;
+
+  void rebuildPolicyTree(const QList<AudioDevice*>& sinks);
+  static QString deriveCardName(const QString& deviceName);
+  void setPolicyDirty(bool dirty);
+};
+
+#endif  // ONEG4VOLUMECONFIGURATION_H
