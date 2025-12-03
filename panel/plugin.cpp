@@ -25,8 +25,8 @@
 #include <QWindow>
 #include <memory>
 
-#include <OneG4/Settings>
-#include <XdgIcon>
+#include <OneG4/Settings.h>
+#include <XdgIcon.h>
 
 // statically linked built-in plugins
 #if defined(WITH_DESKTOPSWITCH_PLUGIN)

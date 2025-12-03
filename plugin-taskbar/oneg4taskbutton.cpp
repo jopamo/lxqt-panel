@@ -7,10 +7,10 @@
 
 #include "../panel/ioneg4panelplugin.h"
 
-#include <OneG4/Settings>
+#include <OneG4/Settings.h>
 
 #include <QDebug>
-#include <XdgIcon>
+#include <XdgIcon.h>
 #include <QTimer>
 #include <QMenu>
 #include <QAction>
@@ -89,7 +89,8 @@ OneG4TaskButton::OneG4TaskButton(const WId window, OneG4TaskBar* taskbar, QWidge
 
   setUrgencyHint(mBackend->applicationDemandsAttention(mWindow));
 
-  connect(OneG4::Settings::globalSettings(), &OneG4::GlobalSettings::iconThemeChanged, this, &OneG4TaskButton::updateIcon);
+  connect(OneG4::Settings::globalSettings(), &OneG4::GlobalSettings::iconThemeChanged, this,
+          &OneG4TaskButton::updateIcon);
   connect(mParentTaskBar, &OneG4TaskBar::iconByClassChanged, this, &OneG4TaskButton::updateIcon);
 }
 

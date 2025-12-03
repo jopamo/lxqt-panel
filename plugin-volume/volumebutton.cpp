@@ -18,7 +18,7 @@
 #include <QWheelEvent>
 #include <QtGlobal>
 
-#include <XdgIcon>
+#include <XdgIcon.h>
 
 #include "../panel/ioneg4panel.h"
 #include "../panel/ioneg4panelplugin.h"

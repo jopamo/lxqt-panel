@@ -67,7 +67,8 @@ OneG4TaskbarConfiguration::OneG4TaskbarConfiguration(PluginSettings* settings, Q
   connect(ui->ungroupedNextToExistingCB, &QAbstractButton::clicked, this, &OneG4TaskbarConfiguration::saveSettings);
   connect(ui->iconByClassCB, &QAbstractButton::clicked, this, &OneG4TaskbarConfiguration::saveSettings);
   connect(ui->wheelEventsActionCB, &QComboBox::activated, this, &OneG4TaskbarConfiguration::saveSettings);
-  connect(ui->wheelDeltaThresholdSB, &QAbstractSpinBox::editingFinished, this, &OneG4TaskbarConfiguration::saveSettings);
+  connect(ui->wheelDeltaThresholdSB, &QAbstractSpinBox::editingFinished, this,
+          &OneG4TaskbarConfiguration::saveSettings);
   connect(ui->excludeLE, &QLineEdit::editingFinished, this, &OneG4TaskbarConfiguration::saveSettings);
 }
 

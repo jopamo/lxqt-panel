@@ -5,7 +5,7 @@
 #ifndef ONEG4_ADDPLUGINDIALOG_H
 #define ONEG4_ADDPLUGINDIALOG_H
 
-#include <OneG4/PluginInfo>
+#include <OneG4/PluginInfo.h>
 #include <QDialog>
 #include <QTimer>
 

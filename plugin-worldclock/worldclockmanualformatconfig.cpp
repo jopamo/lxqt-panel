@@ -14,8 +14,7 @@ WorldClockManualFormatConfig::WorldClockManualFormatConfig(QWidget* parent)
   setWindowModality(Qt::WindowModal);
   ui->setupUi(this);
 
-  connect(ui->manualFormatPTE, &QPlainTextEdit::textChanged, this,
-          &WorldClockManualFormatConfig::manualFormatChanged);
+  connect(ui->manualFormatPTE, &QPlainTextEdit::textChanged, this, &WorldClockManualFormatConfig::manualFormatChanged);
 }
 
 WorldClockManualFormatConfig::~WorldClockManualFormatConfig() {

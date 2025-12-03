@@ -4,8 +4,11 @@
 
 #include "oneg4worldclock.h"
 
-#include <OneG4/Globals>
+#include <OneG4/Globals.h>
 
+#ifndef QL1S
+#define QL1S(str) QLatin1String(str)
+#endif
 #include <QCalendarWidget>
 #include <QDate>
 #include <QDialog>

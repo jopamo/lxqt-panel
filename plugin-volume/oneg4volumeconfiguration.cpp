@@ -37,7 +37,8 @@ OneG4VolumeConfiguration::OneG4VolumeConfiguration(PluginSettings* settings, boo
   connect(ui->audioBackendCombo, &QComboBox::currentIndexChanged, this, &OneG4VolumeConfiguration::audioBackendChanged);
   connect(ui->devAddedCombo, &QComboBox::currentIndexChanged, this, &OneG4VolumeConfiguration::sinkSelectionChanged);
   connect(ui->buttons, &QDialogButtonBox::clicked, this, &OneG4VolumeConfiguration::dialogButtonsAction);
-  connect(ui->muteOnMiddleClickCheckBox, &QCheckBox::toggled, this, &OneG4VolumeConfiguration::muteOnMiddleClickChanged);
+  connect(ui->muteOnMiddleClickCheckBox, &QCheckBox::toggled, this,
+          &OneG4VolumeConfiguration::muteOnMiddleClickChanged);
   connect(ui->stepSpinBox, &QSpinBox::valueChanged, this, &OneG4VolumeConfiguration::stepSpinBoxChanged);
   connect(ui->ignoreMaxVolumeCheckBox, &QCheckBox::toggled, this,
           &OneG4VolumeConfiguration::ignoreMaxVolumeCheckBoxChanged);

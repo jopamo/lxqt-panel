@@ -7,10 +7,11 @@
 #include "ioneg4panelplugin.h"
 #include "oneg4panelapplication.h"
 #include <QPointer>
-#include <XdgIcon>
-#include <OneG4/Settings>
+#include <XdgIcon.h>
+#include <OneG4/Settings.h>
 
 #include <QDebug>
+#include <algorithm>
 
 PanelPluginsModel::PanelPluginsModel(OneG4Panel* panel,
                                      OneG4::Settings* settings,
@@ -226,8 +227,97 @@ bool PanelPluginsModel::moveRows(const QModelIndex& sourceParent,
   return false;
 }
 
+namespace {
+const QStringList kDefaultPluginOrder = {QStringLiteral("taskbar2"),
+                                         QStringLiteral("worldclock"),
+                                         QStringLiteral("volume"),
+                                         QStringLiteral("statusnotifier")};
+}  // namespace
+
+bool PanelPluginsModel::seedDefaultPlugins(QStringList const& desktopDirs) {
+  OneG4::PluginInfoList available =
+      OneG4::PluginInfo::search(desktopDirs, QLatin1String("OneG4Panel/Plugin"), QLatin1String("*.desktop"));
+  if (available.isEmpty())
+    return false;
+
+  QStringList seededNames;
+  auto registerPlugin = [&](const OneG4::PluginInfo& info, const QString& groupName) {
+    mPanelSettings->beginGroup(groupName);
+    mPanelSettings->remove(QString());
+    mPanelSettings->setValue(QStringLiteral("type"), info.id());
+    if (groupName == QStringLiteral("taskbar2")) {
+      mPanelSettings->setValue(QStringLiteral("alignment"), QStringLiteral("Left"));
+      mPanelSettings->setValue(QStringLiteral("autoRotate"), true);
+      mPanelSettings->setValue(QStringLiteral("buttonHeight"), 101);
+      mPanelSettings->setValue(QStringLiteral("buttonStyle"), QStringLiteral("IconText"));
+      mPanelSettings->setValue(QStringLiteral("buttonWidth"), 250);
+      mPanelSettings->setValue(QStringLiteral("closeOnMiddleClick"), false);
+      mPanelSettings->setValue(QStringLiteral("groupingEnabled"), true);
+      mPanelSettings->setValue(QStringLiteral("showGroupOnHover"), true);
+      mPanelSettings->setValue(QStringLiteral("wheelEventsAction"), 0);
+      mPanelSettings->setValue(QStringLiteral("wheelDeltaThreshold"), 300);
+    }
+    if (groupName == QStringLiteral("statusnotifier"))
+      mPanelSettings->setValue(QStringLiteral("alignment"), QStringLiteral("Left"));
+    if (groupName == QStringLiteral("volume"))
+      mPanelSettings->setValue(QStringLiteral("alignment"), QStringLiteral("Right"));
+    if (groupName == QStringLiteral("worldclock")) {
+      mPanelSettings->setValue(QStringLiteral("alignment"), QStringLiteral("Left"));
+      mPanelSettings->setValue(QStringLiteral("autoRotate"), true);
+      mPanelSettings->setValue(
+          QStringLiteral("customFormat"),
+          QString::fromUtf8("'<b>'HH:mm:ss'</b><br/><font size=\"-2\">'ddd, d MMM yyyy'<br/>'TT'</font>'"));
+      mPanelSettings->setValue(QStringLiteral("dateFormatType"), QStringLiteral("custom"));
+      mPanelSettings->setValue(QStringLiteral("dateLongNames"), false);
+      mPanelSettings->setValue(QStringLiteral("datePadDay"), false);
+      mPanelSettings->setValue(QStringLiteral("datePosition"), QStringLiteral("below"));
+      mPanelSettings->setValue(QStringLiteral("dateShowDoW"), true);
+      mPanelSettings->setValue(QStringLiteral("dateShowYear"), false);
+      mPanelSettings->setValue(QStringLiteral("formatType"), QStringLiteral("custom-timeonly"));
+      mPanelSettings->setValue(QStringLiteral("showDate"), true);
+      mPanelSettings->setValue(QStringLiteral("showTimezone"), false);
+      mPanelSettings->setValue(QStringLiteral("showTooltip"), false);
+      mPanelSettings->setValue(QStringLiteral("showWeekNumber"), true);
+      mPanelSettings->setValue(QStringLiteral("timeAMPM"), true);
+      mPanelSettings->setValue(QStringLiteral("timePadHour"), true);
+      mPanelSettings->setValue(QStringLiteral("timeShowSeconds"), false);
+      mPanelSettings->setValue(QStringLiteral("timeZoneWheel"), true);
+      mPanelSettings->setValue(QStringLiteral("timezoneFormatType"), QStringLiteral("iana"));
+      mPanelSettings->setValue(QStringLiteral("timezonePosition"), QStringLiteral("below"));
+      mPanelSettings->setValue(QStringLiteral("useAdvancedManualFormat"), false);
+    }
+    mPanelSettings->endGroup();
+    seededNames.append(groupName);
+  };
+
+  auto takePluginById = [&](const QString& id) -> bool {
+    auto it = std::find_if(available.begin(), available.end(), [&id](const OneG4::PluginInfo& info) {
+      return info.id() == id;
+    });
+    if (it == available.end())
+      return false;
+    registerPlugin(*it, it->id());
+    available.erase(it);
+    return true;
+  };
+
+  for (const QString& id : kDefaultPluginOrder)
+    takePluginById(id);
+
+  for (const OneG4::PluginInfo& info : std::as_const(available))
+    registerPlugin(info, info.id());
+
+  if (seededNames.isEmpty())
+    return false;
+
+  mPanelSettings->setValue(mNamesKey, seededNames);
+  return true;
+}
+
 void PanelPluginsModel::loadPlugins(OneG4Panel* panel, QStringList const& desktopDirs) {
   QStringList plugin_names = mPanelSettings->value(mNamesKey).toStringList();
+  if (plugin_names.isEmpty() && seedDefaultPlugins(desktopDirs))
+    plugin_names = mPanelSettings->value(mNamesKey).toStringList();
 
 #ifdef DEBUG_PLUGIN_LOADTIME
   QElapsedTimer timer;
@@ -261,7 +351,7 @@ void PanelPluginsModel::loadPlugins(OneG4Panel* panel, QStringList const& deskto
 #endif
 
     OneG4::PluginInfoList list = OneG4::PluginInfo::search(desktopDirs, QStringLiteral("OneG4Panel/Plugin"),
-                                                         QStringLiteral("%1.desktop").arg(type));
+                                                           QStringLiteral("%1.desktop").arg(type));
     if (!list.count()) {
       qWarning() << QStringLiteral("Plugin \"%1\" not found.").arg(type);
       continue;

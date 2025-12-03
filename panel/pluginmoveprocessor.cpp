@@ -128,11 +128,11 @@ PluginMoveProcessor::MousePosInfo PluginMoveProcessor::itemByMousePos(const QPoi
       ret.item = item;
       if (mLayout->isHorizontal()) {
         ret.after = OneG4PanelLayout::itemIsSeparate(item) ? mouse.x() > itemRect.center().x()
-                                                          : mouse.y() > itemRect.center().y();
+                                                           : mouse.y() > itemRect.center().y();
       }
       else {
         ret.after = OneG4PanelLayout::itemIsSeparate(item) ? mouse.y() > itemRect.center().y()
-                                                          : mouse.x() > itemRect.center().x();
+                                                           : mouse.x() > itemRect.center().x();
       }
       return ret;
     }

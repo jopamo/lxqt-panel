@@ -10,7 +10,7 @@
 #include <QDialog>
 #include <QLabel>
 
-#include <OneG4/RotatedWidget>
+#include <OneG4/RotatedWidget.h>
 
 #include "../panel/ioneg4panelplugin.h"
 #include "oneg4worldclockconfiguration.h"

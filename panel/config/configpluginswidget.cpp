@@ -9,7 +9,7 @@
 #include "../plugin.h"
 #include "../ioneg4panelplugin.h"
 
-#include <HtmlDelegate>
+#include <OneG4/HtmlDelegate.h>
 #include <QPushButton>
 #include <QItemSelectionModel>
 

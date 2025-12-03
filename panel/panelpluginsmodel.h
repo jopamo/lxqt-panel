@@ -256,8 +256,8 @@ class PanelPluginsModel : public QAbstractListModel {
    * \brief loadPlugins Loads all the Plugins.
    * \param panel The parent panel of these plugins
    * \param desktopDirs These directories are scanned for corresponding
-   * .desktop-files which are necessary to load the plugins.
-   */
+  * .desktop-files which are necessary to load the plugins.
+  */
   void loadPlugins(OneG4Panel* panel, QStringList const& desktopDirs);
   /*!
    * \brief loadPlugin Loads a Plugin and connects signals and slots.
@@ -268,8 +268,9 @@ class PanelPluginsModel : public QAbstractListModel {
    * will only be redirected to the Plugin so that it knows how to read
    * its settings.
    * \return A QPointer to the Plugin that was loaded.
-   */
+  */
   QPointer<Plugin> loadPlugin(OneG4Panel* panel, OneG4::PluginInfo const& desktopFile, QString const& settingsGroup);
+  bool seedDefaultPlugins(QStringList const& desktopDirs);
   /*!
    * \brief findNewPluginSettingsGroup Creates a name for a new Plugin
    * that is not yet present in the settings file. Whenever multiple

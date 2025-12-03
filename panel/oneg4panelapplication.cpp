@@ -13,7 +13,8 @@
 #include <QUuid>
 #include <QWindow>
 #include <QtDebug>
-#include <OneG4/Settings>
+#include <OneG4/Settings.h>
+#include <OneG4/Globals.h>
 
 #include <QPluginLoader>
 #include <QDir>
@@ -69,8 +70,6 @@ static inline QString getBackendFilePath(QString name) {
 
   return QString();
 }
-
-
 
 OneG4PanelApplicationPrivate::OneG4PanelApplicationPrivate(OneG4PanelApplication* q)
     : mSettings(nullptr), mWMBackend(nullptr), q_ptr(q) {}
@@ -152,7 +151,9 @@ OneG4PanelApplication::OneG4PanelApplication(int& argc, char** argv)
   Q_D(OneG4PanelApplication);
 
   QCoreApplication::setApplicationName(QLatin1String("1g4-panel"));
-  const QString VERINFO = QStringLiteral(ONEG4_PANEL_VERSION "\nliboneg4   " ONEG4_VERSION "\nQt        " QT_VERSION_STR);
+  const QString VERINFO = QStringLiteral("%1\nliboneg4   %2\nQt        %3")
+                              .arg(QLatin1String(ONEG4_PANEL_VERSION), QLatin1String(ONEG4_VERSION),
+                                   QLatin1String(QT_VERSION_STR));
 
   QCoreApplication::setApplicationVersion(VERINFO);
 

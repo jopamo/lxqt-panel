@@ -23,7 +23,7 @@ set(UIS
 )
 
 set(LIBRARIES
-    oneg4
+    oneg4-compat
     Qt6Xdg
 )
 

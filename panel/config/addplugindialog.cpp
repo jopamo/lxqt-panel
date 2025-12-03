@@ -7,9 +7,9 @@
 #include "plugin.h"
 #include "../oneg4panelapplication.h"
 
-#include <OneG4/HtmlDelegate>
-#include <XdgIcon>
-#include <XdgDirs>
+#include <OneG4/HtmlDelegate.h>
+#include <XdgIcon.h>
+#include <XdgDirs.h>
 
 #include <QString>
 #include <QLineEdit>

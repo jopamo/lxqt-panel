@@ -4,7 +4,7 @@
 
 #include "pluginsettings.h"
 #include "pluginsettings_p.h"
-#include <OneG4/Settings>
+#include <OneG4/Settings.h>
 #include <memory>
 
 class PluginSettingsPrivate {
@@ -157,7 +157,7 @@ void PluginSettings::loadFromCache() {
   Q_D(PluginSettings);
   d->mSettings->beginGroup(d->mGroup);
   d->mSettings->remove(QString{});
-  d->mOldSettings->loadToSettings();
+  d->mOldSettings->loadToSettings(d->mSettings);
   d->mSettings->endGroup();
   emit settingsChanged();
 }

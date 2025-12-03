@@ -53,8 +53,8 @@ void OneG4PanelPluginConfigDialog::dialogButtonsAction(QAbstractButton* btn) {
 
  ************************************************/
 void OneG4PanelPluginConfigDialog::setComboboxIndexByData(QComboBox* comboBox,
-                                                         const QVariant& data,
-                                                         int defaultIndex) const {
+                                                          const QVariant& data,
+                                                          int defaultIndex) const {
   int index = comboBox->findData(data);
   if (index < 0)
     index = defaultIndex;

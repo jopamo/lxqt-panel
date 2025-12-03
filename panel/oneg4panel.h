@@ -10,7 +10,7 @@
 #include <QTimer>
 #include <QPropertyAnimation>
 #include <QPointer>
-#include <OneG4/Settings>
+#include <OneG4/Settings.h>
 #include "ioneg4panel.h"
 #include "oneg4panelglobals.h"
 
@@ -273,18 +273,18 @@ class ONEG4_PANEL_API OneG4Panel : public QFrame, public IOneG4Panel {
    * @param save If true, saveSettings(true) will be called.
    */
   void setPanelSize(int value, bool save);
-  void setIconSize(int value, bool save);                                  //!< \sa setPanelSize()
-  void setLineCount(int value, bool save);                                 //!< \sa setPanelSize()
-  void setLength(int length, bool inPercents, bool save);                  //!< \sa setPanelSize()
+  void setIconSize(int value, bool save);                                   //!< \sa setPanelSize()
+  void setLineCount(int value, bool save);                                  //!< \sa setPanelSize()
+  void setLength(int length, bool inPercents, bool save);                   //!< \sa setPanelSize()
   void setPosition(int screen, IOneG4Panel::Position position, bool save);  //!< \sa setPanelSize()
   void setAlignment(OneG4Panel::Alignment value, bool save);                //!< \sa setPanelSize()
-  void setFontColor(QColor color, bool save);                              //!< \sa setPanelSize()
-  void setBackgroundColor(QColor color, bool save);                        //!< \sa setPanelSize()
-  void setBackgroundImage(QString path, bool save);                        //!< \sa setPanelSize()
-  void setOpacity(int opacity, bool save);                                 //!< \sa setPanelSize()
-  void setReserveSpace(bool reserveSpace, bool save);                      //!< \sa setPanelSize()
-  void setHidable(bool hidable, bool save);                                //!< \sa setPanelSize()
-  void setVisibleMargin(bool visibleMargin, bool save);                    //!< \sa setPanelSize()
+  void setFontColor(QColor color, bool save);                               //!< \sa setPanelSize()
+  void setBackgroundColor(QColor color, bool save);                         //!< \sa setPanelSize()
+  void setBackgroundImage(QString path, bool save);                         //!< \sa setPanelSize()
+  void setOpacity(int opacity, bool save);                                  //!< \sa setPanelSize()
+  void setReserveSpace(bool reserveSpace, bool save);                       //!< \sa setPanelSize()
+  void setHidable(bool hidable, bool save);                                 //!< \sa setPanelSize()
+  void setVisibleMargin(bool visibleMargin, bool save);                     //!< \sa setPanelSize()
   void setHideOnOverlap(bool hideOnOverlap, bool save);
   void setAnimationTime(int animationTime, bool save);  //!< \sa setPanelSize()
   void setShowDelay(int showDelay, bool save);          //!< \sa setPanelSize()
