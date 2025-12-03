@@ -5,6 +5,11 @@
 #if !defined(SNIASYNC_H)
 #define SNIASYNC_H
 
+#include <algorithm>
+#include <tuple>
+#include <type_traits>
+#include <vector>
+
 #include "statusnotifieriteminterface.h"
 
 template <typename>
@@ -70,6 +75,8 @@ class SniAsync : public QObject {
     static const std::vector<QString> ignored_errors = {QStringLiteral("org.freedesktop.DBus.Error.UnknownProperty"),
                                                         QStringLiteral("org.freedesktop.DBus.Error.InvalidArgs"),
                                                         QStringLiteral("org.freedesktop.DBus.Error.Failed")};
+    using Arg = typename call_signature<F>::arg_type;
+    using DecayedArg = std::remove_cv_t<std::remove_reference_t<Arg>>;
 
     static_assert(is_valid_signature<typename call_signature<F>::type>::value,
                   "need callable (lambda, *function, callable obj) (Arg) -> void");
@@ -80,7 +87,7 @@ class SniAsync : public QObject {
                                                                         reply.error().name()))
                 qDebug().noquote().nospace() << "Error on DBus request(" << mSni.service() << ',' << mSni.path() << ','
                                              << name << "): " << reply.error();
-              finished(qdbus_cast<typename call_signature<F>::arg_type>(reply.value()));
+              finished(qdbus_cast<DecayedArg>(reply.value()));
               call->deleteLater();
             });
   }
