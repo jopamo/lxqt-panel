@@ -7,10 +7,10 @@
 
 #include "../panel/ioneg4panelplugin.h"
 
-#include <OneG4/Settings>
+#include <OneG4/Settings.h>
 
 #include <QDebug>
-#include <XdgIcon>
+#include <XdgIcon.h>
 #include <QTimer>
 #include <QMenu>
 #include <QAction>

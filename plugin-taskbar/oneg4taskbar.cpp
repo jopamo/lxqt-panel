@@ -18,7 +18,7 @@
 #include "../panel/ioneg4panelplugin.h"
 #include "../panel/pluginsettings.h"
 
-#include <OneG4/GridLayout>
+#include <OneG4/GridLayout.h>
 
 #include "oneg4taskgroup.h"
 #include "../panel/pluginsettings.h"

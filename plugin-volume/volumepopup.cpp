@@ -6,7 +6,7 @@
 
 #include "audiodevice.h"
 
-#include <XdgIcon>
+#include <XdgIcon.h>
 
 #include <QApplication>
 #include <QCursor>

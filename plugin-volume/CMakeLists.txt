@@ -27,10 +27,7 @@ set(UIS
 )
 
 
-set(LIBRARIES
-    ${LIBRARIES}
-    Qt6Xdg
-)
+set(LIBRARIES ${LIBRARIES})
 
 # Audio backend selection
 find_package(PkgConfig REQUIRED)

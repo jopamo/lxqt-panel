@@ -7,8 +7,8 @@
 #include "ioneg4panelplugin.h"
 #include "oneg4panelapplication.h"
 #include <QPointer>
-#include <XdgIcon>
-#include <OneG4/Settings>
+#include <XdgIcon.h>
+#include <OneG4/Settings.h>
 
 #include <QDebug>
 

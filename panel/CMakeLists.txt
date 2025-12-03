@@ -58,7 +58,7 @@ set(UI
 )
 
 set(LIBRARIES
-    oneg4
+    oneg4-compat
 )
 
 file(GLOB CONFIG_FILES resources/*.conf)

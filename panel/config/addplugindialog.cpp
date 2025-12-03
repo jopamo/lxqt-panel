@@ -5,11 +5,11 @@
 #include "ui_addplugindialog.h"
 #include "addplugindialog.h"
 #include "plugin.h"
+#include "../oneg4panel.h"
 #include "../oneg4panelapplication.h"
 
-#include <OneG4/HtmlDelegate>
-#include <XdgIcon>
-#include <XdgDirs>
+#include <OneG4/HtmlDelegate.h>
+#include <XdgIcon.h>
 
 #include <QString>
 #include <QLineEdit>
@@ -22,12 +22,7 @@
 AddPluginDialog::AddPluginDialog(QWidget* parent) : QDialog(parent), ui(new Ui::AddPluginDialog) {
   ui->setupUi(this);
 
-  QStringList desktopFilesDirs;
-  desktopFilesDirs
-      << QString::fromLocal8Bit(qgetenv("ONEG4_PANEL_PLUGINS_DIR")).split(QLatin1Char(':'), Qt::SkipEmptyParts);
-  desktopFilesDirs << QStringLiteral("%1/%2").arg(XdgDirs::dataHome(), QStringLiteral("/oneg4/1g4-panel"));
-  desktopFilesDirs << QStringLiteral(PLUGIN_DESKTOPS_DIR);
-
+  const QStringList desktopFilesDirs = pluginDesktopDirs();
   mPlugins = OneG4::PluginInfo::search(desktopFilesDirs, QLatin1String("OneG4Panel/Plugin"), QLatin1String("*"));
   std::sort(mPlugins.begin(), mPlugins.end(), [](const OneG4::PluginInfo& p1, const OneG4::PluginInfo& p2) {
     return p1.name() < p2.name() || (p1.name() == p2.name() && p1.comment() < p2.comment());

@@ -15,7 +15,7 @@
 #include <QStringBuilder>
 #include <QMenu>
 #include <QEnterEvent>
-#include <XdgIcon>
+#include <XdgIcon.h>
 
 #include "../panel/backends/ioneg4abstractwmiface.h"
 

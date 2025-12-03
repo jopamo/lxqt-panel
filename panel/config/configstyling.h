@@ -8,7 +8,7 @@
 #include "../oneg4panel.h"
 #include <QSettings>
 #include <QTimer>
-#include <OneG4/ConfigDialog>
+#include <OneG4/ConfigDialog.h>
 
 class OneG4Panel;
 

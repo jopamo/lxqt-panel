@@ -6,13 +6,14 @@ MACRO (BUILD_ONEG4_PLUGIN NAME)
     set(PLUGIN_SHARE_DIR ${PROG_SHARE_DIR}/${NAME})
 
     # Desktop files **********************************
-    file (GLOB ${PROJECT_NAME}_DESKTOP_FILES_IN resources/*.desktop.in)
-    set(DESKTOP_FILES)
-    foreach(_desktop_in ${${PROJECT_NAME}_DESKTOP_FILES_IN})
-        string(REPLACE ".in" "" _desktop ${_desktop_in})
+file (GLOB ${PROJECT_NAME}_DESKTOP_FILES_IN resources/*.desktop.in)
+set(DESKTOP_FILES)
+foreach(_desktop_in ${${PROJECT_NAME}_DESKTOP_FILES_IN})
+        get_filename_component(_desktop_name ${_desktop_in} NAME_WE)
+        set(_desktop "${CMAKE_CURRENT_BINARY_DIR}/${_desktop_name}")
         configure_file(${_desktop_in} ${_desktop} COPYONLY)
         list(APPEND DESKTOP_FILES ${_desktop})
-    endforeach()
+endforeach()
     #************************************************
 
     file (GLOB CONFIG_FILES resources/*.conf)
@@ -38,7 +39,7 @@ MACRO (BUILD_ONEG4_PLUGIN NAME)
     endif()
     target_link_libraries(${NAME}
         Qt6::Widgets
-        oneg4
+        oneg4-compat
         ${LIBRARIES}
         KF6::WindowSystem
     )

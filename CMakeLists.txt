@@ -34,6 +34,42 @@ find_package(Qt6Widgets ${REQUIRED_QT_VERSION} REQUIRED)
 find_package(Qt6Xml ${REQUIRED_QT_VERSION} REQUIRED)
 find_package(KF6WindowSystem ${KF6_MINIMUM_VERSION} REQUIRED)
 
+set(ONEG4_COMPAT_SOURCES
+    OneG4/Application.cpp
+    OneG4/ConfigDialog.cpp
+    OneG4/GridLayout.cpp
+    OneG4/HtmlDelegate.cpp
+    OneG4/Notification.cpp
+    OneG4/PluginInfo.cpp
+    OneG4/RotatedWidget.cpp
+    OneG4/Settings.cpp
+    XdgIcon.cpp
+    XdgDirs.cpp
+)
+
+set(ONEG4_COMPAT_HEADERS
+    OneG4/Application.h
+    OneG4/ConfigDialog.h
+    OneG4/GridLayout.h
+    OneG4/HtmlDelegate.h
+    OneG4/Notification.h
+    OneG4/PluginInfo.h
+    OneG4/RotatedWidget.h
+    OneG4/Settings.h
+    OneG4/Globals.h
+    XdgIcon.h
+    XdgDirs.h
+)
+
+add_library(oneg4-compat SHARED
+    ${ONEG4_COMPAT_SOURCES}
+    ${ONEG4_COMPAT_HEADERS}
+)
+
+target_include_directories(oneg4-compat PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(oneg4-compat Qt6::Widgets Qt6::Gui Qt6::Core)
+install(TARGETS oneg4-compat DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
 
 
 

@@ -10,7 +10,7 @@
 #include "configpluginswidget.h"
 #include "../oneg4panel.h"
 
-#include <OneG4/ConfigDialog>
+#include <OneG4/ConfigDialog.h>
 
 class ConfigPanelDialog : public OneG4::ConfigDialog {
   Q_OBJECT

@@ -8,8 +8,8 @@
 #include <QFrame>
 #include <QString>
 #include <QPointer>
-#include <OneG4/PluginInfo>
-#include <OneG4/Settings>
+#include <OneG4/PluginInfo.h>
+#include <OneG4/Settings.h>
 #include "ioneg4panel.h"
 #include "oneg4panelglobals.h"
 #include "pluginsettings.h"

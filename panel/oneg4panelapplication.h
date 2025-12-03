@@ -5,7 +5,7 @@
 #ifndef ONEG4PANELAPPLICATION_H
 #define ONEG4PANELAPPLICATION_H
 
-#include <OneG4/Application>
+#include <OneG4/Application.h>
 #include "ioneg4panelplugin.h"
 
 class QScreen;

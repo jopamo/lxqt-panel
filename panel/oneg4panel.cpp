@@ -12,7 +12,8 @@
 #include "plugin.h"
 #include "panelpluginsmodel.h"
 #include "windownotifier.h"
-#include <OneG4/PluginInfo>
+#include <OneG4/Application.h>
+#include <OneG4/PluginInfo.h>
 
 #include <QScreen>
 #include <QWindow>
@@ -24,8 +25,8 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QPainter>
-#include <XdgIcon>
-#include <XdgDirs>
+#include <XdgIcon.h>
+#include <XdgDirs.h>
 
 #include <KWindowSystem>
 #include <KX11Extras>
@@ -198,7 +199,8 @@ OneG4Panel::OneG4Panel(const QString& configGroup, OneG4::Settings* settings, QW
   }
 
   connect(OneG4::Settings::globalSettings(), &OneG4::GlobalSettings::settingsChanged, this, [this] { update(); });
-  connect(oneg4App, &OneG4::Application::themeChanged, this, &OneG4Panel::realign);
+  if (auto* oneg4App = qobject_cast<OneG4::Application*>(qApp))
+    connect(oneg4App, &OneG4::Application::themeChanged, this, &OneG4Panel::realign);
 
   connect(mStandaloneWindows.get(), &WindowNotifier::firstShown, this, [this] { showPanel(true); });
   connect(mStandaloneWindows.get(), &WindowNotifier::lastHidden, this, &OneG4Panel::hidePanel);

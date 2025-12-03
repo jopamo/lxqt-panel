@@ -17,11 +17,11 @@
 #include "volumepopup.h"
 #include "1g4-mixer.h"
 
-#include <OneG4/Notification>
+#include <OneG4/Notification.h>
 #include <QDialog>
 #include <QMessageBox>
 #include <QtGlobal>
-#include <XdgIcon>
+#include <XdgIcon.h>
 
 #include <algorithm>
 

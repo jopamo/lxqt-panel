@@ -22,9 +22,6 @@ set(UIS
     oneg4taskbarconfiguration.ui
 )
 
-set(LIBRARIES
-    oneg4
-    Qt6Xdg
-)
+set(LIBRARIES)
 
 BUILD_ONEG4_PLUGIN(${PLUGIN})

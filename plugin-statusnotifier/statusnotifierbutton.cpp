@@ -10,7 +10,7 @@
 // #include <dbusmenu-oneg4/dbusmenuimporter.h> // Removed dependency
 #include "../panel/ioneg4panelplugin.h"
 #include "sniasync.h"
-#include <XdgIcon>
+#include <XdgIcon.h>
 
 namespace {
 /*! \brief Stub for DBusMenuImporter to remove external dependency.
@@ -18,9 +18,9 @@ namespace {
 class MenuImporter : public QObject {
  public:
   MenuImporter(const QString&, const QString&, QObject* parent) : QObject(parent) {
-      m_menu = new QMenu();
-      m_menu->addAction(tr("Menu not available (Stub)"));
-      m_menu->setParent(this);
+    QWidget* parentWidget = qobject_cast<QWidget*>(parent);
+    m_menu = new QMenu(parentWidget);
+    m_menu->addAction(QObject::tr("Menu not available (Stub)"));
   }
 
   QMenu* menu() { return m_menu; }

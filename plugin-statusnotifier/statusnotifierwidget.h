@@ -6,7 +6,7 @@
 
 #include <QTimer>
 
-#include <OneG4/GridLayout>
+#include <OneG4/GridLayout.h>
 
 #include "statusnotifierbutton.h"
 
