@@ -1,0 +1,41 @@
+name: CMake Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build on Fedora (Qt6)
+    runs-on: ubuntu-latest
+    container: fedora:latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Dependencies
+      run: |
+        dnf -y update
+        dnf -y install \
+          git \
+          cmake \
+          ninja-build \
+          gcc-c++ \
+          qt6-qtbase-devel \
+          qt6-qttools-devel \
+          kf6-kwindowsystem-devel \
+          libX11-devel \
+          libxcb-devel \
+          pipewire-devel \
+          pkgconf-pkg-config
+
+
+
+    - name: Configure CMake
+      run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      run: cmake --build build

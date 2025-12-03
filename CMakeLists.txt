@@ -27,14 +27,14 @@ set(CMAKE_AUTORCC ON)
 
 set(REQUIRED_QT_VERSION "6.6.0")
 set(KF6_MINIMUM_VERSION "6.0.0")
-set(ONEG4_MINIMUM_VERSION "2.3.0")
+
 
 find_package(Qt6DBus ${REQUIRED_QT_VERSION} REQUIRED)
 find_package(Qt6Widgets ${REQUIRED_QT_VERSION} REQUIRED)
 find_package(Qt6Xml ${REQUIRED_QT_VERSION} REQUIRED)
 find_package(KF6WindowSystem ${KF6_MINIMUM_VERSION} REQUIRED)
-find_package(oneg4 ${ONEG4_MINIMUM_VERSION} REQUIRED)
-find_package(oneg4-menu-data ${ONEG4_MINIMUM_VERSION} REQUIRED)
+
+
 
 
 # Prevent in-source builds
@@ -59,7 +59,7 @@ endif()
 
 # Patch Version
 set(ONEG4_PANEL_PATCH_VERSION 1)
-set(ONEG4_PANEL_VERSION ${ONEG4_MAJOR_VERSION}.${ONEG4_MINOR_VERSION}.${ONEG4_PANEL_PATCH_VERSION})
+set(ONEG4_PANEL_VERSION "1.0.0.${ONEG4_PANEL_PATCH_VERSION}")
 add_definitions("-DONEG4_PANEL_VERSION=\"${ONEG4_PANEL_VERSION}\"")
 
 # Warning: This must be before add_subdirectory(panel). Move with caution.
