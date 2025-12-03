@@ -28,6 +28,7 @@ jobs:
           qt6-qttools-devel \
           kf6-kwindowsystem-devel \
           libX11-devel \
+          libqtxdg-devel \
           libqtxdg \
           libxcb-devel \
           pipewire-devel \
