@@ -20,7 +20,7 @@ set(QT_MINIMUM_VERSION "6.6.0")
 
 find_package(Qt6 ${QT_MINIMUM_VERSION} COMPONENTS REQUIRED Widgets)
 
-find_package(GLIB ${GLIB_MINIMUM_VERSION} REQUIRED)
+pkg_check_modules(GLIB REQUIRED glib-2.0>=${GLIB_MINIMUM_VERSION})
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(
