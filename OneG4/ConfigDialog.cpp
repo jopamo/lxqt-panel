@@ -4,8 +4,8 @@
 
 #include "ConfigDialog.h"
 
-#include <QDialogButtonBox>
 #include <QAbstractButton>
+#include <QDialogButtonBox>
 #include <QTabWidget>
 #include <QVBoxLayout>
 
@@ -14,13 +14,15 @@
 
 namespace OneG4 {
 
-ConfigDialog::ConfigDialog(const QString& title, Settings*, QWidget* parent) : QDialog(parent) {
+ConfigDialog::ConfigDialog(const QString& title, Settings* settings, QWidget* parent)
+    : QDialog(parent),
+      mTabWidget(new QTabWidget(this)),
+      mButtonBox(new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Reset, this)) {
+  Q_UNUSED(settings);
+
   setWindowTitle(title);
   setAttribute(Qt::WA_DeleteOnClose, true);
 
-  mTabWidget = new QTabWidget(this);
-
-  mButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Reset, this);
   connect(mButtonBox, &QDialogButtonBox::accepted, this, &ConfigDialog::accept);
   connect(mButtonBox, &QDialogButtonBox::rejected, this, &ConfigDialog::reject);
   connect(mButtonBox, &QDialogButtonBox::clicked, this, &ConfigDialog::handleButton);
@@ -54,7 +56,8 @@ void ConfigDialog::updateIconThemeSettings() {
 }
 
 void ConfigDialog::handleButton(QAbstractButton* button) {
-  if (mButtonBox->buttonRole(button) == QDialogButtonBox::ResetRole)
+  const auto role = mButtonBox->buttonRole(button);
+  if (role == QDialogButtonBox::ResetRole)
     emit reset();
 }
 
