@@ -6,13 +6,20 @@
 
 #include <QApplication>
 #include <QPainter>
+#include <QStyle>
+#include <QStyleOptionViewItem>
 #include <QTextDocument>
 
 namespace OneG4 {
 
-HtmlDelegate::HtmlDelegate(const QSize& iconSize, QObject* parent) : QStyledItemDelegate(parent), mIconSize(iconSize) {}
+HtmlDelegate::HtmlDelegate(const QSize& iconSize, QObject* parent)
+    : QStyledItemDelegate(parent),
+      mIconSize(iconSize) {}
 
 void HtmlDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const {
+  if (!painter)
+    return;
+
   painter->save();
 
   QStyleOptionViewItem opt(option);
@@ -22,22 +29,30 @@ void HtmlDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, 
   doc.setDefaultFont(opt.font);
   doc.setHtml(opt.text);
 
-  opt.text = QString();
-  QStyle* style = opt.widget ? opt.widget->style() : QApplication::style();
-  style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, opt.widget);
+  opt.text.clear();
 
-  const QRect textRect = opt.rect.adjusted(mIconSize.width() + opt.decorationSize.width() / 2, 0, 0, 0);
-  painter->translate(textRect.topLeft());
-  QRect clip(0, 0, textRect.width(), textRect.height());
-  doc.drawContents(painter, clip);
+  QStyle* style = opt.widget ? opt.widget->style() : QApplication::style();
+  if (style)
+    style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, opt.widget);
+
+  QRect textRect = opt.rect;
+  const int iconSpace = mIconSize.width() + opt.decorationSize.width() / 2;
+  textRect.adjust(iconSpace, 0, 0, 0);
+  if (textRect.width() > 0) {
+    painter->translate(textRect.topLeft());
+    QRect clip(0, 0, textRect.width(), textRect.height());
+    doc.setTextWidth(textRect.width());
+    doc.drawContents(painter, clip);
+  }
 
   painter->restore();
 }
 
 QSize HtmlDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const {
-  QTextDocument doc;
   QStyleOptionViewItem opt(option);
   initStyleOption(&opt, index);
+
+  QTextDocument doc;
   doc.setDefaultFont(opt.font);
   doc.setHtml(opt.text);
 
