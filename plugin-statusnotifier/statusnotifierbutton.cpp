@@ -18,6 +18,7 @@
 #include <QTimer>
 #include <QToolButton>
 #include <QWheelEvent>
+#include <QtEndian>
 #include <QtGlobal>
 
 #include "../panel/ioneg4panelplugin.h"
@@ -248,21 +249,23 @@ void StatusNotifierButton::refetchIcon(Status status, const QString& themePath) 
                                           if (iconPixmap.bytes.isNull())
                                             continue;
 
-                                          QImage image(reinterpret_cast<const uchar*>(iconPixmap.bytes.constData()),
-                                                       iconPixmap.width,
-                                                       iconPixmap.height,
-                                                       QImage::Format_ARGB32);
-
-                                          const uchar* src = image.constBits();
-                                          const uchar* end = src + image.sizeInBytes();
-                                          uchar* dest = reinterpret_cast<uchar*>(iconPixmap.bytes.data());
+                                          QByteArray normalizedBytes(iconPixmap.bytes);
+                                          const uchar* src =
+                                              reinterpret_cast<const uchar*>(iconPixmap.bytes.constData());
+                                          const uchar* end = src + iconPixmap.bytes.size();
+                                          uchar* dest = reinterpret_cast<uchar*>(normalizedBytes.data());
 
                                           while (src < end) {
-                                            const quint32 px = qFromUnaligned<quint32>(src);
-                                            qToUnaligned(qToBigEndian(px), dest);
+                                            const quint32 px = qFromBigEndian<quint32>(src);
+                                            qToUnaligned(px, dest);
                                             src += 4;
                                             dest += 4;
                                           }
+
+                                          QImage image(reinterpret_cast<const uchar*>(normalizedBytes.constData()),
+                                                       iconPixmap.width,
+                                                       iconPixmap.height,
+                                                       QImage::Format_ARGB32);
 
                                           nextIcon.addPixmap(QPixmap::fromImage(image));
                                         }
