@@ -557,10 +557,9 @@ void OneG4PanelLayout::setGeometryHoriz(const QRect& geometry) {
           rect.setTop(geometry.top());
           rect.setHeight(geometry.height());
 
-          if (info.expandable)
-            rect.setWidth(info.geometry.width() * expFactor);
-          else
-            rect.setWidth(info.geometry.width());
+          int width = info.expandable ? info.geometry.width() * expFactor : info.geometry.width();
+          const int availableWidth = std::max(0, geometry.right() - left + 1);
+          rect.setWidth(std::min(width, availableWidth));
         }
         else {
           int height = bh + (0 < remain-- ? 1 : 0);
@@ -598,10 +597,9 @@ void OneG4PanelLayout::setGeometryHoriz(const QRect& geometry) {
           rect.setTop(geometry.top());
           rect.setHeight(geometry.height());
 
-          if (info.expandable)
-            rect.setWidth(info.geometry.width() * expFactor);
-          else
-            rect.setWidth(info.geometry.width());
+          int width = info.expandable ? info.geometry.width() * expFactor : info.geometry.width();
+          const int availableWidth = std::max(0, right - geometry.left() + 1);
+          rect.setWidth(std::min(width, availableWidth));
 
           rect.moveRight(right);
         }
@@ -669,10 +667,9 @@ void OneG4PanelLayout::setGeometryVert(const QRect& geometry) {
           rect.setLeft(geometry.left());
           rect.setWidth(geometry.width());
 
-          if (info.expandable)
-            rect.setHeight(info.geometry.height() * expFactor);
-          else
-            rect.setHeight(info.geometry.height());
+          int height = info.expandable ? info.geometry.height() * expFactor : info.geometry.height();
+          const int availableHeight = std::max(0, geometry.bottom() - top + 1);
+          rect.setHeight(std::min(height, availableHeight));
         }
         else {
           rect.setHeight(std::min(info.geometry.height(), geometry.height()));
@@ -710,10 +707,9 @@ void OneG4PanelLayout::setGeometryVert(const QRect& geometry) {
           rect.setLeft(geometry.left());
           rect.setWidth(geometry.width());
 
-          if (info.expandable)
-            rect.setHeight(info.geometry.height() * expFactor);
-          else
-            rect.setHeight(info.geometry.height());
+          int height = info.expandable ? info.geometry.height() * expFactor : info.geometry.height();
+          const int availableHeight = std::max(0, bottom - geometry.top() + 1);
+          rect.setHeight(std::min(height, availableHeight));
           rect.moveBottom(bottom);
         }
         else {

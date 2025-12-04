@@ -17,6 +17,8 @@ class RotatedWidget : public QWidget {
 
   void setOrigin(Qt::Corner corner);
   void adjustContentSize();
+  QSize sizeHint() const override;
+  QSize minimumSizeHint() const override;
 
  protected:
   void resizeEvent(QResizeEvent* event) override;

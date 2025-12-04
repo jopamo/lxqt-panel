@@ -44,6 +44,7 @@ OneG4WorldClock::OneG4WorldClock(const IOneG4PanelPluginStartupInfo& startupInfo
   mContent->setObjectName(QLatin1String("WorldClockContent"));
 
   mContent->setAlignment(Qt::AlignCenter);
+  mContent->setWordWrap(true);
 
   settingsChanged();
 
@@ -104,8 +105,13 @@ void OneG4WorldClock::updateTimeText() {
   if (!isUpToDate) {
     const QSize old_size = mContent->sizeHint();
     mContent->setText(QLocale::system().toString(tzNow, preformat(mFormat, timeZone, tzNow)));
-    if (old_size != mContent->sizeHint())
+    const bool sizeChanged = old_size != mContent->sizeHint();
+    if (sizeChanged) {
       mRotatedWidget->adjustContentSize();
+      mMainWidget->updateGeometry();
+      if (QWidget* pluginFrame = mMainWidget->parentWidget())
+        pluginFrame->updateGeometry();
+    }
     mRotatedWidget->update();
     updatePopupContent();
   }

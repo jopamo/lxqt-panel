@@ -22,15 +22,26 @@ void RotatedWidget::setOrigin(Qt::Corner corner) {
   Q_UNUSED(mOrigin);
 }
 
+QSize RotatedWidget::sizeHint() const {
+  return mContent ? mContent->sizeHint() : QWidget::sizeHint();
+}
+
+QSize RotatedWidget::minimumSizeHint() const {
+  return mContent ? mContent->minimumSizeHint() : QWidget::minimumSizeHint();
+}
+
 void RotatedWidget::adjustContentSize() {
-  if (mContent)
-    mContent->adjustSize();
+  if (!mContent)
+    return;
+
+  mContent->adjustSize();
+  updateGeometry();
 }
 
 void RotatedWidget::resizeEvent(QResizeEvent* event) {
   QWidget::resizeEvent(event);
   if (mContent)
-    mContent->setFixedSize(event->size());
+    mContent->resize(event->size());
 }
 
 }  // namespace OneG4

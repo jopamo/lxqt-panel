@@ -30,8 +30,8 @@ PluginSettings& OneG4PanelPluginConfigDialog::settings() const {
 
  ************************************************/
 void OneG4PanelPluginConfigDialog::closeEvent(QCloseEvent* event) {
-  mSettings.storeToCache();
-  return QDialog::closeEvent(event);
+  mSettings.sync();
+  QDialog::closeEvent(event);
 }
 
 /************************************************
