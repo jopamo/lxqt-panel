@@ -228,7 +228,7 @@ bool PanelPluginsModel::moveRows(const QModelIndex& sourceParent,
 }
 
 namespace {
-const QStringList kDefaultPluginOrder = {QStringLiteral("taskbar2"),
+const QStringList kDefaultPluginOrder = {QStringLiteral("taskbar"),
                                          QStringLiteral("worldclock"),
                                          QStringLiteral("volume"),
                                          QStringLiteral("statusnotifier")};
@@ -245,7 +245,7 @@ bool PanelPluginsModel::seedDefaultPlugins(QStringList const& desktopDirs) {
     mPanelSettings->beginGroup(groupName);
     mPanelSettings->remove(QString());
     mPanelSettings->setValue(QStringLiteral("type"), info.id());
-    if (groupName == QStringLiteral("taskbar2")) {
+    if (groupName == QStringLiteral("taskbar2") || groupName.startsWith(QLatin1String("taskbar"))) {
       mPanelSettings->setValue(QStringLiteral("alignment"), QStringLiteral("Left"));
       mPanelSettings->setValue(QStringLiteral("autoRotate"), true);
       mPanelSettings->setValue(QStringLiteral("buttonHeight"), 101);
@@ -280,7 +280,7 @@ bool PanelPluginsModel::seedDefaultPlugins(QStringList const& desktopDirs) {
       mPanelSettings->setValue(QStringLiteral("showWeekNumber"), true);
       mPanelSettings->setValue(QStringLiteral("timeAMPM"), true);
       mPanelSettings->setValue(QStringLiteral("timePadHour"), true);
-      mPanelSettings->setValue(QStringLiteral("timeShowSeconds"), false);
+      mPanelSettings->setValue(QStringLiteral("timeShowSeconds"), true);
       mPanelSettings->setValue(QStringLiteral("timeZoneWheel"), true);
       mPanelSettings->setValue(QStringLiteral("timezoneFormatType"), QStringLiteral("iana"));
       mPanelSettings->setValue(QStringLiteral("timezonePosition"), QStringLiteral("below"));

@@ -286,7 +286,7 @@ void OneG4Panel::readSettings() {
   setIconSize(mSettings->value(QStringLiteral(CFG_KEY_ICONSIZE), PANEL_DEFAULT_ICON_SIZE).toInt(), false);
   setLineCount(mSettings->value(QStringLiteral(CFG_KEY_LINECNT), PANEL_DEFAULT_LINE_COUNT).toInt(), false);
 
-  setLength(mSettings->value(QStringLiteral(CFG_KEY_LENGTH), 100).toInt(),
+  setLength(mSettings->value(QStringLiteral(CFG_KEY_LENGTH), 70).toInt(),
             mSettings->value(QStringLiteral(CFG_KEY_PERCENT), true).toBool(), false);
 
   const auto screens = QApplication::screens();
@@ -300,7 +300,7 @@ void OneG4Panel::readSettings() {
   if (color.isValid())
     setFontColor(color, false);
 
-  setOpacity(mSettings->value(QStringLiteral(CFG_KEY_OPACITY), 100).toInt(), false);
+  setOpacity(mSettings->value(QStringLiteral(CFG_KEY_OPACITY), 60).toInt(), false);
   mReserveSpace = mSettings->value(QStringLiteral(CFG_KEY_RESERVESPACE), true).toBool();
   color = mSettings->value(QStringLiteral(CFG_KEY_BACKGROUNDCOLOR), QString()).value<QColor>();
   if (color.isValid())
