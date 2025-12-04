@@ -250,11 +250,17 @@ void GridLayout::setColumnCount(int columns) {
 }
 
 void GridLayout::setCellMinimumSize(const QSize& size) {
+  if (mCellMin == size)
+    return;
+
   mCellMin = size;
   invalidate();
 }
 
 void GridLayout::setCellMaximumSize(const QSize& size) {
+  if (mCellMax == size)
+    return;
+
   mCellMax = size;
   invalidate();
 }
