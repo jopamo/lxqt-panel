@@ -24,7 +24,6 @@ set(UIS
 
 set(LIBRARIES
     oneg4-compat
-    Qt6Xdg
 )
 
 BUILD_ONEG4_PLUGIN(${PLUGIN})
