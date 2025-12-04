@@ -7,6 +7,7 @@
 
 #include "../ioneg4abstractwmiface.h"
 
+#include <QHash>
 #include <netwm_def.h>
 
 typedef struct _XDisplay Display;
@@ -88,6 +89,7 @@ class OneG4WMBackendX11 : public IOneG4AbstractWMInterface {
   xcb_connection_t* m_xcbConnection;
 
   QVector<WId> m_windows;
+  QHash<WId, QRect> m_iconGeometries;
 };
 
 class OneG4WMBackendX11Library : public QObject, public IOneG4WMBackendLibrary {

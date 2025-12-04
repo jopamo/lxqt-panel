@@ -15,6 +15,7 @@
 #include <QScreen>
 #include <QTimer>
 #include <QCursor>
+#include <QtMath>
 
 // NOTE: Xlib.h defines Bool which conflicts with QJsonValue::Type enum
 #include <X11/Xlib.h>
@@ -102,6 +103,7 @@ void OneG4WMBackendX11::onWindowRemoved(WId windowId) {
   if (row == -1)
     return;
 
+  m_iconGeometries.remove(windowId);
   m_windows.removeAt(row);
 
   emit windowRemoved(windowId);
@@ -230,6 +232,7 @@ bool OneG4WMBackendX11::reloadWindows() {
   for (auto i = knownWindows.begin(), i_e = knownWindows.end(); i != i_e; ++i) {
     WId wnd = *i;
     if (!new_list.contains(wnd)) {
+      m_iconGeometries.remove(wnd);
       emit windowRemoved(wnd);
     }
   }
@@ -533,21 +536,21 @@ void OneG4WMBackendX11::resizeApplication(WId windowId) {
 }
 
 void OneG4WMBackendX11::refreshIconGeometry(WId windowId, QRect const& geom) {
-  // this function announces where the task icon is so X11 WMs can perform animations correctly
+  // announce where the task icon is so X11 WMs can perform animations correctly
+
+  const qreal scaleFactor = qApp->devicePixelRatio();
+  const QRect scaledGeom(qRound(geom.x() * scaleFactor), qRound(geom.y() * scaleFactor),
+                         qRound(geom.width() * scaleFactor), qRound(geom.height() * scaleFactor));
+
+  const auto cached = m_iconGeometries.value(windowId);
+  if (cached == scaledGeom)
+    return;
+
+  m_iconGeometries.insert(windowId, scaledGeom);
 
   WId appRootWindow = XDefaultRootWindow(m_X11Display);
+  NETWinInfo info(m_xcbConnection, windowId, appRootWindow, NET::Properties(), NET::Properties2());
 
-  NETWinInfo info(m_xcbConnection, windowId, appRootWindow, NET::WMIconGeometry, NET::Properties2());
-  NETRect const curr = info.iconGeometry();
-
-  // see kwindowsystem -> NETWinInfo::setIconGeometry for the scale factor
-  const qreal scaleFactor = qApp->devicePixelRatio();
-  int xPos = geom.x() * scaleFactor;
-  int yPos = geom.y() * scaleFactor;
-  int w = geom.width() * scaleFactor;
-  int h = geom.height() * scaleFactor;
-  if (xPos == curr.pos.x && yPos == curr.pos.y && w == curr.size.width && h == curr.size.height)
-    return;
   NETRect nrect;
   nrect.pos.x = geom.x();
   nrect.pos.y = geom.y();
