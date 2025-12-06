@@ -1,8 +1,6 @@
 # 🖥️ 1g4-panel
 
-> **The sleek, modular taskbar for the OneG4 Desktop Environment.**
-
-`1g4-panel` is the core desktop panel for OneG4, providing a customizable and feature-rich interface for managing your running applications, system tray, clock, and more.
+> **a sleek, modular taskbar.
 
 ---
 
@@ -34,32 +32,19 @@ Launch your favorite apps instantly!
 Manage your background applications and notifications.
 - Implements the modern [StatusNotifierItem (SNI)](https://www.freedesktop.org/wiki/Specifications/StatusNotifierItem) specification, an area where arbitrary applications can place informational icons.
 
-#### 🔊 Volume Control (`plugin-volume`)
-Easily adjust your system volume.
-- Supports **ALSA**, **OSS**, and **PulseAudio** backends.
-- One-click access to advanced mixers like [1g4-mixer](https://github.com/oneg4/1g4-mixer).
-
 ---
 
 ## 📦 Installation
 
 ### 🔧 Compiling from Source
-Please refer to the generic compilation instructions for **OneG4** components to build `1g4-panel` from source.
-
-### 💿 Binary Packages
-Official packages are available for most major Linux and BSD distributions. Simply search for `1g4-panel` in your package manager.
-
-```bash
-# Example (Debian/Ubuntu)
-sudo apt install 1g4-panel
-```
+Please refer to the generic compilation instructions for **1g4** components to build `1g4-panel` from source.
 
 ---
 
 ## ⚙️ Configuration & Usage
 
 ### 🚀 Launching
-`1g4-panel` usually starts automatically with your OneG4 session. You can also launch it manually from the terminal.
+`1g4-panel` usually starts automatically with your 1g4 session. You can also launch it manually from the terminal.
 
 ### 🎨 Customizing
 Make the panel your own!
@@ -72,5 +57,5 @@ Make the panel your own!
 ---
 
 <div align="center">
-  <sub>Built with ❤️ by the OneG4 Team</sub>
+  <sub>Built with ❤️ by the 1g4 team — <a href="https://1g4.org">1g4.org</a></sub>
 </div>
