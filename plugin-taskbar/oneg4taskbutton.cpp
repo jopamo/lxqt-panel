@@ -26,6 +26,7 @@
 #include <QStyleOptionToolButton>
 #include <QScreen>
 #include <QPointer>
+#include <QCursor>
 #include <QEasingCurve>
 #include <QVariantAnimation>
 #include <algorithm>
@@ -838,6 +839,10 @@ void OneG4TaskButton::paintEvent(QPaintEvent* event) {
   QPainter painter(this);
   painter.setTransform(transform);
 
+  const bool cursorInside = rect().contains(mapFromGlobal(QCursor::pos()));
+  if (cursorInside != mHoverTarget)
+    updateHoverAnimation(cursorInside);
+
   const auto mixColors = [](const QColor& from, const QColor& to, qreal progress) {
     const qreal p = std::clamp(progress, 0.0, 1.0);
     return QColor::fromRgbF(from.redF() + (to.redF() - from.redF()) * p,
@@ -854,14 +859,16 @@ void OneG4TaskButton::paintEvent(QPaintEvent* event) {
     border = border.darker(110);
   }
 
-  const qreal hoverAmount = std::clamp(mHoverProgress, 0.0, 1.0);
-  if (hoverAmount > 0.0 || (opt.state & QStyle::State_MouseOver)) {
-    const qreal applied = hoverAmount > 0.0 ? hoverAmount : 1.0;
+  const qreal hoverProgress = std::clamp(mHoverProgress, 0.0, 1.0);
+  const bool hoverState = cursorInside || (opt.state & QStyle::State_MouseOver);
+  const qreal hoverAmount = hoverState ? std::max(hoverProgress, 0.35) : hoverProgress;
+
+  if (hoverAmount > 0.0) {
     const QColor accent = opt.palette.color(QPalette::Highlight);
-    QColor hoverBase = mixColors(base, accent.lighter(120), 0.35);
-    QColor hoverBorder = mixColors(border, accent, 0.6);
-    base = mixColors(base, hoverBase, applied);
-    border = mixColors(border, hoverBorder, applied);
+    QColor hoverBase = mixColors(base, accent.lighter(125), 0.45);
+    QColor hoverBorder = mixColors(border, accent, 0.7);
+    base = mixColors(base, hoverBase, hoverAmount);
+    border = mixColors(border, hoverBorder, hoverAmount);
   }
 
   base.setAlphaF(mOpacity);
@@ -879,8 +886,8 @@ void OneG4TaskButton::paintEvent(QPaintEvent* event) {
 
   if (hoverAmount > 0.0) {
     QColor glow = opt.palette.color(QPalette::Highlight);
-    glow.setAlphaF(mOpacity * 0.35 * hoverAmount);
-    painter.setPen(QPen(glow, 2));
+    glow.setAlphaF(mOpacity * 0.55 * hoverAmount);
+    painter.setPen(QPen(glow, 2.5));
     painter.setBrush(Qt::NoBrush);
     painter.drawRoundedRect(opt.rect.adjusted(0, 0, 0, 0), 4, 4);
   }
