@@ -79,6 +79,7 @@ OneG4TaskButton::OneG4TaskButton(const WId window, OneG4TaskBar* taskbar, QWidge
   setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
   setAcceptDrops(true);
   setMouseTracking(true);
+  setAttribute(Qt::WA_Hover, true);
 
   updateText();
   updateIcon();
@@ -208,6 +209,24 @@ void OneG4TaskButton::dropEvent(QDropEvent* event) {
     updateHoverAnimation(false);
   }
   QToolButton::dropEvent(event);
+}
+
+/************************************************
+
+ ************************************************/
+bool OneG4TaskButton::event(QEvent* event) {
+  switch (event->type()) {
+    case QEvent::HoverEnter:
+    case QEvent::HoverMove:
+      updateHoverAnimation(true);
+      break;
+    case QEvent::HoverLeave:
+      updateHoverAnimation(false);
+      break;
+    default:
+      break;
+  }
+  return QToolButton::event(event);
 }
 
 /************************************************
@@ -835,9 +854,14 @@ void OneG4TaskButton::paintEvent(QPaintEvent* event) {
     border = border.darker(110);
   }
 
-  if (mHoverProgress > 0.0) {
-    base = mixColors(base, base.lighter(118), mHoverProgress);
-    border = mixColors(border, border.lighter(120), mHoverProgress);
+  const qreal hoverAmount = std::clamp(mHoverProgress, 0.0, 1.0);
+  if (hoverAmount > 0.0 || (opt.state & QStyle::State_MouseOver)) {
+    const qreal applied = hoverAmount > 0.0 ? hoverAmount : 1.0;
+    const QColor accent = opt.palette.color(QPalette::Highlight);
+    QColor hoverBase = mixColors(base, accent.lighter(120), 0.35);
+    QColor hoverBorder = mixColors(border, accent, 0.6);
+    base = mixColors(base, hoverBase, applied);
+    border = mixColors(border, hoverBorder, applied);
   }
 
   base.setAlphaF(mOpacity);
@@ -852,6 +876,14 @@ void OneG4TaskButton::paintEvent(QPaintEvent* event) {
   painter.setPen(QPen(border, 1));
   painter.setBrush(Qt::NoBrush);
   painter.drawRoundedRect(opt.rect.adjusted(1, 1, -1, -1), 3, 3);
+
+  if (hoverAmount > 0.0) {
+    QColor glow = opt.palette.color(QPalette::Highlight);
+    glow.setAlphaF(mOpacity * 0.35 * hoverAmount);
+    painter.setPen(QPen(glow, 2));
+    painter.setBrush(Qt::NoBrush);
+    painter.drawRoundedRect(opt.rect.adjusted(0, 0, 0, 0), 4, 4);
+  }
 
   // Draw label/icon with the original palette (no opacity on text/icon)
   opt.rect = opt.rect.adjusted(2, 2, -2, -2);

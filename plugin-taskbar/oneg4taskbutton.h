@@ -94,6 +94,7 @@ class OneG4TaskButton : public QToolButton {
   void wheelEvent(QWheelEvent* event);
   virtual void contextMenuEvent(QContextMenuEvent* event);
   void paintEvent(QPaintEvent*);
+  bool event(QEvent* event) override;
   void enterEvent(QEnterEvent* event) override;
   void leaveEvent(QEvent* event) override;
 
