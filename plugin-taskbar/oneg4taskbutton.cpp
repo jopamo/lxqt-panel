@@ -26,7 +26,8 @@
 #include <QStyleOptionToolButton>
 #include <QScreen>
 #include <QPointer>
-#include <QGraphicsOpacityEffect>
+#include <QEasingCurve>
+#include <QVariantAnimation>
 #include <algorithm>
 
 #include "../panel/backends/ioneg4abstractwmiface.h"
@@ -66,6 +67,7 @@ OneG4TaskButton::OneG4TaskButton(const WId window, OneG4TaskBar* taskbar, QWidge
       mWheelDelta(0),
       mDNDTimer(new QTimer(this)),
       mWheelTimer(new QTimer(this)),
+      mHoverAnimation(new QVariantAnimation(this)),
       mBasePalette(palette()) {
   Q_ASSERT(taskbar);
 
@@ -76,6 +78,7 @@ OneG4TaskButton::OneG4TaskButton(const WId window, OneG4TaskBar* taskbar, QWidge
   setMinimumHeight(1);
   setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
   setAcceptDrops(true);
+  setMouseTracking(true);
 
   updateText();
   updateIcon();
@@ -88,6 +91,15 @@ OneG4TaskButton::OneG4TaskButton(const WId window, OneG4TaskBar* taskbar, QWidge
   mWheelTimer->setInterval(250);
   connect(mWheelTimer, &QTimer::timeout, this, [this] {
     mWheelDelta = 0;  // forget previous wheel deltas
+  });
+
+  mHoverAnimation->setDuration(120);
+  mHoverAnimation->setEasingCurve(QEasingCurve::OutCubic);
+  mHoverAnimation->setStartValue(0.0);
+  mHoverAnimation->setEndValue(0.0);
+  connect(mHoverAnimation, &QVariantAnimation::valueChanged, this, [this](const QVariant& value) {
+    mHoverProgress = value.toReal();
+    update();
   });
 
   setUrgencyHint(mBackend->applicationDemandsAttention(mWindow));
@@ -165,6 +177,7 @@ void OneG4TaskButton::dragEnterEvent(QDragEnterEvent* event) {
   if (event->mimeData()->hasFormat(mimeDataFormat())) {
     emit dragging(event->source(), event->position().toPoint());
     setAttribute(Qt::WA_UnderMouse, false);
+    updateHoverAnimation(false);
   }
   else {
     mDNDTimer->start();
@@ -177,11 +190,13 @@ void OneG4TaskButton::dragMoveEvent(QDragMoveEvent* event) {
   if (event->mimeData()->hasFormat(mimeDataFormat())) {
     emit dragging(event->source(), event->position().toPoint());
     setAttribute(Qt::WA_UnderMouse, false);
+    updateHoverAnimation(false);
   }
 }
 
 void OneG4TaskButton::dragLeaveEvent(QDragLeaveEvent* event) {
   mDNDTimer->stop();
+  updateHoverAnimation(false);
   QToolButton::dragLeaveEvent(event);
 }
 
@@ -190,8 +205,57 @@ void OneG4TaskButton::dropEvent(QDropEvent* event) {
   if (event->mimeData()->hasFormat(mimeDataFormat())) {
     emit dropped(event->source(), event->position().toPoint());
     setAttribute(Qt::WA_UnderMouse, false);
+    updateHoverAnimation(false);
   }
   QToolButton::dropEvent(event);
+}
+
+/************************************************
+
+ ************************************************/
+void OneG4TaskButton::enterEvent(QEnterEvent* event) {
+  updateHoverAnimation(true);
+  QToolButton::enterEvent(event);
+}
+
+/************************************************
+
+ ************************************************/
+void OneG4TaskButton::leaveEvent(QEvent* event) {
+  updateHoverAnimation(false);
+  QToolButton::leaveEvent(event);
+}
+
+/************************************************
+
+ ************************************************/
+void OneG4TaskButton::updateHoverAnimation(bool hovered) {
+  if (!mHoverAnimation)
+    return;
+
+  const qreal endValue = hovered ? 1.0 : 0.0;
+
+  if (hovered == mHoverTarget) {
+    if ((hovered && mHoverProgress >= 1.0) || (!hovered && mHoverProgress <= 0.0))
+      return;
+
+    if (mHoverAnimation->state() == QAbstractAnimation::Running &&
+        qFuzzyCompare(mHoverAnimation->endValue().toReal(), endValue))
+      return;
+  }
+
+  mHoverTarget = hovered;
+
+  if (qFuzzyCompare(mHoverProgress, endValue)) {
+    mHoverProgress = endValue;
+    update();
+    return;
+  }
+
+  mHoverAnimation->stop();
+  mHoverAnimation->setStartValue(mHoverProgress);
+  mHoverAnimation->setEndValue(endValue);
+  mHoverAnimation->start();
 }
 
 /************************************************
@@ -755,12 +819,29 @@ void OneG4TaskButton::paintEvent(QPaintEvent* event) {
   QPainter painter(this);
   painter.setTransform(transform);
 
+  const auto mixColors = [](const QColor& from, const QColor& to, qreal progress) {
+    const qreal p = std::clamp(progress, 0.0, 1.0);
+    return QColor::fromRgbF(from.redF() + (to.redF() - from.redF()) * p,
+                            from.greenF() + (to.greenF() - from.greenF()) * p,
+                            from.blueF() + (to.blueF() - from.blueF()) * p,
+                            from.alphaF() + (to.alphaF() - from.alphaF()) * p);
+  };
+
   QColor base = opt.palette.color(QPalette::Button);
-  if (opt.state & QStyle::State_MouseOver)
-    base = base.lighter(110);
-  if (opt.state & (QStyle::State_On | QStyle::State_Sunken))
+  QColor border = opt.palette.color(QPalette::Mid);
+
+  if (opt.state & (QStyle::State_On | QStyle::State_Sunken)) {
     base = base.darker(105);
+    border = border.darker(110);
+  }
+
+  if (mHoverProgress > 0.0) {
+    base = mixColors(base, base.lighter(118), mHoverProgress);
+    border = mixColors(border, border.lighter(120), mHoverProgress);
+  }
+
   base.setAlphaF(mOpacity);
+  border.setAlphaF(mOpacity);
 
   painter.setRenderHint(QPainter::Antialiasing, true);
   painter.setPen(Qt::NoPen);
@@ -768,8 +849,6 @@ void OneG4TaskButton::paintEvent(QPaintEvent* event) {
   painter.drawRoundedRect(opt.rect.adjusted(1, 1, -1, -1), 3, 3);
 
   // Draw a subtle border that respects the same opacity
-  QColor border = opt.palette.color(QPalette::Mid);
-  border.setAlphaF(mOpacity);
   painter.setPen(QPen(border, 1));
   painter.setBrush(Qt::NoBrush);
   painter.drawRoundedRect(opt.rect.adjusted(1, 1, -1, -1), 3, 3);

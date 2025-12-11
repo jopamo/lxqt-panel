@@ -5,8 +5,11 @@
 #ifndef ONEG4TASKBUTTON_H
 #define ONEG4TASKBUTTON_H
 
-#include <QToolButton>
+#include <QEnterEvent>
 #include <QProxyStyle>
+#include <QToolButton>
+
+class QVariantAnimation;
 
 #include "../panel/ioneg4panel.h"
 
@@ -91,6 +94,8 @@ class OneG4TaskButton : public QToolButton {
   void wheelEvent(QWheelEvent* event);
   virtual void contextMenuEvent(QContextMenuEvent* event);
   void paintEvent(QPaintEvent*);
+  void enterEvent(QEnterEvent* event) override;
+  void leaveEvent(QEvent* event) override;
 
   void setWindowId(WId wid) { mWindow = wid; }
   virtual QMimeData* mimeData();
@@ -99,6 +104,7 @@ class OneG4TaskButton : public QToolButton {
   inline IOneG4PanelPlugin* plugin() const { return mPlugin; }
 
   void setTextExplicitly(const QString& str);
+  void updateHoverAnimation(bool hovered);
 
  protected:
   // TODO: public getter instead?
@@ -125,6 +131,9 @@ class OneG4TaskButton : public QToolButton {
   // Timer for distinguishing between separate mouse wheel rotations
   QTimer* mWheelTimer;
   qreal mOpacity = 1.0;
+  qreal mHoverProgress = 0.0;
+  bool mHoverTarget = false;
+  QVariantAnimation* mHoverAnimation = nullptr;
   QPalette mBasePalette;
 
  signals:

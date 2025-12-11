@@ -490,14 +490,14 @@ QPoint OneG4TaskGroup::recalculateFramePosition() {
  ************************************************/
 void OneG4TaskGroup::leaveEvent(QEvent* event) {
   setPopupVisible(false);
-  QToolButton::leaveEvent(event);
+  OneG4TaskButton::leaveEvent(event);
 }
 
 /************************************************
 
  ************************************************/
 void OneG4TaskGroup::enterEvent(QEnterEvent* event) {
-  QToolButton::enterEvent(event);
+  OneG4TaskButton::enterEvent(event);
 
   if (sDraggging)
     return;
